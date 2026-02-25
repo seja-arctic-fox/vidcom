@@ -1,56 +1,99 @@
-# VidCom GUI
+# VidCom
 
-Tento projekt je zamýšlen jako zápočtová práce pro PRC1
+VidCom (short for Video Compression) is a simple utility for compressing video. It offers both GUI and CLI interface and utilises `ffmpeg` for the video encoding. 
 
-### Cíl projektu
-```vidcom.py``` je skript, který umožňuje vzít libovolné video jako vstup, zvolit jeden z implementovaných video enkodérů a případně určit i cílovou velikost výstupu. Skript se pomocí knihovny ```ffmpeg``` pokusí co nejlépe zmenšit vstupní video s co nejmenší ztrátou kvality. 
+VidCom features two modes; **Archive mode** and **Compress mode**:
 
-#### Je možné zmenšovat ve dvou režimech: 
+- **Archive mode** compresses a video as much as possible without losing target image quality. 
 
-- na cílovou velikost
-- automatické zmenšení se zachováním kvality
+- **Compress mode** compresses a video to a specified target size. 
 
-#### V současnosti mám implementované enkodéry: 
+There are also other options for quick setup, such as reducing resolution and frame rate, choosing an output directory and a trimming function. More advanced users (and anyone else) can set the codec used for encoding and tweak some parameters of chosen codec to trade time for better compression and vice versa. 
 
-- VP9 `libvpx` (včetně 2-pass)
-- H265 `libx265` (včetně 2-pass)
-- rychlé kódování pomocí NVENC enkodérů
-    * `h264_nvenc`
-    * `hevc_nvenc`
-- AV1 `libsvtav1`
+You can process as many videos as you want by adding them to a queue (GUI) or specifying their paths in the command (CLI). 
 
-Skript má velmi základní CLI rozhraní. Lze používat bez argumentů (zeptá se na všechny vstupní informace při spuštění) a s argumenty ve formě `python vidcom.py video režim velikost_v_MB`
+Whether you want your memories to take up less space or just share a funny video clip with your friends, this app makes it easy for you. 
 
+### Features
+- Archiving videos
+- Compressing videos to target sizes
+- Simple and clean GTK4 + Adwaita user interface
+	* Adjustable video queue  
+	* Simple way of setting the basics and advanced options for single or multiple videos
+	* Start encoding with a single button
+- CLI for automation
+- Uses `ffmpeg` for encoding
+- Avaiable codecs are: 
+    * AV1 `libsvtav1`
+    * HEVC `libx265`
+    * VP9 ` libvpx-vp9`
+- Written in C++
 
-Cíl tohoto projektu je napsat program podle [vzoru napsaného v Pythonu](./vzor/vidcom.py), který dokáže zmenšovat videa na danou velikost nebo připravit videa k zálohování. Program bude mít možnost ovládání pomocí jednoduchého CLI i GUI rozhraní. Zároveň bych chtěl přidat nové funkce, které nejsou přítomné v existujícím skriptu, jako je třeba volitelná nastavitelnost jednotlivých parametrů, snazší spouštění na více souborů najednou a náhled výsledku v aplikaci. 
-
-### Inspirace
-Inspiroval jsem se těmito projekty
+### Inspiration
+This project was inspired mainly by these other projects: 
 
 - [Constrict](https://github.com/Wartybix/Constrict)
 - [Handbrake](https://handbrake.fr/)
 
-### Použité knihovny a nástroje
-Projekt bude vyvíjen v jazyce **C++**. Zmenšování videí se bude provádět pomocí knihovny `ffmpeg`. GUI rozhraní bude vytvořeno pomocí `gtk4` a `libadwaita`. GTK4 rozhraní je psáno v jazyce C, proto pro svůj projekt použiji knihovnu `gtkmm-4.0`. Pro usnadnění sestavování budu využívat **Meson build system**. Aplikace je primárně určená pro běh na Linuxu. 
+## Installation
+This project is mainly developed for Linux. I might do a Windows build in the future. 
 
-### Instalace
-WIP
+### Linux
+#### AUR
+TODO
 
-#### Linux
+```bash
+yay -S vidcom
+```
 
-Nejdřív nainstalujte potřebné balíčky a závislosti. Také je nutné mít nainstalovaný `ffmpeg`. Například na Arch Linuxu: 
+#### Flatpak
+TODO
 
-```sudo pacman -S gtk4 libadwaita jsoncpp meson ffmpeg```
+#### Building
+1. Install dependencies: `meson`, `ffmpeg`, `gtk4`, `libadwaita` and `jsoncpp`. For example on Arch Linux: 
 
-Před sestavením je třeba spustit v kořenovém adresáři projektu příkaz: 
+```bash
+pacman -S meson ffmpeg gtk4 libadwaita jsoncpp
+```
 
+2. Clone this repository: 
 
-```meson setup build```
+```bash
+git clone https://github.com/seja-arctic-fox/vidcom.git
+cd vidcom
+```
 
-Pro sestavení přejděte do nového adresáře `build` a spusťte příkaz: 
+3. Setup the build directory:
 
-```meson compile```
+```bash
+meson setup build
+```
 
-Spustitelný soubor se jmenuje `vidcom-gui` a nachází se v adresáři `build`. 
+4. Compile and install: 
 
-*Instalace do systému bude doplněna. *
+```bash
+cd build/
+
+meson compile
+# OR
+meson install
+```
+
+### Windows
+Maybe someday, when I figure out how to do it and prove that it will work at least somewhat decently. 
+
+## Conclusion
+
+Of course this app is not perfect and definitely can be improved. Still, I hope you will find it useful, at least a little! :D 
+
+Todo (I will update this with some future ideas):
+
+- Add two-pass encoding to GUI (and figure out how to do 2-pass encoding with `libsvtav1` properly)
+- Improving the GUI to be more like a typical application from the GNOME Circle
+- ...
+
+If you have a suggestion or you found a bug, feel free to report it in the [Issues](https://github.com/seja-arctic-fox/vidcom/issues) page. 
+
+I will continue to maintain this project/add new features as new codecs become avaiable, but I might be slow to implement them. 
+
+This project follows [GNOME's Code of Conduct](https://conduct.gnome.org/).
