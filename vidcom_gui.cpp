@@ -11,7 +11,7 @@ int main(int argc, char **argv)
     if (argc == 1)
     {
         adw_init();
-        auto app = Gtk::Application::create("cz.seja.vidcom");
+        auto app = Gtk::Application::create("io.github.seja_arctic_fox.vidcom");
         return app -> make_window_and_run<MainWindow>(argc, argv);
     }
     

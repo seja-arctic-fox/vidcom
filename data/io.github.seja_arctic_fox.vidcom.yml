@@ -1,0 +1,84 @@
+app-id: io.github.seja_arctic_fox.vidcom
+runtime: org.gnome.Platform
+runtime-version: '49'
+sdk: org.gnome.Sdk
+command: vidcom
+finish-args:
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  - --share=ipc
+  - --own-name=io.github.seja_arctic_fox.vidcom
+
+modules:
+  - name: mm-common
+    buildsystem: meson
+    sources: 
+      - type: git
+        url: https://gitlab.gnome.org/GNOME/mm-common
+        tag: 1.0.7
+
+      - type: file
+        url: https://gcc.gnu.org/onlinedocs/libstdc++/latest-doxygen/libstdc++.tag
+        sha256: cb01f8aebdb7b9874b100d13a006fb688ee25d2e93e02ff294e6c2483606c7a3
+        dest-filename: libstdc++.tag
+        dest: doctags
+
+  - name: jsoncpp
+    buildsystem: meson
+    sources: 
+      - type: git
+        url: https://github.com/open-source-parsers/jsoncpp
+        tag: 1.9.6
+
+  - name: libsigcplusplus
+    buildsystem: meson
+    config-opts:
+      - -Dbuild-documentation=false
+    sources: 
+      - type: git
+        url: https://github.com/libsigcplusplus/libsigcplusplus.git
+        tag: 3.8.0
+
+  - name: glibmm
+    buildsystem: meson
+    config-opts:
+      - -Dbuild-documentation=false
+    sources: 
+      - type: git
+        url: https://gitlab.gnome.org/GNOME/glibmm
+        tag: 2.86.0
+
+  - name: cairomm
+    buildsystem: meson
+    config-opts:
+      - -Dbuild-documentation=false
+    sources:
+      - type: git
+        url: https://gitlab.freedesktop.org/cairo/cairomm.git
+        tag: 1.19.0
+
+  - name: pangomm
+    buildsystem: meson
+    config-opts:
+      - -Dbuild-documentation=false
+    sources: 
+      - type: git
+        url: https://gitlab.gnome.org/GNOME/pangomm
+        tag: 2.56.1
+
+  - name: gtkmm
+    buildsystem: meson
+    config-opts:
+      - -Dbuild-documentation=false
+    sources: 
+    - type: git
+      url: https://gitlab.gnome.org/GNOME/gtkmm
+      tag: 4.20.0
+
+  - name: vidcom
+    buildsystem: meson
+    sources:
+      - type: git
+        url: https://github.com/seja-arctic-fox/vidcom
+        branch: main

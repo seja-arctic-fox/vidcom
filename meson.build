@@ -52,3 +52,24 @@ exe = executable(
 )
 
 test('basic', exe)
+
+
+datadir = get_option('datadir')
+metainfodir = datadir / 'metainfo'
+desktopdir = datadir / 'applications'
+icondir = datadir / 'icons' / 'hicolor' / 'scalable' / 'apps'
+
+install_data (
+  'data/io.github.seja_arctic_fox.vidcom.desktop',
+  install_dir: desktopdir
+)
+
+install_data(
+  'data/io.github.seja_arctic_fox.vidcom.metainfo.xml',
+  install_dir: metainfodir
+)
+
+install_data(
+  'data/io.github.seja_arctic_fox.vidcom.svg',
+  install_dir: icondir
+)
