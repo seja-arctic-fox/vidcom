@@ -49,6 +49,9 @@ yay -S vidcom
 #### Flatpak
 TODO
 
+#### AppImage
+TODO
+
 #### Building
 1. Install dependencies: `meson`, `ffmpeg`, `gtk4`, `libadwaita` and `jsoncpp`. For example on Arch Linux: 
 
@@ -80,20 +83,41 @@ meson install
 ```
 
 ### Windows
-Maybe someday, when I figure out how to do it and prove that it will work at least somewhat decently. 
+#### WSL
+Tested on WSL with Ubuntu, worked great OOTB, but I need to test it more. 
+
+#### Other
+Maybe I could do it with `msys2`, but it is not top priority. 
+I will make a Windows build only if it is not unecessary hard to do so. 
 
 ## Conclusion
 
 Of course this app is not perfect and definitely can be improved. Still, I hope you will find it useful, at least a little! :D 
 
-Todo (I will update this with some future ideas):
-
-- Add two-pass encoding to GUI (and figure out how to do 2-pass encoding with `libsvtav1` properly)
-- Improving the GUI to be more like a typical application from the GNOME Circle
-- ...
-
-If you have a suggestion or you found a bug, feel free to report it in the [Issues](https://github.com/seja-arctic-fox/vidcom/issues) page. 
-
 I will continue to maintain this project/add new features as new codecs become avaiable, but I might be slow to implement them. 
+
+If you have a suggestion or you found a bug, feel free to report it in the [Issues](https://github.com/seja-arctic-fox/vidcom/issues) page. Check the list below or the issues to see if it has been reported before. 
+
+I will update the lists below from time to time;
+
+### Planned features / suggestions
+- [ ] Bring the app to
+	- [ ] Flatpak
+	- [ ] AUR
+	- [ ] Make a AppImage
+	- [ ] winget?
+- [ ] At least try to make a Windows build
+- [ ] Implement translations (or ability to translate the app)
+- [ ] About window/section
+- [ ] Notify when the encoding finishes? (maybe don't focus the window then)
+
+### Known Issues
+- [ ] Box for widgets in the "Cut Feature" section is rigid, the plan is to make a flex box that behaves normally. Currently, it blocks the window from resizing
+- [ ] The app doesn't show any status change when importing videos. When importing more videos at the same time, the app will appear non-active. It should show a "Loading" status at the top at least
+- [ ] CLI doesn't create a newline after finishing encoding (regression)
+- [ ] The description of present when HEVC codec is selected is wrong, it should be the other way around
+- [ ] The batch editing does not work for video codec parameters. Either block the usage of this section or (preferably) implement a fix. Maybe block it if all the videos are not set to the same codec
+- [ ] Problem with the "Open video" pill button on the "results" page; sometimes it does not open a video at all. The problem may be trivial (wrong path supplied) and should be fixed easily. 
+- [ ] The app crashes when it attempts to write files/folders to a restricted location. It should notify the user  
 
 This project follows [GNOME's Code of Conduct](https://conduct.gnome.org/).
