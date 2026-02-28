@@ -68,27 +68,27 @@
   <screenshots>
     <screenshot type="default">
       <caption>Main page with videos</caption>
-      <image>https://github.com/seja-arctic-fox/vidcom/blob/75848452a6f9e325522de132b261796b0960a35d/screenshots/main.png</image>
+      <image>https://raw.githubusercontent.com/seja-arctic-fox/vidcom/75848452a6f9e325522de132b261796b0960a35d/screenshots/main.png</image>
     </screenshot>
     <screenshot>
       <caption>VidCom</caption>
-      <image>https://github.com/seja-arctic-fox/vidcom/blob/75848452a6f9e325522de132b261796b0960a35d/screenshots/gallery5.png</image>
+      <image>https://raw.githubusercontent.com/seja-arctic-fox/vidcom/75848452a6f9e325522de132b261796b0960a35d/screenshots/gallery5.png</image>
     </screenshot>
     <screenshot>
       <caption>Queue and compression options</caption>
-      <image>https://github.com/seja-arctic-fox/vidcom/blob/75848452a6f9e325522de132b261796b0960a35d/screenshots/gallery1.png</image>
+      <image>https://raw.githubusercontent.com/seja-arctic-fox/vidcom/75848452a6f9e325522de132b261796b0960a35d/screenshots/gallery1.png</image>
     </screenshot>
     <screenshot>
       <caption>Other settings</caption>
-      <image>https://github.com/seja-arctic-fox/vidcom/blob/75848452a6f9e325522de132b261796b0960a35d/screenshots/gallery2.png</image>
+      <image>https://raw.githubusercontent.com/seja-arctic-fox/vidcom/75848452a6f9e325522de132b261796b0960a35d/screenshots/gallery2.png</image>
     </screenshot>
     <screenshot>
       <caption>Encoding in progress</caption>
-      <image>https://github.com/seja-arctic-fox/vidcom/blob/75848452a6f9e325522de132b261796b0960a35d/screenshots/gallery3.png</image>
+      <image>https://raw.githubusercontent.com/seja-arctic-fox/vidcom/75848452a6f9e325522de132b261796b0960a35d/screenshots/gallery3.png</image>
     </screenshot>
     <screenshot>
       <caption>Results page</caption>
-      <image>https://github.com/seja-arctic-fox/vidcom/blob/75848452a6f9e325522de132b261796b0960a35d/screenshots/gallery4.png</image>
+      <image>https://raw.githubusercontent.com/seja-arctic-fox/vidcom/75848452a6f9e325522de132b261796b0960a35d/screenshots/gallery4.png</image>
     </screenshot>
   </screenshots>
 
@@ -96,6 +96,7 @@
 
   <url type="homepage">https://github.com/seja-arctic-fox/vidcom/</url>
   <url type="bugtracker">https://github.com/seja-arctic-fox/vidcom/issues</url>
+  <url type="vcs-browser">https://github.com/seja-arctic-fox/vidcom/</url>
 
   <requires>
     <control>keyboard</control>

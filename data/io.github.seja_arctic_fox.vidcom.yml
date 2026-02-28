@@ -17,6 +17,7 @@ modules:
       - type: git
         url: https://gitlab.gnome.org/GNOME/mm-common
         tag: 1.0.7
+        commit: "1a34d0fd"
 
       - type: file
         url: https://gcc.gnu.org/onlinedocs/libstdc++/latest-doxygen/libstdc++.tag
@@ -30,6 +31,7 @@ modules:
       - type: git
         url: https://github.com/open-source-parsers/jsoncpp
         tag: 1.9.6
+        commit: "89e2973"
 
   - name: libsigcplusplus
     buildsystem: meson
@@ -39,6 +41,7 @@ modules:
       - type: git
         url: https://github.com/libsigcplusplus/libsigcplusplus.git
         tag: 3.8.0
+        commit: "6534471"
 
   - name: glibmm
     buildsystem: meson
@@ -48,6 +51,7 @@ modules:
       - type: git
         url: https://gitlab.gnome.org/GNOME/glibmm
         tag: 2.86.0
+        commit: "84ef2146"
 
   - name: cairomm
     buildsystem: meson
@@ -57,6 +61,7 @@ modules:
       - type: git
         url: https://gitlab.freedesktop.org/cairo/cairomm.git
         tag: 1.19.0
+        commit: "398889aa"
 
   - name: pangomm
     buildsystem: meson
@@ -66,6 +71,7 @@ modules:
       - type: git
         url: https://gitlab.gnome.org/GNOME/pangomm
         tag: 2.56.1
+        commit: "004c661d"
 
   - name: gtkmm
     buildsystem: meson
@@ -75,10 +81,12 @@ modules:
     - type: git
       url: https://gitlab.gnome.org/GNOME/gtkmm
       tag: 4.20.0
+      commit: "718113f9"
 
   - name: vidcom
     buildsystem: meson
     sources:
       - type: git
         url: https://github.com/seja-arctic-fox/vidcom
-        branch: main
+        tag: "0.8"
+        commit: "43c52ce755059e67b7bca516cd685febbcf1e93c"
