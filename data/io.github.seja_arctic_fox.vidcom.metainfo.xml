@@ -2,12 +2,17 @@
 <component type="desktop-application">
   <id>io.github.seja_arctic_fox.vidcom</id>
   <name>VidCom</name>
-  <summary>A simple utility for video archiving and compression</summary>
+  <summary>Archive and compress videos easily</summary>
   <developer id="io.github">
     <name>seja_arctic_fox</name>
   </developer>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-only</project_license>
+  
+<branding>
+  <color type="primary" scheme_preference="light">#fcd4ad</color>
+  <color type="primary" scheme_preference="dark">#806343</color>
+</branding>
   
   <description>
     <p>
@@ -66,27 +71,27 @@
   </description>
 
   <screenshots>
-    <screenshot type="default">
+    <screenshot type="default" xml:lang="en">
       <caption>Main page with videos</caption>
       <image>https://raw.githubusercontent.com/seja-arctic-fox/vidcom/75848452a6f9e325522de132b261796b0960a35d/screenshots/main.png</image>
     </screenshot>
-    <screenshot>
+    <screenshot xml:lang="en">
       <caption>VidCom</caption>
       <image>https://raw.githubusercontent.com/seja-arctic-fox/vidcom/75848452a6f9e325522de132b261796b0960a35d/screenshots/gallery5.png</image>
     </screenshot>
-    <screenshot>
+    <screenshot xml:lang="en">
       <caption>Queue and compression options</caption>
       <image>https://raw.githubusercontent.com/seja-arctic-fox/vidcom/75848452a6f9e325522de132b261796b0960a35d/screenshots/gallery1.png</image>
     </screenshot>
-    <screenshot>
+    <screenshot xml:lang="en">
       <caption>Other settings</caption>
       <image>https://raw.githubusercontent.com/seja-arctic-fox/vidcom/75848452a6f9e325522de132b261796b0960a35d/screenshots/gallery2.png</image>
     </screenshot>
-    <screenshot>
+    <screenshot xml:lang="en">
       <caption>Encoding in progress</caption>
       <image>https://raw.githubusercontent.com/seja-arctic-fox/vidcom/75848452a6f9e325522de132b261796b0960a35d/screenshots/gallery3.png</image>
     </screenshot>
-    <screenshot>
+    <screenshot xml:lang="en">
       <caption>Results page</caption>
       <image>https://raw.githubusercontent.com/seja-arctic-fox/vidcom/75848452a6f9e325522de132b261796b0960a35d/screenshots/gallery4.png</image>
     </screenshot>

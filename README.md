@@ -40,20 +40,15 @@ This project is mainly developed for Linux. I might do a Windows build in the fu
 
 ### Linux
 #### AUR
-TODO
-
 ```bash
 yay -S vidcom
 ```
 
 #### Flatpak
-TODO
-
-#### AppImage
-TODO
+You can get VidCom on [Flathub](https://flathub.org/en/apps/io.github.seja_arctic_fox.vidcom)
 
 #### Building
-1. Install dependencies: `meson`, `ffmpeg`, `gtk4`, `libadwaita` and `jsoncpp`. For example on Arch Linux: 
+1. Install dependencies: `meson`, `ffmpeg`, `gtk4`, `libadwaita` and `jsoncpp`. Alternatively change `gtk4` for `gtkmm-4.0`. For example on Arch Linux: 
 
 ```bash
 pacman -S meson ffmpeg gtk4 libadwaita jsoncpp
@@ -84,7 +79,7 @@ meson install
 
 ### Windows
 #### WSL
-Tested on WSL with Ubuntu, worked great OOTB, but I need to test it more. 
+Tested on WSL with Ubuntu and Arch Linux, worked great OOTB, but I need to test it more. 
 
 #### Other
 Maybe I could do it with `msys2`, but it is not top priority. 
@@ -102,14 +97,16 @@ I will update the lists below from time to time;
 
 ### Planned features / suggestions
 - [ ] Bring the app to
-	- [ ] Flatpak
-	- [ ] AUR
-	- [ ] Make a AppImage
+	- [X] Flatpak
+	- [X] AUR
+	
+	~~- Make a AppImage~~
 	- [ ] winget?
 - [ ] At least try to make a Windows build
 - [ ] Implement translations (or ability to translate the app)
 - [ ] About window/section
 - [ ] Notify when the encoding finishes? (maybe don't focus the window then)
+- [ ] Add an ability to change default configuration/settings
 
 ### Known Issues
 - [ ] Box for widgets in the "Cut Feature" section is rigid, the plan is to make a flex box that behaves normally. Currently, it blocks the window from resizing
