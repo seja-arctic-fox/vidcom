@@ -8,12 +8,12 @@
   </developer>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-only</project_license>
-  
+
 <branding>
   <color type="primary" scheme_preference="light">#fcd4ad</color>
   <color type="primary" scheme_preference="dark">#806343</color>
 </branding>
-  
+
   <description>
     <p>
     VidCom (short for Video Compression) is a simple utility for compressing video. It offers both GUI and CLI interface and utilises <code>ffmpeg</code> for the video encoding.
@@ -99,7 +99,7 @@
 
   <launchable type="desktop-id">io.github.seja_arctic_fox.vidcom.desktop</launchable>
 
-  <url type="homepage">https://github.com/seja-arctic-fox/vidcom/</url>
+  <url type="homepage">https://seja-arctic-fox.github.io/</url>
   <url type="bugtracker">https://github.com/seja-arctic-fox/vidcom/issues</url>
   <url type="vcs-browser">https://github.com/seja-arctic-fox/vidcom/</url>
 
@@ -108,7 +108,7 @@
     <control>pointing</control>
     <display_length compare="ge">768</display_length>
   </requires>
-  
+
   <content_rating type="oars-1.1" />
   <releases>
     <release version="0.8" date="2026-02-27" />
