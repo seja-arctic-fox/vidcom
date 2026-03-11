@@ -235,11 +235,9 @@ string Video::make_options()
 {
     string command = "";        // Konečný příkaz
 
-    string command_extention = ".mp4'";   // Přípona
-
     string command_prefix = "-v 0 -y -progress pipe:1 -stats_period 0.1 ";                                                              // Základní nastavení ffmpegu
     string command_input = "-i '" + inputVideo.path.generic_string() + "' ";                                                            // Vstupní soubor
-    string command_output = "'" + outputPath.parent_path().generic_string() + "/" + outputPath.stem().generic_string() + command_extention;   // Výstupní soubor                                                                                                              // Nastavení použití NVENC
+    string command_output = "'" + outputPath.generic_string() + "'";   // Výstupní soubor                                                                                                              // Nastavení použití NVENC
     string command_rate = "";                                                                                                                // Nastavení bitratu a velikosti při kompresi
     string command_codec;                                                                                                               // Nastavení použitého kodeku
     

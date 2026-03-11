@@ -124,7 +124,7 @@ I will update the lists below from time to time;
 - [ ] CLI doesn't create a newline after finishing encoding (regression)
 - [ ] The description of present when HEVC codec is selected is wrong, it should be the other way around
 - [ ] The batch editing does not work for video codec parameters. Either block the usage of this section or (preferably) implement a fix. Maybe block it if all the videos are not set to the same codec
-- [ ] Problem with the "Open video" pill button on the "results" page; sometimes it does not open a video at all. The problem may be trivial (wrong path supplied) and should be fixed easily. 
+- [x] Problem with the "Open video" pill button on the "results" page; sometimes it does not open a video at all. The problem may be trivial (wrong path supplied) and should be fixed easily. 
 - [ ] The app crashes when it attempts to write files/folders to a restricted location. It should notify the user  
 
 This project follows [GNOME's Code of Conduct](https://conduct.gnome.org/).
