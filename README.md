@@ -2,6 +2,8 @@
 
 VidCom (short for Video Compression) is a simple utility for compressing video. It offers both GUI and CLI interface and utilises `ffmpeg` for the video encoding. 
 
+For screenshots and basic information, visit the [project website](https://seja-arctic-fox.github.io). 
+
 VidCom features two modes; **Archive mode** and **Compress mode**:
 
 - **Archive mode** compresses a video as much as possible without losing target image quality. 
@@ -28,6 +30,13 @@ Whether you want your memories to take up less space or just share a funny video
     * HEVC `libx265`
     * VP9 ` libvpx-vp9`
 - Written in C++
+
+### CLI
+When you run the command `vidcom`, it start the GUI by default. To use the CLI interface, you have to specify at least one input file. To see the avaiable commands and some example usage of the CLI, execute the following: 
+
+```bash
+vidcom -h
+```
 
 ### Inspiration
 This project was inspired mainly by these other projects: 
@@ -106,7 +115,8 @@ I will update the lists below from time to time;
 - [ ] Implement translations (or ability to translate the app)
 - [ ] About window/section
 - [ ] Notify when the encoding finishes? (maybe don't focus the window then)
-- [ ] Add an ability to change default configuration/settings
+- [ ] Add an ability to change default configuration/settings. save the configs in a file
+- [ ] Make the queue hide when shrinking the Window + adding a button to hide the shrink/expand the queue
 
 ### Known Issues
 - [ ] Box for widgets in the "Cut Feature" section is rigid, the plan is to make a flex box that behaves normally. Currently, it blocks the window from resizing
