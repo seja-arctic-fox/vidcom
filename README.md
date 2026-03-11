@@ -117,10 +117,11 @@ I will update the lists below from time to time;
 - [ ] Notify when the encoding finishes? (maybe don't focus the window then)
 - [ ] Add an ability to change default configuration/settings. save the configs in a file
 - [ ] Make the queue hide when shrinking the Window + adding a button to hide the shrink/expand the queue
+- [ ] Don't regenerate thumbnails when they already exist
 
 ### Known Issues
 - [ ] Box for widgets in the "Cut Feature" section is rigid, the plan is to make a flex box that behaves normally. Currently, it blocks the window from resizing
-- [ ] The app doesn't show any status change when importing videos. When importing more videos at the same time, the app will appear non-active. It should show a "Loading" status at the top at least
+- [x] The app doesn't show any status change when importing videos. When importing more videos at the same time, the app will appear non-active. It should show a "Loading" status at the top at least
 - [ ] CLI doesn't create a newline after finishing encoding (regression)
 - [x] The description of present when HEVC codec is selected is wrong, it should be the other way around
 - [ ] The batch editing does not work for video codec parameters. Either block the usage of this section or (preferably) implement a fix. Maybe block it if all the videos are not set to the same codec
