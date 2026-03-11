@@ -60,7 +60,7 @@ void ResultsDialog::load_results()
         auto row = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL);
         row -> set_margin(5);
 
-        auto video_name = Gtk::make_managed<Gtk::Label>(result.video_name);
+        auto video_name = Gtk::make_managed<Gtk::Label>(result.video_path.stem().generic_string());
         video_name -> add_css_class("heading");
         video_name -> set_ellipsize(Pango::EllipsizeMode::MIDDLE);
         video_name -> set_margin_start(10);

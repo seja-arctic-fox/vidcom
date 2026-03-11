@@ -58,8 +58,7 @@ struct EncodingProgress
 // Výsledek kódování
 struct EncodingResult
 {
-    std::string video_name;
-    std::string video_path;
+    fs::path video_path;
     int exit_status;
     bool was_cancelled;
 };

@@ -151,7 +151,6 @@ void MainWindow::encoding_worker()
         int exit_code = video -> encode("", "", progress_callback);
 
         EncodingResult result;
-        result.video_name = video -> get_video_info().path.filename();
         result.video_path = video -> get_output_path();
         result.exit_status = exit_code;
         result.was_cancelled = (exit_code == -2);
