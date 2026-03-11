@@ -13,7 +13,7 @@ HEVC_Parameters::HEVC_Parameters(VideoElement * video_element)
     aq_text("Adaptive Quantisation"),
     pt_text("Psychovisual Tuning"),
     ab_text("Adaptive B-Frames"),
-    preset_caption("Lower value means better compression but longer encoding time. "),
+    preset_caption("Higher value means better compression but longer encoding time. "),
     crf_caption("Quality level. Lower values increase quality and bitrate. "),
     me_caption("Enables better motion estimation. Good for better compression, but increases encoding time. "),
     aq_caption("Enables adaptive quantisation. Better quality in frames with more details. "),
