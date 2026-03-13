@@ -76,24 +76,23 @@ VideoElement::VideoElement(std::string input_path)
     video_thumbnail.set_margin(10);
     video_thumbnail.set_cursor(Gdk::Cursor::create("grab"));
 
-    string icon_name = fs::path(input_path).stem().generic_string() + ".jpg";
-    fs::path thumbnail_path("/tmp/vidcom/thumnail/thumb_" + icon_name);
+    int icon_hash = (input_path.length() + (int) video.get_video_info().duration) * 7333 % 100;
+    string icon_name = fs::path(input_path).stem().generic_string() + to_string(icon_hash) + ".jpg";
+    fs::path thumbnail_path("/tmp/vidcom/thumbnail/thumb_" + icon_name);
 
-    if (!filesystem::exists(thumbnail_path.parent_path()))
+    if (!filesystem::exists(thumbnail_path.parent_path())) filesystem::create_directories(thumbnail_path.parent_path());
+
+    if (!filesystem::exists(thumbnail_path))
     {
-        filesystem::create_directories(thumbnail_path.parent_path());
+        string thumbnail_command = "ffmpeg -y -i '" + input_path + "' -ss 1 -vframes 1 -s 64x64 '" + thumbnail_path.generic_string() + "' > /dev/null 2>&1";
+        int thumbnail_gen_success = std::system(thumbnail_command.c_str());
+
+        if (thumbnail_gen_success == 0) { video_thumbnail.set(thumbnail_path.generic_string()); }
+        else { video_thumbnail.set_from_icon_name("video-x-generic-symbolic"); }
     }
-
-    string thumnail_command = "ffmpeg -y -i '" + input_path + "' -ss 1 -vframes 1 -s 64x64 '" + thumbnail_path.generic_string() + "' > /dev/null 2>&1";
-    int thumnail_gen_success = std::system(thumnail_command.c_str());
-
-    if (thumnail_gen_success == 0)
+    else
     {
         video_thumbnail.set(thumbnail_path.generic_string());
-    }
-    else 
-    {
-        video_thumbnail.set_from_icon_name("video-x-generic-symbolic");
     }
 
     video_thumbnail.set_pixel_size(64);

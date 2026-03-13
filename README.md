@@ -117,7 +117,7 @@ I will update the lists below from time to time;
 - [ ] Notify when the encoding finishes? (maybe don't focus the window then)
 - [ ] Add an ability to change default configuration/settings. save the configs in a file
 - [ ] Make the queue hide when shrinking the Window + adding a button to hide the shrink/expand the queue
-- [ ] Don't regenerate thumbnails when they already exist
+- [x] Don't regenerate thumbnails when they already exist
 
 ### Known Issues
 - [ ] Box for widgets in the "Cut Feature" section is rigid, the plan is to make a flex box that behaves normally. Currently, it blocks the window from resizing
