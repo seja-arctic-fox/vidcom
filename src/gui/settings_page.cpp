@@ -648,20 +648,17 @@ void VideoSettings_VBox::save_options(VideoElement * element)
         }
        
     // Kodek
-    if (codec_av1_toggle.get_active())
+
+    Codec new_codec_setting;
+    
+    if (codec_av1_toggle.get_active()) new_codec_setting = AV1;
+    else if (codec_hevc_toggle.get_active()) new_codec_setting = HEVC;
+    else new_codec_setting = VP9;
+    
+    if (video -> get_codec() != new_codec_setting)
     {
-        video -> set_codec(AV1);
-        switch_codec_page(AV1);
-    }
-    else if (codec_hevc_toggle.get_active())
-    {
-        video -> set_codec(HEVC);
-        switch_codec_page(HEVC);
-    }
-    else if (codec_vp9_toggle.get_active())
-    {
-        video -> set_codec(VP9);
-        switch_codec_page(VP9);
+        video -> set_codec(new_codec_setting);
+        switch_codec_page(new_codec_setting);
     }
     
     // Střih
