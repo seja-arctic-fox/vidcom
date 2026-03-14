@@ -22,6 +22,12 @@ void Video::sigint_handler(int)
 {
     if (current_instance)
     {
+        pid_t pid = current_instance -> encoding_pid;
+        if (pid != -1)
+        {
+            kill (-pid, SIGKILL);
+        }
+        
         current_instance -> cancel_encoding();
     }
 }
@@ -56,6 +62,7 @@ int Video::encode(fs::path output_path, string command, ProgressCallback progres
     }
     catch (std::filesystem::filesystem_error &e)
     {
+        cerr << RED << "ERROR: Cannot write to specified output location! Exiting. " << RESET << endl;
         return -3;      // Znamená, že se nepodařilo složku vytvořit
     }
 
@@ -179,12 +186,23 @@ int Video::encode(fs::path output_path, string command, ProgressCallback progres
         }
     }
 
+    cout << endl;
     fclose(encoding_pipe);
 
     int child_status = 0;
     waitpid(encoding_pid, &child_status, 0);
-    int exit_status = WIFEXITED(child_status) ? WEXITSTATUS(child_status) : -1;
     encoding_pid = -1;
+    
+    if (cancelling_encoding.load())
+    {
+        sigaction(SIGINT, &old_sa, nullptr);
+        current_instance = nullptr;
+        if (termios_saved)
+            tcsetattr(STDIN_FILENO, TCSANOW, &original_termios);
+        return -2;
+    }
+    
+    int exit_status = WIFEXITED(child_status) ? WEXITSTATUS(child_status) : -1;
 
     // Obnovit přechozí SIGINT akci
     sigaction(SIGINT, &old_sa, nullptr);

@@ -462,7 +462,12 @@ int CLI::parse_arguments(int argc, char **argv)
         }
         else
         {
-            if (video.encode() != 0)
+            int exit_code = video.encode();
+            if (exit_code == -2)
+            {
+                cerr << RED << "ENCODING CANCELLED!" << RESET << endl;
+            }
+            else if (exit_code != 0)
             {
                 cerr << RED << "ENCODING FAILED!" << RESET << endl;
             }
