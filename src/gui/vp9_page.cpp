@@ -193,6 +193,8 @@ void VP9_Parameters::update()
     video_options -> noise_sensitivity = ns_w.get_value();
     video_options -> quality = q_w.get_value();
     video_options -> tune_content = t_w.get_value();
+    
+    if (on_updated) on_updated();
 }
 
 void VP9_Parameters::load()

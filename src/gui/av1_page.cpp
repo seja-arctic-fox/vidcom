@@ -268,6 +268,8 @@ void AV1_Parameters::update()
     video_options -> better_details = bd_w.get_active();
     video_options -> psychovisual_tuning = pt_w.get_active();
     video_options -> variance_boost = vb_w.get_active();
+    
+    if (on_updated) on_updated();
 }
 
 void AV1_Parameters::load()

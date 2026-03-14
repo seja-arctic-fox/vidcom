@@ -496,22 +496,39 @@ void VideoSettings_VBox::switch_codec_page(Codec codec)
 {
     window_content.remove(*window_content.get_last_child());
 
+    // Podle kodeků zařazuji příslušné stránky na místo té předchozí
+    // Díky friend jsou stránky odsud viditelné a můžu s nimi pracovat, což je potřebné
+    // Zavádím zde definici funkce stránky, která zaktualizuje i zbytek nastavení při změně ve stránce, 
+    // čímž se tyto stránky hezky propojí. Šlo by to udělat i přes signály, ale tohle se zdá být čistší postup. 
+    
     switch (codec)
     {
         case AV1:
+        {
             window_content.append(*Gtk::make_managed<AV1_Parameters>(video_element));
-            dynamic_cast<AV1_Parameters *>(window_content.get_last_child()) -> load();
+            auto page = dynamic_cast<AV1_Parameters *>(window_content.get_last_child());
+            page -> on_updated = [this]() { update(); };
+            page -> load();
             break;
+        }
 
         case HEVC:
+        {
             window_content.append(*Gtk::make_managed<HEVC_Parameters>(video_element));
-            dynamic_cast<HEVC_Parameters *>(window_content.get_last_child()) -> load();
+            auto page = dynamic_cast<HEVC_Parameters *>(window_content.get_last_child());
+            page -> on_updated = [this]() { update(); };
+            page -> load();
             break;
+        }
 
         case VP9:
+        {
             window_content.append(*Gtk::make_managed<VP9_Parameters>(video_element));
-            dynamic_cast<VP9_Parameters *>(window_content.get_last_child()) -> load();
+            auto page = dynamic_cast<VP9_Parameters *>(window_content.get_last_child());
+            page -> on_updated = [this]() { update(); };
+            page -> load();
             break;
+        }
     }
 
 }
@@ -693,7 +710,23 @@ void VideoSettings_VBox::save_options(VideoElement * element)
     video -> set_output_path(output_path);
     video -> set_prefix(set_prefix_field.get_text());
     output_caption.set_text("Video(s) will be saved to: \n" + video -> get_output_path());
+    
+    // Parametry kodeku
+    if (batch_settings)
+    {
+        Codec current_codec = video -> get_codec();
+        
+        if (video_element)
+        {
+            Video * displayed_video = &(video_element -> video);
+            
+            if (current_codec == AV1) video -> AV1_options = displayed_video -> AV1_options;
+            else if (current_codec == HEVC) video -> HEVC_options = displayed_video -> HEVC_options;
+            else video -> VP9_options = displayed_video -> VP9_options;
+        }
+    }
 
+    // Zobrazení některých informací v položkách fronty - dobré pro kontrolu, zda se nastavení uložilo
     element -> update_labels();
 }
 

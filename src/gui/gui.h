@@ -223,6 +223,7 @@ class AV1_Parameters : public Gtk::ListBox
         void load();
         void update();
         void on_select_row(Gtk::ListBoxRow * row);
+        std::function<void()> on_updated;
 };
 
 // Stránka parametrů pro HEVC
@@ -248,6 +249,7 @@ class HEVC_Parameters : public Gtk::ListBox
         void load();
         void update();
         void on_select_row(Gtk::ListBoxRow * row);
+        std::function<void()> on_updated;
 };
 
 // Stránka parametrů pro VP9
@@ -273,6 +275,7 @@ class VP9_Parameters : public Gtk::ListBox
         void load();
         void update();
         bool on_move_slider(Gtk::ScrollType, double);
+        std::function<void()> on_updated;
 };
 
 // Stránka pro označené video ve frontě. Obsahuje základní nastavení pro každé video individuálně

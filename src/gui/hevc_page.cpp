@@ -238,6 +238,8 @@ void HEVC_Parameters::update()
     video_options -> psychovisual_tuning = pt_w.get_active();
     video_options -> adaptive_quantisation = aq_w.get_active();
     video_options -> adaptive_b_frames = ab_w.get_active();
+    
+    if (on_updated) on_updated();
 }
 
 void HEVC_Parameters::load()
