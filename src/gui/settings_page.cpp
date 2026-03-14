@@ -15,6 +15,7 @@
 #include "sigc++/adaptors/bind.h"
 #include "sigc++/functors/mem_fun.h"
 #include "src/video/video.h"
+#include <cmath>
 #include <filesystem>
 #include <iostream>
 #include <vector>
@@ -668,7 +669,7 @@ void VideoSettings_VBox::save_options(VideoElement * element)
     }
     
     // Střih
-    if (!batch_settings && cut_switch.get_active())
+    if (cut_switch.get_active())
     {
         float start_secs = cut_start_s.get_value();
         float stop_secs = cut_stop_s.get_value();
@@ -860,13 +861,27 @@ void VideoSettings_VBox::read_video_vector_options(std::vector<VideoElement *> v
 {
     this -> video_queue = video_vector ;
     batch_settings = true;
-    cut_listbox.set_sensitive(false);
     cut_heading.add_css_class("warning");
-    cut_heading.set_text("Cut Feature (disable Select All)");
+    cut_heading.set_text("Cut Feature (set according to the shortest video)");
 
     if (video_queue.size() > 0)
     {
-        Video * video = &(video_queue.at(0) -> video);
+        // Volba videa pro načtení do GUI: 
+        //  Najde se video s nejkratší délkou (kvůli funkci střihu) a podle něho se načtou nastavení do GUI
+        //  To bude užitečné například v případech, kdy má uživatel několik stejně dlouhých videí a chce překódovat prvních pár minut každého videa
+        float min_duration = MAXFLOAT;
+        int video_index = -1;
+        
+        for (unsigned long i = 0; i < video_queue.size(); i++)
+        {
+            if (min_duration > video_queue.at(i) -> video.get_video_info().duration)
+            {
+                video_index = i;
+                min_duration = video_queue.at(i) -> video.get_video_info().duration;
+            }
+        }
+        
+        Video * video = &(video_queue.at(video_index) -> video);
         output_path = video -> get_output_path();
         output_path = filesystem::path(output_path).parent_path().generic_string().substr(0, output_path.find("encoded_videos/"));
         load_options_into_GUI(video);
