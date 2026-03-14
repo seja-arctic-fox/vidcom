@@ -112,6 +112,7 @@
   <content_rating type="oars-1.1" />
   <releases>
     <release version="0.81" date="2026-03-14">
+        <url type="details">https://github.com/seja-arctic-fox/vidcom/releases/tag/0.81</url>
         <description>
             <p>Bugfixes and improvements</p>
             <ul>
@@ -130,6 +131,7 @@
                 <li>Implemented batch settings of codec parameters </li>
             </ul>
         </description>
+    </release>
     <release version="0.8" date="2026-02-27">
         <description>
             <p>Initial release</p>
