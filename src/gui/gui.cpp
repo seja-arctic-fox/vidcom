@@ -149,8 +149,36 @@ void MainWindow::encoding_worker()
             progress_dispatcher.emit();
         };
 
-        video->test_commands();
+        video -> test_commands();
         int exit_code = video -> encode("", "", progress_callback);
+        
+        if (exit_code == -3)
+        {
+            is_encoding.store(false);
+            completion_dispatcher.emit();
+            
+            EncodingResult result;
+            result.video_path = video -> get_output_path();
+            result.exit_status = exit_code;
+            result.was_cancelled = (exit_code == -2);
+            encoding_results.push_back(result);
+            
+            auto dialog = Gtk::AlertDialog::create();
+            dialog -> set_message("Cannot create output");
+            dialog -> set_detail("There was an error while creating specified output: \n" + video -> get_output_path() + "\n\nPlease make sure you have sufficient rights to write in this folder or set a different output. \n\n Encoding was cancelled. ");
+            dialog -> set_buttons({"Okay"});
+            dialog -> set_cancel_button(0);
+            dialog -> set_modal();
+            
+            // Po uzavření dialogového okna se objeví výsledky
+            dialog -> choose(*this, 
+            [this](Glib::RefPtr<Gio::AsyncResult>&) 
+            {
+                show_results_dialog();
+            });
+            
+            return;
+        }
 
         EncodingResult result;
         result.video_path = video -> get_output_path();
@@ -171,6 +199,7 @@ void MainWindow::encoding_worker()
 
     is_encoding.store(false);
     completion_dispatcher.emit();
+    show_results_dialog();
 }
 
 void MainWindow::on_progress_update()
@@ -189,8 +218,6 @@ void MainWindow::on_encoding_complete()
     {
         encoding_thread.join();
     }
-
-    show_results_dialog();
 }
 
 void MainWindow::show_results_dialog()

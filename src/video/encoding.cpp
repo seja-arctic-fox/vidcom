@@ -3,6 +3,7 @@
 #include <csignal>
 #include <cstdio>
 #include <cstdlib>
+#include <filesystem>
 #include <iostream>
 #include <stdexcept>
 #include <format>
@@ -42,12 +43,20 @@ int Video::encode(fs::path output_path, string command, ProgressCallback progres
     }
 
     // vytvořit výstupní složku
-    if (fs::create_directory(output_path.parent_path()))
+    try
     {
-        cout << GREEN << "Creating the output folder: " << output_path.parent_path() << RESET << endl;
-    } else 
+        if (fs::create_directory(output_path.parent_path()))
+        {
+            cout << GREEN << "Creating the output folder: " << output_path.parent_path() << RESET << endl;
+        } 
+        else 
+        {
+            cerr << YELLOW << "WARNING: Output folder " << output_path.parent_path() << " already exists! Some files might be overwritten. " << RESET << endl;
+        }
+    }
+    catch (std::filesystem::filesystem_error &e)
     {
-        cerr << YELLOW << "WARNING: Output folder " << output_path.parent_path() << " already exists! Some files might be overwritten. " << RESET << endl;
+        return -3;      // Znamená, že se nepodařilo složku vytvořit
     }
 
     // Spuštění příkazu
