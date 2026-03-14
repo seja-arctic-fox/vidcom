@@ -483,7 +483,13 @@ VideoSettings_VBox::VideoSettings_VBox()
 }
 
 VideoSettings_VBox::~VideoSettings_VBox()
-{}
+{
+    mode_desc.unparent();
+    codec_desc.unparent();
+    cut_desc.unparent();
+    output_desc.unparent();
+    parameters_desc.unparent();
+}
 
 void VideoSettings_VBox::switch_codec_page(Codec codec)
 {
