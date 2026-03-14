@@ -6,7 +6,6 @@
 #include "gtkmm/dragsource.h"
 #include "gtkmm/droptarget.h"
 #include "gtkmm/enums.h"
-#include "gtkmm/filechooser.h"
 #include "gtkmm/listbox.h"
 #include "gtkmm/listboxrow.h"
 #include "gtkmm/widgetpaintable.h"
@@ -15,7 +14,6 @@
 #include "sigc++/functors/mem_fun.h"
 #include "src/video/video.h"
 #include <filesystem>
-#include <iostream>
 #include <string>
 
 // Pomocná funkce pro formátování času

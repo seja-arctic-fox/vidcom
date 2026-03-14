@@ -15,7 +15,6 @@
 #include "sigc++/adaptors/bind.h"
 #include "sigc++/functors/mem_fun.h"
 #include "src/video/video.h"
-#include <cmath>
 #include <filesystem>
 #include <iostream>
 #include <vector>

@@ -7,7 +7,7 @@ RunnerPanel::RunnerPanel()
 :   isEncoding(false),
     EncodingProgressBar(),
     EncodingButton(),
-    WindowTitle("VidCom GUI 0.8")
+    WindowTitle("VidCom GUI 0.81")
 {
     // Vlastnosti panelu
     set_orientation(Gtk::Orientation::HORIZONTAL);

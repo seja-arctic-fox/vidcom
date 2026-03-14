@@ -1,5 +1,4 @@
 #include "gui.h"
-#include "gtkmm/appchooser.h"
 #include "gtkmm/enums.h"
 #include "gtkmm/headerbar.h"
 #include "gtkmm/object.h"
@@ -14,7 +13,7 @@ MainWindow::MainWindow()
     options_page(),
     is_encoding(false)
 {
-    set_title("VidCom 0.8 GUI");
+    set_title("VidCom 0.81 GUI");
     set_default_size(960, 540);
 
     // Horní lišta
