@@ -1,4 +1,5 @@
 #include "gui.h"
+#include "gtkmm/appchooser.h"
 #include "gtkmm/enums.h"
 #include "gtkmm/headerbar.h"
 #include "gtkmm/object.h"
@@ -223,7 +224,13 @@ void MainWindow::on_encoding_complete()
 void MainWindow::show_results_dialog()
 {
     std::lock_guard<std::mutex> lock(encoding_mutex);
+    
+    // Oznámení
+    auto app = Gtk::Application::get_default();
+    auto notification_finish = Gio::Notification::create("Encoding finished");
+    notification_finish -> set_body("Queued videos have been compressed. Click here to see results");
+    app -> send_notification(notification_finish);
 
     auto result_dialog = Gtk::make_managed<ResultsDialog>(*this, encoding_results);
-    result_dialog -> present();
+    result_dialog -> set_visible();
 }
