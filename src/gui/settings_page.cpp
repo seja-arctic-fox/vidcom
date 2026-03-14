@@ -783,9 +783,16 @@ void VideoSettings_VBox::calculate_cut_limits(float duration, Cut cut_info)
     cut_stop_s.set_adjustment(lim_stop_s);
 }
     
+struct SafeReset
+{
+    bool &value;
+    SafeReset(bool &v) : value(v) { value = true; }
+    ~SafeReset() { value = false; }
+};
+
 void VideoSettings_VBox::load_options_into_GUI(Video * video)
 {
-    is_loading = true;
+    SafeReset safe_reset(is_loading);
     Codec codec = video -> get_codec();
 
     // Režim
@@ -844,7 +851,6 @@ void VideoSettings_VBox::load_options_into_GUI(Video * video)
     set_prefix_field.set_text(video -> get_prefix());
     output_caption.set_text("Video(s) will be saved to: \n" + video -> get_output_path());
 
-    is_loading = false;
     set_sensitive();
 }
 
