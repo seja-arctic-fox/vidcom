@@ -665,36 +665,26 @@ void VideoSettings_VBox::save_options(VideoElement * element)
         switch_codec_page(VP9);
     }
     
-    if (!batch_settings)
+    // Střih
+    if (!batch_settings && cut_switch.get_active())
     {
-        // Střih
-        if (cut_switch.get_active())
+        float start_secs = cut_start_s.get_value();
+        float stop_secs = cut_stop_s.get_value();
+        start_secs += cut_start_m.get_value() * 60;
+        start_secs += cut_start_h.get_value() * 60 * 60;
+        stop_secs += cut_stop_m.get_value() * 60;
+        stop_secs += cut_stop_h.get_value() * 60 * 60;
+        
+        if (( start_secs < stop_secs ) && ( stop_secs <= video -> get_video_info().duration ))
         {
             video -> enable_cut(true);
-            float duration = video -> get_video_info().duration; 
-    
-            float start_secs = cut_start_s.get_value();
-            float stop_secs = cut_stop_s.get_value();
-    
-            start_secs += cut_start_m.get_value() * 60;
-            start_secs += cut_start_h.get_value() * 60 * 60;
-            stop_secs += cut_stop_m.get_value() * 60;
-            stop_secs += cut_stop_h.get_value() * 60 * 60;
-    
-            if (start_secs >= stop_secs || start_secs >= duration || stop_secs > duration)
-            {
-                load_options_into_GUI(video);
-            }
-            else
-            {
-                video -> set_cut(start_secs, stop_secs);
-            }
+            video -> set_cut(start_secs, stop_secs);
+            calculate_cut_limits(video -> get_video_info().duration, video -> get_cut_info());
         }
-        else
-        {
-            video -> enable_cut(false);
-        }
+        else set_cut_values(video -> get_cut_info());
+        
     }
+    else video -> enable_cut(false);
     
     // Výstup a prefix
     video -> set_output_path(output_path);
@@ -725,6 +715,74 @@ void VideoSettings_VBox::update()
     }
 }
 
+void VideoSettings_VBox::set_cut_values(Cut cut_info)
+{
+    int start_s = (int) cut_info.startTime % 60;
+    int start_m = ( (int) cut_info.startTime / 60 ) % 60;
+    int start_h = (int) cut_info.startTime / 3600;
+    int stop_s = (int) cut_info.endTime % 60;
+    int stop_m = ( (int) cut_info.endTime / 60 ) % 60;
+    int stop_h = (int) cut_info.endTime / 3600;
+    
+    cut_start_h.set_value(start_h);
+    cut_start_m.set_value(start_m);
+    cut_start_s.set_value(start_s);
+    cut_stop_h.set_value(stop_h);
+    cut_stop_m.set_value(stop_m);
+    cut_stop_s.set_value(stop_s);
+}
+
+void VideoSettings_VBox::calculate_cut_limits(float duration, Cut cut_info)
+{
+    // Získat časy pro současné nastavení
+    int stop_s = (int) cut_info.endTime % 60;
+    int stop_m = ( (int) cut_info.endTime / 60 ) % 60;
+    int stop_h = (int) cut_info.endTime / 3600;
+    
+    int start_s = (int) cut_info.startTime % 60;
+    int start_m = ( (int) cut_info.startTime / 60 ) % 60;
+    int start_h = (int) cut_info.startTime / 3600;
+    
+    int duration_s = (int) duration % 60;
+    int duration_m = ( (int) duration / 60 ) % 60;
+    int duration_h = (int) duration / 3600;
+    
+    // Časové limity
+    int stop_max_h = duration_h;
+    int stop_max_m = (stop_h >= duration_h) ? duration_m : 59;
+    int stop_max_s = (stop_h >= duration_h && stop_m >= duration_m) ? duration_s : 59;
+    
+    int stop_min_h = start_h;
+    int stop_min_m = (stop_h <= start_h) ? start_m : 0;
+    int stop_min_s = (stop_h <= start_h && stop_m <= start_m) ? start_s : 0;
+    
+    int start_max_h = stop_h;
+    int start_max_m = (start_h >= stop_h) ? stop_m : 59;
+    int start_max_s = (start_h >= stop_h && start_m >= stop_m) ? stop_s - 1 : 59;
+    if (start_max_s < 0) start_max_s = 0;
+    
+    // Nastavení limitů v GUI
+    lim_start_h -> set_upper(start_max_h);
+    lim_start_m -> set_upper(start_max_m);
+    lim_start_s -> set_upper(start_max_s);
+    
+    lim_stop_h -> set_upper(stop_max_h);
+    lim_stop_m -> set_upper(stop_max_m);
+    lim_stop_s -> set_upper(stop_max_s);
+    
+    lim_stop_h -> set_lower(stop_min_h);
+    lim_stop_m -> set_lower(stop_min_m);
+    lim_stop_s -> set_lower(stop_min_s);
+    
+    cut_start_h.set_adjustment(lim_start_h);
+    cut_start_m.set_adjustment(lim_start_m);
+    cut_start_s.set_adjustment(lim_start_s);
+    
+    cut_stop_h.set_adjustment(lim_stop_h);
+    cut_stop_m.set_adjustment(lim_stop_m);
+    cut_stop_s.set_adjustment(lim_stop_s);
+}
+    
 void VideoSettings_VBox::load_options_into_GUI(Video * video)
 {
     is_loading = true;
@@ -769,73 +827,18 @@ void VideoSettings_VBox::load_options_into_GUI(Video * video)
         switch_codec_page(VP9);
     }
 
-    int secs = video -> get_video_info().duration;
-    int mins = secs / 60;
-    int hrs = mins / 60;
-    mins = mins % 60;
-    secs = secs % 60;
+    // Střih
+    calculate_cut_limits(video -> get_video_info().duration, video -> get_cut_info());
+    set_cut_values(video -> get_cut_info());
     
-    if (!batch_settings)
-    {
-        // Střih
-        if (video -> is_cutting_enabled())
-        {
-            int start_secs = video -> get_cut_info().startTime;
-            int start_mins = start_secs / 60;
-            int start_hrs = start_mins / 60;
-            start_mins = start_mins % 60;
-            start_secs = start_secs % 60;
-    
-            int stop_secs = video -> get_cut_info().endTime;
-            int stop_mins = stop_secs / 60;
-            int stop_hrs = stop_mins / 60;
-            stop_mins = stop_mins % 60;
-            stop_secs = stop_secs % 60;
-    
-            lim_start_h -> configure(start_hrs, 0, hrs, 1, 10, 0);
-            lim_start_m -> configure(start_mins, 0, mins, 1, 10, 0);
-            lim_start_s -> configure(start_secs, 0, secs, 1, 10, 0);
-            lim_stop_h -> configure(stop_hrs, 0, hrs, 1, 10, 0);
-            lim_stop_m -> configure(stop_mins, 0, mins, 1, 10, 0);
-            lim_stop_s -> configure(stop_secs, 0, secs, 1, 10, 0);
-    
-            cut_start_h.set_adjustment(lim_start_h);
-            cut_start_m.set_adjustment(lim_start_m);
-            cut_start_s.set_adjustment(lim_start_s);
-            cut_stop_h.set_adjustment(lim_stop_h);
-            cut_stop_m.set_adjustment(lim_stop_m);
-            cut_stop_s.set_adjustment(lim_stop_s);
-    
-            cut_switch.set_active();
-            cut_start_box.set_sensitive();
-            cut_stop_box.set_sensitive();
-        }
-        else
-        {
-            lim_start_h -> configure(0, 0, hrs, 1, 10, 0);
-            lim_start_m -> configure(0, 0, mins, 1, 10, 0);
-            lim_start_s -> configure(0, 0, secs, 1, 10, 0);
-            lim_stop_h -> configure(hrs, 0, hrs, 1, 10, 0);
-            lim_stop_m -> configure(mins, 0, mins, 1, 10, 0);
-            lim_stop_s -> configure(secs, 0, secs, 1, 10, 0);
-    
-            cut_start_h.set_adjustment(lim_start_h);
-            cut_start_m.set_adjustment(lim_start_m);
-            cut_start_s.set_adjustment(lim_start_s);
-            cut_stop_h.set_adjustment(lim_stop_h);
-            cut_stop_m.set_adjustment(lim_stop_m);
-            cut_stop_s.set_adjustment(lim_stop_s);
-    
-            cut_switch.set_active(false);
-            cut_start_box.set_sensitive(false);
-            cut_stop_box.set_sensitive(false);
-        }
+    cut_switch.set_active(video -> is_cutting_enabled());
+    cut_start_box.set_sensitive(video -> is_cutting_enabled());
+    cut_stop_box.set_sensitive(video -> is_cutting_enabled());
 
-        // Rozlišení a fps
-        res_field.set_value(video -> get_downscale_factor());
-        fps_field.set_range(0, video -> get_video_info().framerate);
-        fps_field.set_value(video -> get_output_framerate());
-    }
+    // Rozlišení a fps
+    res_field.set_value(video -> get_downscale_factor());
+    fps_field.set_range(0, video -> get_video_info().framerate);
+    fps_field.set_value(video -> get_output_framerate());
 
     // Výstup a prefix
     set_prefix_field.set_text(video -> get_prefix());

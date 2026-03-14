@@ -370,6 +370,8 @@ class VideoSettings_VBox : public Gtk::ScrolledWindow
         void set_output_path();
         void on_folder_selected(Glib::RefPtr<Gio::AsyncResult> &result, Glib::RefPtr<Gtk::FileDialog> folder_picker);
         void switch_codec_page(Codec codec);
+        void calculate_cut_limits(float duration, Cut cut_info);
+        void set_cut_values(Cut cut_info);
     };
 
 
