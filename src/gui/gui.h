@@ -45,6 +45,16 @@
 #ifndef GUI
 #define GUI
 
+// Bezpečný reset stavu načítání
+// Bez tohoto by mohla nastat výjimka a pak už by všechna nastavení nešla změnit, protože by to blokoval is_loading
+// SafeReset po skončení funkce zavolá vždy destruktor, který to nastaví zpět, i když se ta dotyčná metoda nedokončí
+struct SafeReset
+{
+    bool &value;
+    SafeReset(bool &v) : value(v) { value = true; }
+    ~SafeReset() { value = false; }
+};
+
 // Stav kódování
 struct EncodingProgress
 {

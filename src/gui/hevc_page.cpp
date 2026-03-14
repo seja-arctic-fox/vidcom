@@ -242,7 +242,7 @@ void HEVC_Parameters::update()
 
 void HEVC_Parameters::load()
 {
-    is_loading = true;
+    SafeReset safe_reset(is_loading);
 
     HEVC_options video_options = video_element -> video.HEVC_options;
 
@@ -252,6 +252,4 @@ void HEVC_Parameters::load()
     pt_w.set_active(video_options.psychovisual_tuning);
     aq_w.set_active(video_options.adaptive_quantisation);
     ab_w.set_active(video_options.adaptive_b_frames);
-
-    is_loading = false;
 }

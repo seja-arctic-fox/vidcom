@@ -272,13 +272,14 @@ void AV1_Parameters::update()
 
 void AV1_Parameters::load()
 {
-    is_loading = true;
+    SafeReset safe_reset(is_loading);
 
     AV1_options video_options = video_element -> video.AV1_options;
 
     preset_w.set_value(video_options.preset);
     crf_w.set_value(video_options.crf);
     fgs_w.set_active(video_options.film_grain_synthesis);
+    fgl_w.set_value(video_options.film_grain_level);
 
     if (video_options.film_grain_synthesis)
     {
@@ -292,6 +293,4 @@ void AV1_Parameters::load()
     bd_w.set_active(video_options.better_details);
     pt_w.set_active(video_options.psychovisual_tuning);
     vb_w.set_active(video_options.variance_boost);
-
-    is_loading = false;
 }

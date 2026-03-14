@@ -785,13 +785,6 @@ void VideoSettings_VBox::calculate_cut_limits(float duration, Cut cut_info)
     cut_stop_m.set_adjustment(lim_stop_m);
     cut_stop_s.set_adjustment(lim_stop_s);
 }
-    
-struct SafeReset
-{
-    bool &value;
-    SafeReset(bool &v) : value(v) { value = true; }
-    ~SafeReset() { value = false; }
-};
 
 void VideoSettings_VBox::load_options_into_GUI(Video * video)
 {
