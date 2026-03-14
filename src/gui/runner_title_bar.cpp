@@ -92,7 +92,10 @@ void RunnerPanel::on_start_stop_clicked()
 
 void RunnerPanel::update_encoding_progress(const EncodingProgress& progress)
 {
-    EncodingProgressBar.set_fraction(progress.progress_percent / 100.0);
+    double percentage = progress.progress_percent / 100.0;
+    if (percentage > 1) percentage = 1;
+    
+    EncodingProgressBar.set_fraction(percentage);
     EncodingProgressBar.set_text(progress.video_name + " ( " + to_string(progress.progress_percent) + "% )");
     EncodingTextStatus.set_markup("<b>Encoding... " + to_string(progress.current_index) + "/" + to_string(progress.total_count) + "</b>");
 }

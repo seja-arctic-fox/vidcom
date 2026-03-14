@@ -41,6 +41,7 @@ void CLI::print_encoding_progress(char *stdout_buffer, float duration)
     {
         cout << "[";
         progress_time = ((stof(value_string) / 1000000) / duration) *  100;     // Spočítáme procenta
+        if (progress_time > 100) progress_time = 100;
 
         for (int i = 0; i < 100; i++)
         {
