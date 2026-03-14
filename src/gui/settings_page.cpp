@@ -620,8 +620,7 @@ void VideoSettings_VBox::on_select_row(Gtk::ListBoxRow * selected_row)
                 cut_stop_box.set_sensitive();
             }
 
-            cut_listbox.set_selection_mode(Gtk::SelectionMode::NONE);
-            cut_listbox.set_selection_mode(Gtk::SelectionMode::SINGLE);
+            cut_listbox.unselect_all();
             cut_listbox.select_row(*cut_listbox.get_row_at_index(2));
         }
     }
