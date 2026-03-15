@@ -1,20 +1,17 @@
-#include "adwaita.h"
 #include "gio/gio.h"
-#include "giomm/file.h"
 #include "giomm/liststore.h"
 #include "glib-object.h"
 #include "glibmm/error.h"
+#include "glibmm/main.h"
 #include "glibmm/refptr.h"
 #include "glibmm/ustring.h"
 #include "glibmm/value.h"
-#include "gtkmm/accessible.h"
 #include "gtkmm/alertdialog.h"
 #include "gtkmm/droptarget.h"
 #include "gtkmm/enums.h"
 #include "gtkmm/error.h"
 #include "gtkmm/filedialog.h"
 #include "gtkmm/filefilter.h"
-#include "gtkmm/messagedialog.h"
 #include "gtkmm/object.h"
 #include "gtkmm/scrolledwindow.h"
 #include "gtkmm/widget.h"
@@ -141,6 +138,12 @@ void QueueFrame::file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& re
     try
     {
         auto files = file_picker -> open_multiple_finish(result);
+        
+        // Shared pointer pro kontrolu stavu ve voláních
+        // Stavová proměnná musí přežít několik pozdějích volání toho idle handleru
+        // po skončení této metody
+        auto state = std::make_shared<std::pair<std::vector<std::string>, size_t>>();
+        state -> second = 0;
 
         for (guint i = 0; i < files.size(); i++)
         {
@@ -152,10 +155,35 @@ void QueueFrame::file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& re
 
                 if (!path.empty())
                 {
-                    add_video(path);
+                    state -> first.push_back(path);
                 }
             }
         }
+        
+        if (state -> first.empty())
+        {
+            signal_loading_videos.emit(false);
+            return;
+        }
+        
+        signal_loading_videos_count.emit(0, (int) state -> first.size());
+        
+        Glib::signal_idle().connect([this, state]() -> bool
+        {
+            size_t& i = state -> second;
+            auto& paths = state -> first;
+            
+            if (i < paths.size())
+            {
+                signal_loading_videos_count.emit((int) i + 1, (int) paths.size());
+                add_video(paths[i]);
+                i++;
+                return true;
+            }
+            
+            signal_loading_videos.emit(false);
+            return false;
+        });
     }
     catch (const Gtk::DialogError& error)
     {
@@ -163,6 +191,8 @@ void QueueFrame::file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& re
         {
             cerr << YELLOW << "File picker cancelled by user. " << RESET << endl;
         }
+        
+        signal_loading_videos.emit(false);
     }
     catch (const Glib::Error& error)
     {
@@ -175,12 +205,14 @@ void QueueFrame::file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& re
         error_dialog -> set_cancel_button(0);
 
         error_dialog -> show(* dynamic_cast<Gtk::Window *>(get_root()));
+        signal_loading_videos.emit(false);
     }
 }
 
 
 void QueueFrame::on_import_video_clicked()
 {
+    signal_loading_videos.emit(true);
     auto file_picker = Gtk::FileDialog::create();
     file_picker -> set_title("Select video(s) to import");
     file_picker -> set_modal();
@@ -319,30 +351,63 @@ void QueueFrame::on_select_all_clicked()
 
 bool QueueFrame::on_drop(const Glib::ValueBase& value, double, double)
 {
-    // Seznam souborů funguje pro jakýkoliv počet souborů
-    // Získám seznam souborů z předané hodnoty
-    // Procházím seznam, z každého souboru vytáhnu cestu a přidám do fronty
+    // Původní implementaci jsem měl ve vnořených podmínkách
+    // To znemožňovalo nahlašování stavu, protože GTK blokovalo překreslování, 
+    // dokud se drop akce nedokončila. 
+    // Zde je to lépe rozdělené + na konec je idle handler, který to překreslí v mezičasech
+    
+    // Seznam souborů
+    if (!G_VALUE_HOLDS(value.gobj(), gdk_file_list_get_type())) return false;
+    
+    // Získat ukazatel na seznam souborů
+    GdkFileList* file_list = (GdkFileList*)g_value_get_boxed(value.gobj());
+    if (!file_list) return false;
 
-    if (G_VALUE_HOLDS(value.gobj(), gdk_file_list_get_type())) 
+    // Sestavit seznam cest napřed
+    std::vector<std::string> dropped_videos;
+    GSList* list = gdk_file_list_get_files(file_list);
+    for (GSList* l = list; l != nullptr; l = l->next)
     {
-        GdkFileList* file_list = (GdkFileList*)g_value_get_boxed(value.gobj());
-        if (file_list) 
+        char* path_c = g_file_get_path(G_FILE(l->data));
+        if (path_c)
         {
-            GSList* list = gdk_file_list_get_files(file_list);
-            
-            for (GSList* l = list; l != nullptr; l = l->next) 
-            {
-                GFile* file_ptr = G_FILE(l->data);
-                char* path_c = g_file_get_path(file_ptr);
-                if (path_c) 
-                {
-                    add_video(std::string(path_c));
-                    g_free(path_c);
-                }
-            }
-            return true;
+            dropped_videos.push_back(std::string(path_c));
+            g_free(path_c);
         }
     }
+    if (dropped_videos.empty()) return false;
+    
+    // Nahlášení stavu do runneru
+    signal_loading_videos.emit(true);
 
-    return false;
+    // Sdílený stav pro idle handler
+    // Je třeba, protože musí přežít několik pozdějších volání idle handleru
+    // po skončení této metody
+    auto state = std::make_shared<std::pair<std::vector<std::string>, size_t>>
+    (
+        std::move(dropped_videos), 0
+    );
+
+    // Musím použít idle handler, protože jinak mi to nešlo
+    // Akce puštění souboru totiž blokovala všechny signály, dokud se nedokončila
+    // Videa se zpracovávají po jednom. Když se vrátí true, idle handler se vykoná znovu
+    Glib::signal_idle().connect([this, state]() -> bool
+    {
+        size_t& i = state->second;
+        auto& paths = state->first;
+
+        if (i < paths.size())
+        {
+            signal_loading_videos_count.emit((int)i + 1, (int)paths.size());
+            add_video(paths[i]);
+            i++;
+            return true;
+        }
+
+        // Hotovo, už mě nevolej
+        signal_loading_videos.emit(false);
+        return false;
+    });
+
+    return true;
 }

@@ -1,0 +1,17 @@
+pkgbase = vidcom
+	pkgdesc = Archive and compress videos easily
+	pkgver = 0.81
+	pkgrel = 1
+	url = https://github.com/seja-arctic-fox/vidcom
+	arch = x86_64
+	license = GPL-3.0-only
+	makedepends = meson
+	makedepends = ninja
+	depends = gtkmm-4.0
+	depends = libadwaita
+	depends = jsoncpp
+	depends = ffmpeg
+	source = vidcom-0.81.tar.gz::https://github.com/seja-arctic-fox/vidcom/archive/refs/tags/0.81.tar.gz
+	sha256sums = 9a4f17208897d14d06c82339900ed2f34a980dd4e926f1838adffc686e044d71
+
+pkgname = vidcom

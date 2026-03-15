@@ -7,7 +7,7 @@ RunnerPanel::RunnerPanel()
 :   isEncoding(false),
     EncodingProgressBar(),
     EncodingButton(),
-    WindowTitle("VidCom GUI 0.8")
+    WindowTitle("VidCom GUI 0.81")
 {
     // Vlastnosti panelu
     set_orientation(Gtk::Orientation::HORIZONTAL);
@@ -55,6 +55,29 @@ RunnerPanel::~RunnerPanel()
 
 }
 
+void RunnerPanel::update_loading_progress(int video_index, int video_count)
+{
+    float i = video_index;
+    EncodingProgressBar.set_fraction(i / video_count);
+    EncodingProgressBar.set_text("Loading videos: " + to_string(video_index) + " / " + to_string(video_count));
+}
+
+void RunnerPanel::set_loading_state(bool is_loading)
+{
+    if (is_loading) 
+    { 
+        update_status("Loading", "warning"); 
+        EncodingIconStatus.set_from_icon_name("applications-system-symbolic");
+    }
+    else 
+    { 
+        update_status("Ready", "success"); 
+        EncodingIconStatus.set_from_icon_name("selection-mode-symbolic");
+        EncodingProgressBar.set_text("Nothing to do...");
+        EncodingProgressBar.set_fraction(0);
+    }
+}
+
 void RunnerPanel::on_start_stop_clicked()
 {
     if (!isEncoding)
@@ -67,10 +90,14 @@ void RunnerPanel::on_start_stop_clicked()
     }
 }
 
-void RunnerPanel::update_progress(const EncodingProgress& progress)
+void RunnerPanel::update_encoding_progress(const EncodingProgress& progress)
 {
-    EncodingProgressBar.set_fraction(progress.progress_percent / 100.0);
-    EncodingProgressBar.set_text(progress.video_name + " ( " + to_string(progress.progress_percent) + "% )");
+    double fraction = progress.progress_percent / 100.0;
+    if (fraction > 1) fraction = 1;
+    int percentage = fraction * 100;
+    
+    EncodingProgressBar.set_fraction(fraction);
+    EncodingProgressBar.set_text(progress.video_name + " ( " + to_string(percentage) + "% )");
     EncodingTextStatus.set_markup("<b>Encoding... " + to_string(progress.current_index) + "/" + to_string(progress.total_count) + "</b>");
 }
 

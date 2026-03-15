@@ -13,7 +13,7 @@ MainWindow::MainWindow()
     options_page(),
     is_encoding(false)
 {
-    set_title("VidCom 0.8 GUI");
+    set_title("VidCom 0.81 GUI");
     set_default_size(960, 540);
 
     // Horní lišta
@@ -36,9 +36,11 @@ MainWindow::MainWindow()
     video_queue.signal_all_videos_selected.connect(sigc::mem_fun(options_page, &VideoSettings_VBox::read_video_vector_options));
     video_queue.signal_nothing_selected.connect(sigc::mem_fun(options_page, &VideoSettings_VBox::no_video_selected));
 
-    // Signály pro začátek a zastavení kódování
+    // Signály pro začátek a zastavení kódování, načítání videí do fronty
     runner_panel.signal_start_encoding.connect(sigc::mem_fun(*this, &MainWindow::start_encoding));
     runner_panel.signal_stop_encoding.connect(sigc::mem_fun(*this, &MainWindow::stop_encoding));
+    video_queue.signal_loading_videos.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_loading_state));
+    video_queue.signal_loading_videos_count.connect(sigc::mem_fun(runner_panel, &RunnerPanel::update_loading_progress));
 
     // Komunikace mezi vlákny
     progress_dispatcher.connect(sigc::mem_fun(*this, &MainWindow::on_progress_update));
@@ -147,11 +149,38 @@ void MainWindow::encoding_worker()
             progress_dispatcher.emit();
         };
 
-        video->test_commands();
+        video -> test_commands();
         int exit_code = video -> encode("", "", progress_callback);
+        
+        if (exit_code == -3)
+        {
+            is_encoding.store(false);
+            completion_dispatcher.emit();
+            
+            EncodingResult result;
+            result.video_path = video -> get_output_path();
+            result.exit_status = exit_code;
+            result.was_cancelled = (exit_code == -2);
+            encoding_results.push_back(result);
+            
+            auto dialog = Gtk::AlertDialog::create();
+            dialog -> set_message("Cannot create output");
+            dialog -> set_detail("There was an error while creating specified output: \n" + video -> get_output_path() + "\n\nPlease make sure you have sufficient rights to write in this folder or set a different output. \n\n Encoding was cancelled. ");
+            dialog -> set_buttons({"Okay"});
+            dialog -> set_cancel_button(0);
+            dialog -> set_modal();
+            
+            // Po uzavření dialogového okna se objeví výsledky
+            dialog -> choose(*this, 
+            [this](Glib::RefPtr<Gio::AsyncResult>&) 
+            {
+                show_results_dialog();
+            });
+            
+            return;
+        }
 
         EncodingResult result;
-        result.video_name = video -> get_video_info().path.filename();
         result.video_path = video -> get_output_path();
         result.exit_status = exit_code;
         result.was_cancelled = (exit_code == -2);
@@ -170,12 +199,13 @@ void MainWindow::encoding_worker()
 
     is_encoding.store(false);
     completion_dispatcher.emit();
+    show_results_dialog();
 }
 
 void MainWindow::on_progress_update()
 {
     std::lock_guard<std::mutex> lock(encoding_mutex);
-    runner_panel.update_progress(current_progress);
+    runner_panel.update_encoding_progress(current_progress);
 }
 
 void MainWindow::on_encoding_complete()
@@ -188,14 +218,18 @@ void MainWindow::on_encoding_complete()
     {
         encoding_thread.join();
     }
-
-    show_results_dialog();
 }
 
 void MainWindow::show_results_dialog()
 {
     std::lock_guard<std::mutex> lock(encoding_mutex);
+    
+    // Oznámení
+    auto app = Gtk::Application::get_default();
+    auto notification_finish = Gio::Notification::create("Encoding finished");
+    notification_finish -> set_body("Queued videos have been compressed. Click here to see results");
+    app -> send_notification(notification_finish);
 
     auto result_dialog = Gtk::make_managed<ResultsDialog>(*this, encoding_results);
-    result_dialog -> present();
+    result_dialog -> set_visible();
 }

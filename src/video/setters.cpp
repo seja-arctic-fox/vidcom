@@ -32,7 +32,7 @@ void Video::set_output_path(string output_path)
     }
     outputPath = output_path;
     outputPath /= "encoded_videos/";
-    outputPath /= (prefix + "_" + inputVideo.path.filename().generic_string());
+    set_prefix(prefix);
 }
 
 void Video::set_bitrate_by_size(float target_size)
@@ -53,7 +53,11 @@ void Video::set_downscale_factor(float downscale_factor)
 void Video::set_prefix(string prefix)
 {
     this->prefix = prefix;
-    outputPath = outputPath.parent_path() / (prefix + "_" + inputVideo.path.filename().generic_string());
+    string separator;
+
+    if (this -> prefix == "") { separator = ""; } else { separator = "_"; }
+
+    outputPath = (outputPath.parent_path() / (prefix + separator + inputVideo.path.stem().generic_string() + ".mp4"));
 }
 
 void Video::set_output_framerate(unsigned int fps)

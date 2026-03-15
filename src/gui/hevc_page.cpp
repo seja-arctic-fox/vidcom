@@ -13,7 +13,7 @@ HEVC_Parameters::HEVC_Parameters(VideoElement * video_element)
     aq_text("Adaptive Quantisation"),
     pt_text("Psychovisual Tuning"),
     ab_text("Adaptive B-Frames"),
-    preset_caption("Lower value means better compression but longer encoding time. "),
+    preset_caption("Higher value means better compression but longer encoding time. "),
     crf_caption("Quality level. Lower values increase quality and bitrate. "),
     me_caption("Enables better motion estimation. Good for better compression, but increases encoding time. "),
     aq_caption("Enables adaptive quantisation. Better quality in frames with more details. "),
@@ -238,11 +238,13 @@ void HEVC_Parameters::update()
     video_options -> psychovisual_tuning = pt_w.get_active();
     video_options -> adaptive_quantisation = aq_w.get_active();
     video_options -> adaptive_b_frames = ab_w.get_active();
+    
+    if (on_updated) on_updated();
 }
 
 void HEVC_Parameters::load()
 {
-    is_loading = true;
+    SafeReset safe_reset(is_loading);
 
     HEVC_options video_options = video_element -> video.HEVC_options;
 
@@ -252,6 +254,4 @@ void HEVC_Parameters::load()
     pt_w.set_active(video_options.psychovisual_tuning);
     aq_w.set_active(video_options.adaptive_quantisation);
     ab_w.set_active(video_options.adaptive_b_frames);
-
-    is_loading = false;
 }

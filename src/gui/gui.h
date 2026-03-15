@@ -45,6 +45,16 @@
 #ifndef GUI
 #define GUI
 
+// Bezpečný reset stavu načítání
+// Bez tohoto by mohla nastat výjimka a pak už by všechna nastavení nešla změnit, protože by to blokoval is_loading
+// SafeReset po skončení funkce zavolá vždy destruktor, který to nastaví zpět, i když se ta dotyčná metoda nedokončí
+struct SafeReset
+{
+    bool &value;
+    SafeReset(bool &v) : value(v) { value = true; }
+    ~SafeReset() { value = false; }
+};
+
 // Stav kódování
 struct EncodingProgress
 {
@@ -58,8 +68,7 @@ struct EncodingProgress
 // Výsledek kódování
 struct EncodingResult
 {
-    std::string video_name;
-    std::string video_path;
+    fs::path video_path;
     int exit_status;
     bool was_cancelled;
 };
@@ -71,10 +80,12 @@ class RunnerPanel : public Gtk::Box
         ~RunnerPanel();
 
         // Aktualizace informací o postupu
-        void update_progress(const EncodingProgress& progress);
+        void update_encoding_progress(const EncodingProgress& progress);
         void set_encoding_state(bool is_encoding);
         void update_status(const std::string& status, const std::string& css_class = "");
         void block_encoding_button(bool block);
+        void set_loading_state(bool is_loading);
+        void update_loading_progress(int video_index, int video_count);
         
         // Signály
         sigc::signal<void()> signal_start_encoding;
@@ -147,6 +158,8 @@ class QueueFrame : public Gtk::Box
         sigc::signal<void(VideoElement *)> signal_video_selected;
         sigc::signal<void(std::vector<VideoElement*>)> signal_all_videos_selected;
         sigc::signal<void()> signal_nothing_selected;
+        sigc::signal<void(bool)> signal_loading_videos;
+        sigc::signal<void(int, int)> signal_loading_videos_count;
     
     protected:
         // Prostor pro prvky fronty a seznam prvků
@@ -210,6 +223,7 @@ class AV1_Parameters : public Gtk::ListBox
         void load();
         void update();
         void on_select_row(Gtk::ListBoxRow * row);
+        std::function<void()> on_updated;
 };
 
 // Stránka parametrů pro HEVC
@@ -235,6 +249,7 @@ class HEVC_Parameters : public Gtk::ListBox
         void load();
         void update();
         void on_select_row(Gtk::ListBoxRow * row);
+        std::function<void()> on_updated;
 };
 
 // Stránka parametrů pro VP9
@@ -260,6 +275,7 @@ class VP9_Parameters : public Gtk::ListBox
         void load();
         void update();
         bool on_move_slider(Gtk::ScrollType, double);
+        std::function<void()> on_updated;
 };
 
 // Stránka pro označené video ve frontě. Obsahuje základní nastavení pro každé video individuálně
@@ -367,6 +383,8 @@ class VideoSettings_VBox : public Gtk::ScrolledWindow
         void set_output_path();
         void on_folder_selected(Glib::RefPtr<Gio::AsyncResult> &result, Glib::RefPtr<Gtk::FileDialog> folder_picker);
         void switch_codec_page(Codec codec);
+        void calculate_cut_limits(float duration, Cut cut_info);
+        void set_cut_values(Cut cut_info);
     };
 
 

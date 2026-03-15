@@ -2,13 +2,18 @@
 <component type="desktop-application">
   <id>io.github.seja_arctic_fox.vidcom</id>
   <name>VidCom</name>
-  <summary>A simple utility for video archiving and compression</summary>
+  <summary>Archive and compress videos easily</summary>
   <developer id="io.github">
     <name>seja_arctic_fox</name>
   </developer>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-only</project_license>
-  
+
+<branding>
+  <color type="primary" scheme_preference="light">#fcd4ad</color>
+  <color type="primary" scheme_preference="dark">#806343</color>
+</branding>
+
   <description>
     <p>
     VidCom (short for Video Compression) is a simple utility for compressing video. It offers both GUI and CLI interface and utilises <code>ffmpeg</code> for the video encoding.
@@ -66,27 +71,27 @@
   </description>
 
   <screenshots>
-    <screenshot type="default">
+    <screenshot type="default" xml:lang="en">
       <caption>Main page with videos</caption>
       <image>https://raw.githubusercontent.com/seja-arctic-fox/vidcom/75848452a6f9e325522de132b261796b0960a35d/screenshots/main.png</image>
     </screenshot>
-    <screenshot>
+    <screenshot xml:lang="en">
       <caption>VidCom</caption>
       <image>https://raw.githubusercontent.com/seja-arctic-fox/vidcom/75848452a6f9e325522de132b261796b0960a35d/screenshots/gallery5.png</image>
     </screenshot>
-    <screenshot>
+    <screenshot xml:lang="en">
       <caption>Queue and compression options</caption>
       <image>https://raw.githubusercontent.com/seja-arctic-fox/vidcom/75848452a6f9e325522de132b261796b0960a35d/screenshots/gallery1.png</image>
     </screenshot>
-    <screenshot>
+    <screenshot xml:lang="en">
       <caption>Other settings</caption>
       <image>https://raw.githubusercontent.com/seja-arctic-fox/vidcom/75848452a6f9e325522de132b261796b0960a35d/screenshots/gallery2.png</image>
     </screenshot>
-    <screenshot>
+    <screenshot xml:lang="en">
       <caption>Encoding in progress</caption>
       <image>https://raw.githubusercontent.com/seja-arctic-fox/vidcom/75848452a6f9e325522de132b261796b0960a35d/screenshots/gallery3.png</image>
     </screenshot>
-    <screenshot>
+    <screenshot xml:lang="en">
       <caption>Results page</caption>
       <image>https://raw.githubusercontent.com/seja-arctic-fox/vidcom/75848452a6f9e325522de132b261796b0960a35d/screenshots/gallery4.png</image>
     </screenshot>
@@ -94,7 +99,7 @@
 
   <launchable type="desktop-id">io.github.seja_arctic_fox.vidcom.desktop</launchable>
 
-  <url type="homepage">https://github.com/seja-arctic-fox/vidcom/</url>
+  <url type="homepage">https://seja-arctic-fox.github.io/</url>
   <url type="bugtracker">https://github.com/seja-arctic-fox/vidcom/issues</url>
   <url type="vcs-browser">https://github.com/seja-arctic-fox/vidcom/</url>
 
@@ -103,9 +108,34 @@
     <control>pointing</control>
     <display_length compare="ge">768</display_length>
   </requires>
-  
+
   <content_rating type="oars-1.1" />
   <releases>
-    <release version="0.8" date="2026-02-27" />
+    <release version="0.81" date="2026-03-14">
+        <url type="details">https://github.com/seja-arctic-fox/vidcom/releases/tag/0.81</url>
+        <description>
+            <p>Bugfixes and improvements</p>
+            <ul>
+                <li>Fixed a bug where the "Open video" button on the results page wouldn't show a video if the original video wasn't `.mp4` </li>
+                <li>Fixed the HEVC preset parameter description </li>
+                <li>When importing videos, runner bar's status changes and shows progress on importing </li>
+                <li>The program now doesn't regenerate thumbnails if they already exist in cache</li>
+                <li>Fixed the progress bar in runner sometimes showing more than 100 % </li>
+                <li>Limits in Cut Feature should now be set properly </li>
+                <li>Safety mechanism agains a possible rare bug that stopped updating some options  </li>
+                <li>Fixed a crash when the program tried to create a folder inside a directory without write privileges. Now it shows a dialog and stops encoding </li>
+                <li>Added a notification when encoding is finished. Window should not grab focus when the results page is shown </li>
+                <li>Fixes for CLI: Ctrl+C should now work properly, missing newline after finishing encoding and report when folder failed to be created </li>
+                <li>Fixed warnings shown after closing the window; now the popovers are unlinked properly  </li>
+                <li>Now it is possible to cut all videos at once with Cut Feature. The end time is set according to the duration of the shortest clip. This can be useful for encoding for example only the first ten second of each video </li>
+                <li>Implemented batch settings of codec parameters </li>
+            </ul>
+        </description>
+    </release>
+    <release version="0.8" date="2026-02-27">
+        <description>
+            <p>Initial release</p>
+        </description> 
+    </release>
   </releases>
 </component>

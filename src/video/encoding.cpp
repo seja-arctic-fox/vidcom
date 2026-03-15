@@ -3,6 +3,7 @@
 #include <csignal>
 #include <cstdio>
 #include <cstdlib>
+#include <filesystem>
 #include <iostream>
 #include <stdexcept>
 #include <format>
@@ -21,6 +22,12 @@ void Video::sigint_handler(int)
 {
     if (current_instance)
     {
+        pid_t pid = current_instance -> encoding_pid;
+        if (pid != -1)
+        {
+            kill (-pid, SIGKILL);
+        }
+        
         current_instance -> cancel_encoding();
     }
 }
@@ -42,12 +49,21 @@ int Video::encode(fs::path output_path, string command, ProgressCallback progres
     }
 
     // vytvořit výstupní složku
-    if (fs::create_directory(output_path.parent_path()))
+    try
     {
-        cout << GREEN << "Creating the output folder: " << output_path.parent_path() << RESET << endl;
-    } else 
+        if (fs::create_directory(output_path.parent_path()))
+        {
+            cout << GREEN << "Creating the output folder: " << output_path.parent_path() << RESET << endl;
+        } 
+        else 
+        {
+            cerr << YELLOW << "WARNING: Output folder " << output_path.parent_path() << " already exists! Some files might be overwritten. " << RESET << endl;
+        }
+    }
+    catch (std::filesystem::filesystem_error &e)
     {
-        cerr << YELLOW << "WARNING: Output folder " << output_path.parent_path() << " already exists! Some files might be overwritten. " << RESET << endl;
+        cerr << RED << "ERROR: Cannot write to specified output location! Exiting. " << RESET << endl;
+        return -3;      // Znamená, že se nepodařilo složku vytvořit
     }
 
     // Spuštění příkazu
@@ -170,12 +186,23 @@ int Video::encode(fs::path output_path, string command, ProgressCallback progres
         }
     }
 
+    cout << endl;
     fclose(encoding_pipe);
 
     int child_status = 0;
     waitpid(encoding_pid, &child_status, 0);
-    int exit_status = WIFEXITED(child_status) ? WEXITSTATUS(child_status) : -1;
     encoding_pid = -1;
+    
+    if (cancelling_encoding.load())
+    {
+        sigaction(SIGINT, &old_sa, nullptr);
+        current_instance = nullptr;
+        if (termios_saved)
+            tcsetattr(STDIN_FILENO, TCSANOW, &original_termios);
+        return -2;
+    }
+    
+    int exit_status = WIFEXITED(child_status) ? WEXITSTATUS(child_status) : -1;
 
     // Obnovit přechozí SIGINT akci
     sigaction(SIGINT, &old_sa, nullptr);
@@ -235,11 +262,9 @@ string Video::make_options()
 {
     string command = "";        // Konečný příkaz
 
-    string command_extention = ".mp4'";   // Přípona
-
     string command_prefix = "-v 0 -y -progress pipe:1 -stats_period 0.1 ";                                                              // Základní nastavení ffmpegu
     string command_input = "-i '" + inputVideo.path.generic_string() + "' ";                                                            // Vstupní soubor
-    string command_output = "'" + outputPath.parent_path().generic_string() + "/" + outputPath.stem().generic_string() + command_extention;   // Výstupní soubor                                                                                                              // Nastavení použití NVENC
+    string command_output = "'" + outputPath.generic_string() + "'";   // Výstupní soubor                                                                                                              // Nastavení použití NVENC
     string command_rate = "";                                                                                                                // Nastavení bitratu a velikosti při kompresi
     string command_codec;                                                                                                               // Nastavení použitého kodeku
     

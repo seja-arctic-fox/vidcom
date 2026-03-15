@@ -60,7 +60,7 @@ void ResultsDialog::load_results()
         auto row = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL);
         row -> set_margin(5);
 
-        auto video_name = Gtk::make_managed<Gtk::Label>(result.video_name);
+        auto video_name = Gtk::make_managed<Gtk::Label>(result.video_path.stem().generic_string());
         video_name -> add_css_class("heading");
         video_name -> set_ellipsize(Pango::EllipsizeMode::MIDDLE);
         video_name -> set_margin_start(10);
@@ -88,6 +88,14 @@ void ResultsDialog::load_results()
 
             status_icon -> set_from_icon_name("dialog-warning-symbolic");
             status_text -> set_markup("<b>Cancelled</b>");
+        }
+        else if (result.exit_status == -3)
+        {
+            status_icon -> add_css_class("error");
+            status_text -> add_css_class("error");
+
+            status_icon -> set_from_icon_name("process-stop-symbolic");
+            status_text -> set_markup("<b>Incorrect output path</b>");
         }
         else
         {
@@ -128,6 +136,8 @@ void ResultsDialog::load_results()
         output_folder_button -> add_css_class("pill");
         output_folder_button -> set_margin_start(10);
         output_folder_button -> set_margin_end(10);
+        
+        if (result.exit_status == -3) output_folder_button -> set_sensitive(false);
 
         output_folder_button -> signal_clicked().connect(([result]() 
             {

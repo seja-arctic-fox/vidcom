@@ -193,11 +193,13 @@ void VP9_Parameters::update()
     video_options -> noise_sensitivity = ns_w.get_value();
     video_options -> quality = q_w.get_value();
     video_options -> tune_content = t_w.get_value();
+    
+    if (on_updated) on_updated();
 }
 
 void VP9_Parameters::load()
 {
-    is_loading = true;
+    SafeReset safe_reset(is_loading);
 
     VP9_options video_options = video_element -> video.VP9_options;
 
@@ -207,6 +209,4 @@ void VP9_Parameters::load()
     ns_w.set_value(video_options.noise_sensitivity);
     q_w.set_value(video_options.quality);
     t_w.set_value(video_options.tune_content);
-
-    is_loading = false;
 }
