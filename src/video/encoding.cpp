@@ -299,7 +299,10 @@ string Video::make_options()
     // Nastavení střihu
     if (EnableCut)
     {
-        command_rate += "-ss " + format("{}", cut.startTime) + " -to " + format("{}", cut.endTime) + " ";
+        float video_duration = cut.endTime - cut.startTime;
+        
+        command_params += "-t " + format("{}", video_duration) + " ";
+        command_input = "-ss " + format("{}", cut.startTime) + " " + command_input;
     }
     
     if (eCodec == AV1)
