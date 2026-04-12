@@ -110,7 +110,7 @@ I will update the lists below from time to time;
 - [ ] About window/section
 - [ ] Add an ability to change default configuration/settings. save the configs in a file
 - [ ] Change the current paned window split into the typical Adwaita side panel for queue and the main page
-- [ ] "No video selected" page for the settings page
+- [ ] "No video selected" placeholder for the settings page
 - [ ] Copy subtitles automatically when they are present in the original video
 - [ ] Be able to select multiple videos manually, not be limited to just selecting single or all the videos (when holding Shift or other key)
 - [ ] Make the runner (in the header bar) slimmer and simpler
@@ -118,6 +118,10 @@ I will update the lists below from time to time;
 - [ ] Highlight the currently encoding video in the queue
 - [ ] Copy settings from one video to another with right click/shortcut/button
 - [ ] Keyboard shortcuts
+- [ ] "Open With" function/binding for VidCom
+- [ ] Replace popups with visible messages inside window and/or notification
+- [ ] Different behavior for cases when the output videos already exist - show conflicts
+- [ ] Better TAB behavior + accelerators
 
 ### Known Issues
 - [ ] Cut feature - change spinbuttons for something more manageable, specifically for time setting + make it less rigid
