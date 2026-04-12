@@ -195,9 +195,7 @@ AV1_Parameters::~AV1_Parameters()
 
 void AV1_Parameters::on_select_row(Gtk::ListBoxRow * row)
 {
-    set_selection_mode(Gtk::SelectionMode::NONE);
-    select_row(*get_row_at_index(0));
-    set_selection_mode(Gtk::SelectionMode::SINGLE);
+    unselect_all();
 
     if (row == get_row_at_index(2))
     {
