@@ -294,6 +294,9 @@ string Video::make_options()
             command_rate += "-r " + to_string(outputFPS) + " ";
         }
     }
+    
+    // Titulky
+    if (!inputVideo.use_matroska) { command_rate += "-c:s mov_text "; }
 
     // Nastavení střihu
     if (EnableCut)
