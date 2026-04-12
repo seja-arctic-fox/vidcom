@@ -272,10 +272,11 @@ void VideoElement::update_labels()
 
     if (video.is_compress_enabled())
     {
-        string target_size = to_string(video.get_target_size());
+        std::ostringstream str;
+        str << std::fixed << std::setprecision(1) << video.get_target_size();
 
         mode_text_string += "COMPRESS to size "
-                         + target_size.erase(target_size.find(",") + 2, 20)
+                         + str.str()
                          + " MB with ";
     } 
     else
