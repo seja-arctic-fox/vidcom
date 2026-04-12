@@ -36,8 +36,13 @@ void Video::set_output_path(string output_path)
 
 void Video::set_bitrate_by_size(float target_size)
 {
+    float video_duration;
+    
+    if (EnableCut) { video_duration = cut.endTime - cut.startTime; }
+    else { video_duration = inputVideo.duration; }
+    
     targetSize = target_size;
-    maxBitrate = (target_size / inputVideo.duration) * 8;
+    maxBitrate = (target_size / video_duration) * 8;
     bitrate = maxBitrate * 0.75;
 }
 
