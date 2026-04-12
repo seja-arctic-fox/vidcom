@@ -265,19 +265,19 @@ string Video::make_options()
     string command_prefix = "-v 0 -y -progress pipe:1 -stats_period 0.1 ";                                                              // Základní nastavení ffmpegu
     string command_input = "-i '" + inputVideo.path.generic_string() + "' ";                                                            // Vstupní soubor
     string command_output = "'" + outputPath.generic_string() + "'";   // Výstupní soubor                                                                                                              // Nastavení použití NVENC
-    string command_rate = "";                                                                                                                // Nastavení bitratu a velikosti při kompresi
+    string command_params = "";                                                                                                                // Nastavení bitratu a velikosti při kompresi
     string command_codec;                                                                                                               // Nastavení použitého kodeku
     
 
     // Nastavení limitu bitratu, menšího rozlišení a snímkové frekvence v případě komprese
     if (Compress)
     {
-        command_rate = "-fs " + format("{}", targetSize) + "M -b:v " + format("{}", bitrate) + "M ";
+        command_params = "-fs " + format("{}", targetSize) + "M -b:v " + format("{}", bitrate) + "M ";
 
         // Pro použití v tomto programu SVT_AV1 nepřijímá nastavení maximálního bitratu
         if (eCodec != AV1)
         {
-            command_rate += "-maxrate " + format("{}", maxBitrate) + "M ";
+            command_params += "-maxrate " + format("{}", maxBitrate) + "M ";
         }
 
         // Zmenšování rozlišení
@@ -286,13 +286,13 @@ string Video::make_options()
             int new_x = inputVideo.resolution.width / downscaleFactor;
             int new_y = inputVideo.resolution.height / downscaleFactor;
 
-            command_rate += "-s " + to_string(new_x) + "x" + to_string(new_y) + " ";
+            command_params += "-s " + to_string(new_x) + "x" + to_string(new_y) + " ";
         }
 
         // Snížení fps
         if (outputFPS != inputVideo.framerate)
         {
-            command_rate += "-r " + to_string(outputFPS) + " ";
+            command_params += "-r " + to_string(outputFPS) + " ";
         }
     }
 
@@ -321,12 +321,12 @@ string Video::make_options()
 
     if (TwoPass && eCodec != AV1)
     {
-        command =   "ffmpeg " + command_prefix + command_input + command_rate + command_codec + "-pass 1 -an -f null /dev/null; "
-                    +"ffmpeg " + command_prefix + command_input + command_rate + command_codec + "-pass 2 " + command_output + " 2>&1";
+        command =   "ffmpeg " + command_prefix + command_input + command_params + command_codec + "-pass 1 -an -f null /dev/null; "
+                    +"ffmpeg " + command_prefix + command_input + command_params + command_codec + "-pass 2 " + command_output + " 2>&1";
     }
     else
     {
-        command = "ffmpeg " + command_prefix + command_input + command_rate + command_codec + command_output + " 2>&1";
+        command = "ffmpeg " + command_prefix + command_input + command_params + command_codec + command_output + " 2>&1";
     }
     return command;
 }
