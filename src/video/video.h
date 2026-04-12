@@ -69,6 +69,8 @@ struct VideoInfo // informace u vstupním videu
         Resolution resolution;  // rozlišení v pixelech
         unsigned int framerate; // snímková frekvence
         fs::path path;          // cesta k vstupnímu souboru
+        bool use_matroska = false;              // Výchozí kontejner je MP4, v určitých případech bude však lepší MKV
+        bool multiple_video_streams = false;    // true, pokud je ve videu více video streamů
     };
 
 struct Cut // informace o střihu

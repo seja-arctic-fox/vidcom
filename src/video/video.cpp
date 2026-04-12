@@ -60,6 +60,7 @@ void Video::get_video_info_from_json(Json::Value data)
 
     Json::Value video_stream;
     bool video_stream_found = false;
+    int num_video_streams = 0;
 
     // Najdu první video proud v seznamu
     for (int i = 0; i < N; i++)
@@ -67,9 +68,13 @@ void Video::get_video_info_from_json(Json::Value data)
         Json::Value stream_data = data["streams"][i];
         if (stream_data["codec_type"] == "video")
         {
-            video_stream = stream_data;
-            video_stream_found = true;
-            break;
+            if (!video_stream_found)
+            {
+                video_stream = stream_data;
+                video_stream_found = true;
+            }
+            
+            num_video_streams++;
         }
     }
 
@@ -86,6 +91,13 @@ void Video::get_video_info_from_json(Json::Value data)
     inputVideo.resolution.width = get_int_from_json(video_stream, "width");
     inputVideo.resolution.height = get_int_from_json(video_stream, "height");
     validate_video_info();
+    
+    if (num_video_streams > 1) 
+    {
+        inputVideo.use_matroska = true; 
+        inputVideo.multiple_video_streams = true; 
+        cout << YELLOW << "WARNING: Multiple video streams detected!" << RESET << endl;
+    }
 
     return;
 }
