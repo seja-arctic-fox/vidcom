@@ -264,10 +264,9 @@ string Video::make_options()
 
     string command_prefix = "-v 0 -y -progress pipe:1 -stats_period 0.1 ";                                                              // Základní nastavení ffmpegu
     string command_input = "-i '" + inputVideo.path.generic_string() + "' -map 0 ";                                                            // Vstupní soubor
-    string command_output = "-c:s mov_text '" + outputPath.generic_string() + "'";   // Výstupní soubor                                                                                                              // Nastavení použití NVENC
+    string command_output = "'" + outputPath.generic_string() + "'";   // Výstupní soubor                                                                                                              // Nastavení použití NVENC
     string command_rate = "";                                                                                                                // Nastavení bitratu a velikosti při kompresi
     string command_codec;                                                                                                               // Nastavení použitého kodeku
-    
 
     // Nastavení limitu bitratu, menšího rozlišení a snímkové frekvence v případě komprese
     if (Compress)

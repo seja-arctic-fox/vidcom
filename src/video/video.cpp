@@ -76,6 +76,17 @@ void Video::get_video_info_from_json(Json::Value data)
             
             num_video_streams++;
         }
+        
+        if (stream_data["codec_type"] == "subtitle")
+        {
+            auto subtitle_codec = stream_data["codec_name"];
+            bool subtitles_compatible = subtitle_codec == "subrip" ||
+                                        subtitle_codec == "webvtt" ||
+                                        subtitle_codec == "text"   ||
+                                        subtitle_codec == "mov_text";
+            
+            if (!subtitles_compatible) { inputVideo.use_matroska = true; }
+        }
     }
 
     // Končíme, pokud nebyl nalezen žádný video proud
