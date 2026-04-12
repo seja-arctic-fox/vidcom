@@ -343,7 +343,7 @@ string Video::encode_AV1()
     } 
     else {
         command_codec += "-crf " + to_string(AV1_options.crf) + " ";
-        command_codec += "-c:a copy ";
+        command_codec += "-c:a aac -q:a 1 ";
     }
 
     // Nastavit preset, na který se bude kódovat a začít parametry kodeku
@@ -409,7 +409,7 @@ string Video::encode_HEVC()
     } 
     else {
         command_codec += "-crf " + to_string(HEVC_options.crf) + " ";
-        command_codec += "-c:a copy ";
+        command_codec += "-c:a aac -q:a 1 ";
     }
 
     // Nastavit preset, na který se bude kódovat a začít parametry kodeku
@@ -471,7 +471,7 @@ string Video::encode_VP9()
     } 
     else {
         command_codec += "-crf " + to_string(VP9_options.crf) + " ";
-        command_codec += "-c:a copy ";
+        command_codec += "-c:a aac -q:a 1 ";
     }
 
     // Nastavit preset, na který se bude kódovat a parametry kodeku
