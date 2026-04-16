@@ -28,7 +28,8 @@ gui = [
   './src/gui/hevc_page.cpp',
   './src/gui/vp9_page.cpp',
   './src/gui/results_dialog.cpp',
-  './src/gui/time_widgets.cpp'
+  './src/gui/time_setter.cpp',
+  './src/gui/cut_widget.cpp'
 ]
 
 video = [

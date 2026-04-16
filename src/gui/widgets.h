@@ -1,5 +1,7 @@
 #include "glibmm/refptr.h"
 #include "gtkmm/box.h"
+#include "gtkmm/flowbox.h"
+#include "gtkmm/separator.h"
 #include "gtkmm/spinbutton.h"
 #include "gtkmm/label.h"
 #include "gtkmm/adjustment.h"
@@ -32,4 +34,17 @@ class TimeSetter : public Gtk::Box
         int compute_seconds(std::array<int, 3> time);
         void update_adjustments();
         void resolve_overflow(Gtk::SpinButton * widget);
+};
+
+class CutWidget : public Gtk::FlowBox
+{
+    public:
+        CutWidget();
+        ~CutWidget();
+    
+    protected:
+        Gtk::Box box_start, box_end;
+        Gtk::Separator separator;
+        Gtk::Label start_label, end_label;
+        TimeSetter start_time, end_time;
 };
