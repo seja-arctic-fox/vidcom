@@ -1,11 +1,33 @@
 #include "glibmm/refptr.h"
 #include "gtkmm/box.h"
+#include "gtkmm/cssprovider.h"
 #include "gtkmm/flowbox.h"
-#include "gtkmm/separator.h"
 #include "gtkmm/spinbutton.h"
 #include "gtkmm/label.h"
 #include "gtkmm/adjustment.h"
 #include <array>
+
+class NoFlowBoxHL
+{
+    public:
+        NoFlowBoxHL()
+        {
+            css = Gtk::CssProvider::create();
+            css -> load_from_data(
+                ".no_highlight flowboxchild {background: none; }"
+            );
+            
+            Gtk::StyleContext::add_provider_for_display(
+                Gdk::Display::get_default(), 
+                css, 
+                GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+        }
+        
+        ~NoFlowBoxHL(){};
+        
+    private:
+        inline static Glib::RefPtr<Gtk::CssProvider> css;
+};
 
 class TimeSetter : public Gtk::Box
 {
@@ -44,7 +66,8 @@ class CutWidget : public Gtk::FlowBox
     
     protected:
         Gtk::Box box_start, box_end;
-        Gtk::Separator separator;
         Gtk::Label start_label, end_label;
         TimeSetter start_time, end_time;
+
+        NoFlowBoxHL css;
 };
