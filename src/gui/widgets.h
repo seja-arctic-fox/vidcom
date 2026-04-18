@@ -41,8 +41,8 @@ class TimeSetter : public Gtk::Box
         
         void set_seconds(int seconds);
         void set_range(int min_s, int max_s);
-        void set_min(int seconds);
-        void set_max(int seconds);
+        void set_min(int seconds = 0);
+        void set_max(int seconds = INT_MAX);
         
         int get_seconds();
         std::array<int, 3> get_time();
@@ -83,6 +83,7 @@ class CutWidget : public Gtk::FlowBox
         TimeSetter start_time, end_time;
 
         NoFlowBoxHL css;
+        bool updating = false;
         
         void update_limits(TimeSetter * setter = nullptr);
 };

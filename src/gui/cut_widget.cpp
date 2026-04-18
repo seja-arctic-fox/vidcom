@@ -43,10 +43,17 @@ CutWidget::~CutWidget()
 
 void CutWidget::set_cut(int video_duration_s, Cut cut_info)
 {
+    updating = true;
+    
     this -> start_time.set_min(0);
+    this -> end_time.set_min(0);
+    this -> start_time.set_max(video_duration_s);
     this -> end_time.set_max(video_duration_s);
+    
     this -> start_time.set_seconds(cut_info.startTime);
     this -> end_time.set_seconds(cut_info.endTime);
+    
+    updating = false;
     update_limits();
 }
 
@@ -62,6 +69,9 @@ int CutWidget::get_end()
 
 void CutWidget::update_limits(TimeSetter * setter)
 {
+    if (this -> updating) return;
+    updating = true;
+    
     this -> start_time.set_max(end_time.get_seconds() - 1);
     this -> end_time.set_min(start_time.get_seconds() + 1);
     
@@ -72,4 +82,5 @@ void CutWidget::update_limits(TimeSetter * setter)
     }
     
     signal_cut_change.emit();
+    updating = false;
 }

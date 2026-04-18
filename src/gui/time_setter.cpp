@@ -56,7 +56,7 @@ void TimeSetter::set_seconds(int seconds)
     std::array<int, 3> new_time = compute_time(seconds);
     
     // Nastavit čas do polí
-    if ((this -> min_s <= seconds) <= this -> max_s)
+    if (this -> min_s <= seconds && seconds <= this -> max_s)
     {
         this -> hours.set_value(new_time[0]);
         this -> minutes.set_value(new_time[1]);
@@ -114,11 +114,13 @@ void TimeSetter::resolve_overflow(Gtk::SpinButton * widget)
 void TimeSetter::set_min(int seconds)
 {
     this -> min_s = seconds;
+    update_adjustments();
 }
 
 void TimeSetter::set_max(int seconds)
 {
     this -> max_s = seconds;
+    update_adjustments();
 }
 
 void TimeSetter::set_range(int min_s, int max_s)
