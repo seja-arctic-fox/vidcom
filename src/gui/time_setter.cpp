@@ -87,6 +87,8 @@ void TimeSetter::update_adjustments()
     a_hours -> set_upper(max_time_h);
     a_minutes -> set_upper(max_time_m);
     a_seconds -> set_upper(max_time_s);
+    
+    signal_cut_change.emit();
 }
 
 void TimeSetter::resolve_overflow(Gtk::SpinButton * widget)
@@ -110,20 +112,20 @@ void TimeSetter::resolve_overflow(Gtk::SpinButton * widget)
     }
 }
 
-void TimeSetter::set_min_time(int seconds)
+void TimeSetter::set_min(int seconds)
 {
     this -> min_s = seconds;
 }
 
-void TimeSetter::set_max_time(int seconds)
+void TimeSetter::set_max(int seconds)
 {
     this -> max_s = seconds;
 }
 
 void TimeSetter::set_range(int min_s, int max_s)
 {
-    set_min_time(min_s);
-    set_max_time(max_s);
+    set_min(min_s);
+    set_max(max_s);
 }
 
 std::array<int, 3> TimeSetter::compute_time(int seconds)

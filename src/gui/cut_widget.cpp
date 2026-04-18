@@ -26,6 +26,9 @@ CutWidget::CutWidget()
     start_label.add_css_class("heading");
     end_label.add_css_class("heading");
     
+    start_time.signal_cut_change.connect(sigc::mem_fun(*this, &CutWidget::update_limits));
+    end_time.signal_cut_change.connect(sigc::mem_fun(*this, &CutWidget::update_limits));
+    
     add_css_class("no_highlight");
     set_halign(Gtk::Align::CENTER);
     set_orientation(Gtk::Orientation::HORIZONTAL);
@@ -37,3 +40,29 @@ CutWidget::CutWidget()
 
 CutWidget::~CutWidget()
 {}
+
+void CutWidget::set_cut(int video_duration_s, Cut cut_info)
+{
+    this -> start_time.set_min(0);
+    this -> end_time.set_max(video_duration_s);
+    this -> start_time.set_seconds(cut_info.startTime);
+    this -> end_time.set_seconds(cut_info.endTime);
+    update_limits();
+}
+
+int CutWidget::get_start()
+{
+    return start_time.get_seconds();
+}
+
+int CutWidget::get_end()
+{
+    return end_time.get_seconds();
+}
+
+void CutWidget::update_limits()
+{
+    this -> start_time.set_max(end_time.get_seconds() - 1);
+    this -> end_time.set_min(start_time.get_seconds() + 1);
+    signal_cut_change.emit();
+}
