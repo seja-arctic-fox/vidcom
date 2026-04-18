@@ -41,6 +41,7 @@
 #include <vector>
 #include "../video/video.h"
 #include "sigc++/signal.h"
+#include "widgets.h"
 
 #ifndef GUI
 #define GUI
@@ -351,6 +352,7 @@ class VideoSettings_VBox : public Gtk::ScrolledWindow
         Gtk::SpinButton cut_stop_h, cut_stop_m, cut_stop_s;
         Gtk::ListBox cut_listbox;
         Glib::RefPtr<Gtk::Adjustment> lim_start_h, lim_start_m, lim_start_s, lim_stop_h, lim_stop_m, lim_stop_s;
+        CutWidget cut_widget;
 
         // Fps a rozlišení
         Gtk::Box res_hbox, res_text_vbox, fps_hbox, fps_text_vbox;
