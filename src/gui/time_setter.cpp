@@ -31,6 +31,7 @@ TimeSetter::TimeSetter()
         sb -> set_margin(5);
         sb -> signal_value_changed().connect(sigc::mem_fun(*this, &TimeSetter::update_adjustments));
         sb -> signal_value_changed().connect(sigc::bind(sigc::mem_fun(*this, &TimeSetter::resolve_overflow), sb));
+        sb -> signal_value_changed().connect([this]() {signal_cut_change.emit(this);});
     }
     
     sep1.add_css_class("title-2");
@@ -87,8 +88,6 @@ void TimeSetter::update_adjustments()
     a_hours -> set_upper(max_time_h);
     a_minutes -> set_upper(max_time_m);
     a_seconds -> set_upper(max_time_s);
-    
-    signal_cut_change.emit();
 }
 
 void TimeSetter::resolve_overflow(Gtk::SpinButton * widget)

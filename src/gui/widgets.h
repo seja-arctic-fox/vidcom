@@ -56,7 +56,7 @@ class TimeSetter : public Gtk::Box
         
         int min_s, max_s;
         
-        sigc::signal<void()> signal_cut_change;
+        sigc::signal<void(TimeSetter *)> signal_cut_change;
         std::array<int, 3> compute_time(int seconds);
         int compute_seconds(std::array<int, 3> time);
         void update_adjustments();
@@ -84,5 +84,5 @@ class CutWidget : public Gtk::FlowBox
 
         NoFlowBoxHL css;
         
-        void update_limits();
+        void update_limits(TimeSetter * setter = nullptr);
 };

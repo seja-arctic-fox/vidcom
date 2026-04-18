@@ -60,9 +60,16 @@ int CutWidget::get_end()
     return end_time.get_seconds();
 }
 
-void CutWidget::update_limits()
+void CutWidget::update_limits(TimeSetter * setter)
 {
     this -> start_time.set_max(end_time.get_seconds() - 1);
     this -> end_time.set_min(start_time.get_seconds() + 1);
+    
+    if (setter)
+    {
+        if (setter == &start_time) end_time.update_adjustments();
+        if (setter == &end_time) start_time.update_adjustments();
+    }
+    
     signal_cut_change.emit();
 }
