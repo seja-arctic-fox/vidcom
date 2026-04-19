@@ -71,7 +71,6 @@ VideoElement::VideoElement(std::string input_path)
     drag_handle_icon.set_pixel_size(16);
 
     // Obrázek videa
-    video_thumbnail.set_margin(10);
     video_thumbnail.set_cursor(Gdk::Cursor::create("grab"));
 
     int icon_hash = (input_path.length() + (int) video.get_video_info().duration) * 7333 % 100;
@@ -94,6 +93,9 @@ VideoElement::VideoElement(std::string input_path)
     }
 
     video_thumbnail.set_pixel_size(64);
+    video_thumbnail_frame.add_css_class("rounded");
+    video_thumbnail_frame.set_margin(10);
+    video_thumbnail_frame.set_child(video_thumbnail);
 
     // Textíky - informace o videu
     video_name_text.set_ellipsize(Pango::EllipsizeMode::END);
@@ -129,7 +131,7 @@ VideoElement::VideoElement(std::string input_path)
 
     // Všechno to přidat do finální položky
     main_hbox.append(drag_handle_icon);
-    main_hbox.append(video_thumbnail);
+    main_hbox.append(video_thumbnail_frame);
     main_hbox.append(label_vbox);
     main_hbox.append(remove_element_button);
     main_hbox.set_margin(10);
@@ -272,10 +274,11 @@ void VideoElement::update_labels()
 
     if (video.is_compress_enabled())
     {
-        string target_size = to_string(video.get_target_size());
+        std::ostringstream str;
+        str << std::fixed << std::setprecision(1) << video.get_target_size();
 
         mode_text_string += "COMPRESS to size "
-                         + target_size.erase(target_size.find(",") + 2, 20)
+                         + str.str()
                          + " MB with ";
     } 
     else

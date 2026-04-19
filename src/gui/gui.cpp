@@ -28,6 +28,7 @@ MainWindow::MainWindow()
     paned.set_end_child(options_page);
     paned.set_resize_end_child();
     paned.set_shrink_end_child(false);
+    paned.set_resize_start_child(false);
     paned.set_position(320);
     set_child(paned);
 
