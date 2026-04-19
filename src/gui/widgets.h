@@ -31,6 +31,28 @@ class NoFlowBoxHL
         inline static Glib::RefPtr<Gtk::CssProvider> css;
 };
 
+class RoundedImage
+{
+    public:
+        RoundedImage()
+        {
+            auto css = Gtk::CssProvider::create();
+            css -> load_from_data(
+                ".rounded {border-radius: 8px;}"
+            );
+            
+            Gtk::StyleContext::add_provider_for_display(
+                Gdk::Display::get_default(), 
+                css, 
+                GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+        }
+        
+        ~RoundedImage(){};
+        
+    private:
+        inline static Glib::RefPtr<Gtk::CssProvider> css;
+};
+
 class TimeSetter : public Gtk::Box
 {
     friend class CutWidget;
