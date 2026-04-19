@@ -41,6 +41,7 @@
 #include <vector>
 #include "../video/video.h"
 #include "sigc++/signal.h"
+#include "widgets.h"
 
 #ifndef GUI
 #define GUI
@@ -344,13 +345,10 @@ class VideoSettings_VBox : public Gtk::ScrolledWindow
         Gtk::Popover cut_desc;
         Gtk::Label cut_desc_text;
         Gtk::Switch cut_switch;
-        Gtk::Box cut_heading_hbox, cut_switch_box, cut_switch_text_vbox, cut_start_h_box, cut_start_m_box, cut_start_s_box, cut_stop_h_box, cut_stop_m_box, cut_stop_s_box;
-        Gtk::Box cut_start_box, cut_stop_box, cut_start_time_box, cut_stop_time_box;
-        Gtk::Label cut_start_text, cut_stop_text, cut_h_text, cut_h2_text, cut_m_text, cut_m2_text, cut_s_text, cut_s2_text, cut_switch_text, cut_switch_desc;
-        Gtk::SpinButton cut_start_h, cut_start_m, cut_start_s; 
-        Gtk::SpinButton cut_stop_h, cut_stop_m, cut_stop_s;
+        Gtk::Box cut_heading_hbox, cut_switch_box, cut_switch_text_vbox;
+        Gtk::Label cut_switch_text, cut_switch_desc;
         Gtk::ListBox cut_listbox;
-        Glib::RefPtr<Gtk::Adjustment> lim_start_h, lim_start_m, lim_start_s, lim_stop_h, lim_stop_m, lim_stop_s;
+        CutWidget cut_widget;
 
         // Fps a rozlišení
         Gtk::Box res_hbox, res_text_vbox, fps_hbox, fps_text_vbox;
@@ -383,8 +381,6 @@ class VideoSettings_VBox : public Gtk::ScrolledWindow
         void set_output_path();
         void on_folder_selected(Glib::RefPtr<Gio::AsyncResult> &result, Glib::RefPtr<Gtk::FileDialog> folder_picker);
         void switch_codec_page(Codec codec);
-        void calculate_cut_limits(float duration, Cut cut_info);
-        void set_cut_values(Cut cut_info);
     };
 
 
