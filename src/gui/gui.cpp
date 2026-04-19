@@ -13,7 +13,7 @@ MainWindow::MainWindow()
     options_page(),
     is_encoding(false)
 {
-    set_title("VidCom 0.81 GUI");
+    set_title("VidCom 0.82 Beta");
     set_default_size(960, 540);
 
     // Horní lišta
