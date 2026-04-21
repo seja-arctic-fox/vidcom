@@ -403,6 +403,8 @@ VideoSettings_VBox::VideoSettings_VBox()
     cut_widget.signal_cut_change.connect(sigc::mem_fun(*this, &VideoSettings_VBox::update));
     set_prefix_field.signal_changed().connect(sigc::mem_fun(*this, &VideoSettings_VBox::update));
     set_output_folder_button.signal_clicked().connect(sigc::mem_fun(*this, &VideoSettings_VBox::set_output_path));
+    fps_field.signal_value_changed().connect(sigc::mem_fun(*this, &VideoSettings_VBox::update));
+    res_field.signal_value_changed().connect(sigc::mem_fun(*this, &VideoSettings_VBox::update));
 }
 
 VideoSettings_VBox::~VideoSettings_VBox()
