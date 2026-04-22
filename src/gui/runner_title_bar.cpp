@@ -12,6 +12,10 @@ RunnerPanel::RunnerPanel()
 {
     // Vlastnosti panelu
     set_expand(true);
+    WindowTitle.set_ellipsize(Pango::EllipsizeMode::MIDDLE);
+    WindowTitle.add_css_class("heading");
+    WindowTitle.set_margin_start(20);
+    WindowTitle.set_margin_end(20);
     set_title_widget(WindowTitle);
 
     // Tlačítko pro zobrazení/skrytí fronty
@@ -54,6 +58,23 @@ RunnerPanel::RunnerPanel()
 RunnerPanel::~RunnerPanel()
 {
 
+}
+
+void RunnerPanel::clear_title()
+{
+    WindowTitle.set_text("");
+}
+
+void RunnerPanel::set_title(VideoElement * video_element)
+{
+    WindowTitle.set_text(
+        video_element -> video_info.path.filename().string()
+    );
+}
+
+void RunnerPanel::set_title_multiple(std::vector<VideoElement*>)
+{
+    WindowTitle.set_text("Multiple videos selected");
 }
 
 void RunnerPanel::show_queue_button(bool show)

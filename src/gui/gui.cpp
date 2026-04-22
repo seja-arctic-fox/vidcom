@@ -70,6 +70,11 @@ MainWindow::MainWindow()
     runner_panel.signal_toggle_queue.connect([this]()
         { adw_overlay_split_view_set_show_sidebar(split_view, true); });
     
+    // Signály pro změny názvu videa v runneru
+    video_queue.signal_video_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_title));
+    video_queue.signal_all_videos_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_title_multiple));
+    video_queue.signal_nothing_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::clear_title));
+    
     // Propojení signálů pro aktualizaci nastavení videa
     video_queue.signal_video_selected.connect(sigc::mem_fun(options_page, &VideoSettings_VBox::read_video_options));
     video_queue.signal_all_videos_selected.connect(sigc::mem_fun(options_page, &VideoSettings_VBox::read_video_vector_options));

@@ -74,39 +74,6 @@ struct EncodingResult
     bool was_cancelled;
 };
 
-class RunnerPanel : public Gtk::HeaderBar
-{
-    public:
-        RunnerPanel();
-        ~RunnerPanel();
-
-        // Aktualizace informací o postupu
-        void update_encoding_progress(const EncodingProgress& progress);
-        void set_encoding_state(bool is_encoding);
-        void update_status(const std::string& status, const std::string& css_class = "");
-        void block_encoding_button(bool block);
-        void set_loading_state(bool is_loading);
-        void update_loading_progress(int video_index, int video_count);
-        void show_queue_button(bool show);
-        
-        // Signály
-        sigc::signal<void()> signal_start_encoding;
-        sigc::signal<void()> signal_stop_encoding;
-        sigc::signal<void()> signal_toggle_queue;
-
-    protected:
-        bool isEncoding;
-
-        Gtk::Button queue_display_button;
-        Gtk::ProgressBar EncodingProgressBar;
-        Gtk::Button EncodingButton;
-        Gtk::Label WindowTitle;
-        Gtk::Image EncodingIconStatus;
-        Gtk::Label EncodingTextStatus;
-
-        void on_start_stop_clicked();
-};
-
 // Prvek ve frontě kódování
 class VideoElement : public Gtk::Frame
 {
@@ -116,11 +83,11 @@ class VideoElement : public Gtk::Frame
         void update_labels();
 
         Video video;
+        VideoInfo video_info;
 
         sigc::signal<void(VideoElement *)> signal_remove;
 
         protected:
-            VideoInfo video_info;
 
             // Popisky vlastností videa
             Gtk::Image drag_handle_icon, video_thumbnail;
@@ -145,6 +112,42 @@ class VideoElement : public Gtk::Frame
             Glib::RefPtr<Gdk::ContentProvider> on_drag_prepare(double, double);
             void on_drag_begin(const Glib::RefPtr<Gdk::Drag>& drag);
             bool on_drop(const Glib::ValueBase& value, double, double);
+};
+
+class RunnerPanel : public Gtk::HeaderBar
+{
+    public:
+        RunnerPanel();
+        ~RunnerPanel();
+
+        // Aktualizace informací o postupu
+        void update_encoding_progress(const EncodingProgress& progress);
+        void set_encoding_state(bool is_encoding);
+        void update_status(const std::string& status, const std::string& css_class = "");
+        void block_encoding_button(bool block);
+        void set_loading_state(bool is_loading);
+        void update_loading_progress(int video_index, int video_count);
+        void show_queue_button(bool show);
+        void set_title(VideoElement * video_element);
+        void set_title_multiple(std::vector<VideoElement*>);
+        void clear_title();
+        
+        // Signály
+        sigc::signal<void()> signal_start_encoding;
+        sigc::signal<void()> signal_stop_encoding;
+        sigc::signal<void()> signal_toggle_queue;
+
+    protected:
+        bool isEncoding;
+
+        Gtk::Button queue_display_button;
+        Gtk::ProgressBar EncodingProgressBar;
+        Gtk::Button EncodingButton;
+        Gtk::Label WindowTitle;
+        Gtk::Image EncodingIconStatus;
+        Gtk::Label EncodingTextStatus;
+
+        void on_start_stop_clicked();
 };
 
 // Interaktivní fronta kódování, do které bude možné vkládat videa
