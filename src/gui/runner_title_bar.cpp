@@ -1,3 +1,4 @@
+#include "gtkmm/enums.h"
 #include "gui.h"
 #include "pangomm/layout.h"
 #include "sigc++/functors/mem_fun.h"
@@ -7,17 +8,17 @@ RunnerPanel::RunnerPanel()
 :   isEncoding(false),
     EncodingProgressBar(),
     EncodingButton(),
-    WindowTitle("VidCom 0.82 Beta")
+    WindowTitle("")
 {
     // Vlastnosti panelu
-    set_orientation(Gtk::Orientation::HORIZONTAL);
-    set_margin(5);
-    set_margin_top(10);
-    set_spacing(10);
     set_expand(true);
-    set_margin_end(20);
-    WindowTitle.add_css_class("heading");
+    set_title_widget(WindowTitle);
 
+    // Tlačítko pro zobrazení/skrytí fronty
+    queue_display_button.set_icon_name("sidebar-show-symbolic");
+    queue_display_button.signal_clicked().connect([this]()
+        { signal_toggle_queue.emit(); });
+    
     // Stavový text a ikona
     EncodingTextStatus.add_css_class("success");
     EncodingIconStatus.add_css_class("success");
@@ -28,7 +29,8 @@ RunnerPanel::RunnerPanel()
     // Postup
     EncodingProgressBar.add_css_class("chunky-progress");
     EncodingProgressBar.set_expand(true);
-    EncodingProgressBar.set_show_text();
+    EncodingProgressBar.set_show_text(false);
+    EncodingProgressBar.set_valign(Gtk::Align::CENTER);
     EncodingProgressBar.set_text("Nothing to do...");
     EncodingProgressBar.add_css_class("monospace");
     EncodingProgressBar.set_fraction(0);
@@ -38,14 +40,13 @@ RunnerPanel::RunnerPanel()
     EncodingButton.set_expand(false);
     EncodingButton.set_icon_name("media-playback-start-symbolic");
     EncodingButton.add_css_class("suggested-action");
-    EncodingButton.add_css_class("pill");
     EncodingButton.set_halign(Gtk::Align::START);
 
-    append(WindowTitle);
-    append(EncodingButton);
-    append(EncodingIconStatus);
-    append(EncodingTextStatus);
-    append(EncodingProgressBar);
+    pack_start(queue_display_button);
+    pack_start(EncodingButton);
+    pack_start(EncodingIconStatus);
+    pack_start(EncodingTextStatus);
+    pack_end(EncodingProgressBar);
 
     EncodingButton.signal_clicked().connect(sigc::mem_fun(*this, &RunnerPanel::on_start_stop_clicked));
 }
@@ -54,6 +55,9 @@ RunnerPanel::~RunnerPanel()
 {
 
 }
+
+void RunnerPanel::show_queue_button(bool show)
+{ queue_display_button.set_visible(show); }
 
 void RunnerPanel::update_loading_progress(int video_index, int video_count)
 {

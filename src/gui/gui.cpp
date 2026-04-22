@@ -1,5 +1,5 @@
 #include "gui.h"
-#include "gtkmm/enums.h"
+#include "adwaita.h"
 #include "gtkmm/headerbar.h"
 #include "gtkmm/object.h"
 #include "sigc++/functors/mem_fun.h"
@@ -8,30 +8,68 @@
 #include <vector>
 
 MainWindow::MainWindow()
-:   header_bar(),
+:
+    header_bar(),
     runner_panel(),
     options_page(),
     is_encoding(false)
 {
-    set_title("VidCom 0.82 Beta");
+    set_title("VidCom");
     set_default_size(960, 540);
+    gtk_window_set_titlebar(GTK_WINDOW(gobj()), gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
+    
+    // Hlavní nabídka
+    auto main_menu = Gio::Menu::create();
+    main_menu -> append("Settings", "app.preferences");
+    main_menu -> append("Keyboard Shortcuts", "app.shortcuts");
+    main_menu -> append_section({}, []
+        {
+            auto s = Gio::Menu::create();
+            s -> append("About VidCom");
+            return s;
+        }());
+    
+    menu_button.set_icon_name("open-menu-symbolic");;
+    menu_button.set_menu_model(main_menu);
+    menu_button.add_css_class("flat");
+    
+    // Postranní panel
+    sidebar_header = ADW_HEADER_BAR(adw_header_bar_new());
+    adw_header_bar_pack_end(sidebar_header, GTK_WIDGET(menu_button.gobj()));
+    
+    sidebar_view = ADW_TOOLBAR_VIEW(adw_toolbar_view_new());
+    adw_toolbar_view_add_top_bar(sidebar_view, GTK_WIDGET(sidebar_header));
+    adw_toolbar_view_set_content(sidebar_view, GTK_WIDGET(video_queue.gobj()));
+    
+    // Hlavní část okna
+    content_view = ADW_TOOLBAR_VIEW(adw_toolbar_view_new());
+    adw_toolbar_view_add_top_bar(content_view, GTK_WIDGET(runner_panel.gobj()));
+    
+    toast_overlay = ADW_TOAST_OVERLAY(adw_toast_overlay_new());
+    adw_toast_overlay_set_child(toast_overlay, GTK_WIDGET(options_page.gobj()));
+    adw_toolbar_view_set_content(content_view, GTK_WIDGET(toast_overlay));
+    
+    // Složení hlavní části a postranního panelu
+    split_view = ADW_OVERLAY_SPLIT_VIEW(adw_overlay_split_view_new());
+    adw_overlay_split_view_set_sidebar(split_view, GTK_WIDGET(sidebar_view));
+    adw_overlay_split_view_set_content(split_view, GTK_WIDGET(content_view));
+    adw_overlay_split_view_set_sidebar_position(split_view, GTK_PACK_START);
+    adw_overlay_split_view_set_min_sidebar_width(split_view, 250.0);
+    
+    set_child(*Glib::wrap(GTK_WIDGET(split_view)));
 
-    // Horní lišta
-    header_bar.set_show_title_buttons();
-    header_bar.set_title_widget(runner_panel);
-    set_titlebar(header_bar);
+    signal_realize().connect([this]()
+        {
+            get_surface() -> signal_layout().connect(
+                sigc::mem_fun(*this, &MainWindow::on_window_resize)
+            );
+        }
+    );
 
-    // Rozdělené okno na dvě části
-    paned.set_shrink_start_child(false);
-    paned.set_orientation(Gtk::Orientation::HORIZONTAL);
-    paned.set_start_child(video_queue);
-    paned.set_end_child(options_page);
-    paned.set_resize_end_child();
-    paned.set_shrink_end_child(false);
-    paned.set_resize_start_child(false);
-    paned.set_position(320);
-    set_child(paned);
-
+    // Signál pro zobrazení/skrývání fronty
+    runner_panel.signal_toggle_queue.connect([this]()
+        { adw_overlay_split_view_set_show_sidebar(split_view, true); });
+    
     // Propojení signálů pro aktualizaci nastavení videa
     video_queue.signal_video_selected.connect(sigc::mem_fun(options_page, &VideoSettings_VBox::read_video_options));
     video_queue.signal_all_videos_selected.connect(sigc::mem_fun(options_page, &VideoSettings_VBox::read_video_vector_options));
@@ -54,6 +92,22 @@ MainWindow::~MainWindow()
     {
         is_encoding.store(false);
         encoding_thread.join();
+    }
+}
+
+void MainWindow::on_window_resize(int width, int)
+{
+    if (width < 860 && !adw_overlay_split_view_get_collapsed(split_view))
+    {
+        adw_overlay_split_view_set_collapsed(split_view, true);
+        adw_overlay_split_view_set_enable_hide_gesture(split_view, true);
+        runner_panel.show_queue_button(true);
+    }
+    else if (width >= 860)
+    {
+        adw_overlay_split_view_set_collapsed(split_view, false);
+        adw_overlay_split_view_set_enable_hide_gesture(split_view, false);
+        runner_panel.show_queue_button(false);
     }
 }
 

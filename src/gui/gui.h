@@ -74,7 +74,7 @@ struct EncodingResult
     bool was_cancelled;
 };
 
-class RunnerPanel : public Gtk::Box
+class RunnerPanel : public Gtk::HeaderBar
 {
     public:
         RunnerPanel();
@@ -87,14 +87,17 @@ class RunnerPanel : public Gtk::Box
         void block_encoding_button(bool block);
         void set_loading_state(bool is_loading);
         void update_loading_progress(int video_index, int video_count);
+        void show_queue_button(bool show);
         
         // Signály
         sigc::signal<void()> signal_start_encoding;
         sigc::signal<void()> signal_stop_encoding;
+        sigc::signal<void()> signal_toggle_queue;
 
     protected:
         bool isEncoding;
 
+        Gtk::Button queue_display_button;
         Gtk::ProgressBar EncodingProgressBar;
         Gtk::Button EncodingButton;
         Gtk::Label WindowTitle;
@@ -415,6 +418,16 @@ class MainWindow : public Gtk::Window
         QueueFrame video_queue;
         VideoSettings_VBox options_page;
         Gtk::Paned paned;
+        
+        Glib::RefPtr<Gio::Menu> main_menu;
+        Gtk::MenuButton menu_button;
+        AdwHeaderBar * sidebar_header;
+        AdwToolbarView * sidebar_view;
+        AdwToolbarView * content_view;
+        AdwToastOverlay * toast_overlay;
+        AdwOverlaySplitView * split_view;
+        
+        void on_window_resize(int width, int height);
 
         // Vlákno pro kódování videí, synchronizace
         std::thread encoding_thread;
