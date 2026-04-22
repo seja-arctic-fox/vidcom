@@ -16,7 +16,28 @@ RunnerPanel::RunnerPanel()
     WindowTitle.add_css_class("heading");
     WindowTitle.set_margin_start(20);
     WindowTitle.set_margin_end(20);
+    WindowTitle.set_max_width_chars(20);
     set_title_widget(WindowTitle);
+    
+    // Skrytí tlačítek, když jsou tlačítka nalevo
+    // Automaticky se mi to zatím nepovedlo :(
+    // Ale běžně to lidi nemění za běhu, tak to stačí
+    gchar * layout = nullptr;
+    g_object_get(
+        gtk_settings_get_default(),
+        "gtk-decoration-layout",
+        &layout,
+        nullptr
+    );
+    
+    if (layout)
+    {
+        std::string s(layout);
+        
+        if (s.substr(0, s.find(":")) == "close")
+            set_show_title_buttons(false);
+    }
+    g_free(layout);
 
     // Tlačítko pro zobrazení/skrytí fronty
     queue_display_button.set_icon_name("sidebar-show-symbolic");
@@ -32,7 +53,8 @@ RunnerPanel::RunnerPanel()
 
     // Postup
     EncodingProgressBar.add_css_class("chunky-progress");
-    EncodingProgressBar.set_expand(true);
+    EncodingProgressBar.set_expand(false);
+    EncodingProgressBar.set_size_request(200);
     EncodingProgressBar.set_show_text(false);
     EncodingProgressBar.set_valign(Gtk::Align::CENTER);
     EncodingProgressBar.set_text("Nothing to do...");

@@ -19,7 +19,7 @@ MainWindow::MainWindow()
     gtk_window_set_titlebar(GTK_WINDOW(gobj()), gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
     
     // Hlavní nabídka
-    auto main_menu = Gio::Menu::create();
+    main_menu = Gio::Menu::create();
     main_menu -> append("Settings", "app.preferences");
     main_menu -> append("Keyboard Shortcuts", "app.shortcuts");
     main_menu -> append_section({}, []
