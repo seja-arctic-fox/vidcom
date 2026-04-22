@@ -8,7 +8,7 @@ RunnerPanel::RunnerPanel()
 :   isEncoding(false),
     EncodingProgressBar(),
     EncodingButton(),
-    WindowTitle("")
+    WindowTitle("No video selected")
 {
     // Vlastnosti panelu
     set_expand(true);
@@ -45,9 +45,10 @@ RunnerPanel::RunnerPanel()
         { signal_toggle_queue.emit(); });
     
     // Stavový text a ikona
-    EncodingTextStatus.add_css_class("success");
     EncodingIconStatus.add_css_class("success");
     EncodingIconStatus.set_from_icon_name("selection-mode-symbolic");
+    EncodingIconStatus.set_margin_start(10);
+    EncodingTextStatus.add_css_class("success");
     EncodingTextStatus.set_markup("<b>Ready</b>");
     EncodingTextStatus.set_expand(false);
 
@@ -84,7 +85,7 @@ RunnerPanel::~RunnerPanel()
 
 void RunnerPanel::clear_title()
 {
-    WindowTitle.set_text("");
+    WindowTitle.set_text("No video selected");
 }
 
 void RunnerPanel::set_title(VideoElement * video_element)
