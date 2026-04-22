@@ -197,11 +197,9 @@ class QueueFrame : public Gtk::Box
         // Metody
         void on_clear_clicked();
         void on_select_all_clicked();
-        void on_import_video_clicked();
         bool on_drop(const Glib::ValueBase& value, double, double);
         void error_dialog_not_a_video();
         void on_row_selected(Gtk::ListBoxRow * row);
-        void file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& result, Glib::RefPtr<Gtk::FileDialog> file_picker);
 };
 
 // Stránka parametrů pro AV1
@@ -419,6 +417,7 @@ class MainWindow : public Gtk::Window
         
         Glib::RefPtr<Gio::Menu> main_menu;
         Gtk::MenuButton menu_button;
+        Gtk::Button add_videos_button;
         AdwHeaderBar * sidebar_header;
         AdwToolbarView * sidebar_view;
         AdwToolbarView * content_view;
@@ -426,7 +425,13 @@ class MainWindow : public Gtk::Window
         AdwOverlaySplitView * split_view;
         
         void on_window_resize(int width, int height);
+        void on_import_video_clicked();
+        void file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& result, Glib::RefPtr<Gtk::FileDialog> file_picker);
 
+        //Signály načítání - file picker
+        sigc::signal<void(bool)> signal_loading_videos;
+        sigc::signal<void(int, int)> signal_loading_videos_count;
+        
         // Vlákno pro kódování videí, synchronizace
         std::thread encoding_thread;
         std::atomic<bool> is_encoding;

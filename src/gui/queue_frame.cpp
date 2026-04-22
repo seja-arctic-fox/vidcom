@@ -1,7 +1,5 @@
 #include "gio/gio.h"
-#include "giomm/liststore.h"
 #include "glib-object.h"
-#include "glibmm/error.h"
 #include "glibmm/main.h"
 #include "glibmm/refptr.h"
 #include "glibmm/ustring.h"
@@ -9,20 +7,16 @@
 #include "gtkmm/alertdialog.h"
 #include "gtkmm/droptarget.h"
 #include "gtkmm/enums.h"
-#include "gtkmm/error.h"
 #include "gtkmm/filedialog.h"
-#include "gtkmm/filefilter.h"
 #include "gtkmm/object.h"
 #include "gtkmm/scrolledwindow.h"
 #include "gtkmm/widget.h"
 #include "gtkmm/window.h"
 #include "gui.h"
 #include "sigc++/functors/mem_fun.h"
-#include <iostream>
 #include <string>
 #include <gdk/gdk.h>
 #include <vector>
-#include "../cli/cli.h"
 
 QueueFrame::QueueFrame()
 :   scrolled_window(),
@@ -94,9 +88,8 @@ QueueFrame::QueueFrame()
     // Spodní lišta
     import_video_button.set_margin(10);
     import_video_button.add_css_class("suggested-action");
-    import_video_button.signal_clicked().connect(sigc::mem_fun(*this, &QueueFrame::on_import_video_clicked));
     footer_box.set_halign(Gtk::Align::CENTER);
-    footer_box.append(import_video_button);
+
 
     // Drag and drop
     drag_and_drop_target = Gtk::DropTarget::create(gdk_file_list_get_type(), Gdk::DragAction::COPY);
@@ -131,109 +124,6 @@ std::vector<Video *> QueueFrame::get_all_videos()
     }
     
     return all_elements;
-}
-
-void QueueFrame::file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& result, Glib::RefPtr<Gtk::FileDialog> file_picker)
-{
-    try
-    {
-        auto files = file_picker -> open_multiple_finish(result);
-        
-        // Shared pointer pro kontrolu stavu ve voláních
-        // Stavová proměnná musí přežít několik pozdějích volání toho idle handleru
-        // po skončení této metody
-        auto state = std::make_shared<std::pair<std::vector<std::string>, size_t>>();
-        state -> second = 0;
-
-        for (guint i = 0; i < files.size(); i++)
-        {
-            auto file = files.at(i);
-
-            if (file)
-            {
-                auto path = file -> get_path();
-
-                if (!path.empty())
-                {
-                    state -> first.push_back(path);
-                }
-            }
-        }
-        
-        if (state -> first.empty())
-        {
-            signal_loading_videos.emit(false);
-            return;
-        }
-        
-        signal_loading_videos_count.emit(0, (int) state -> first.size());
-        
-        Glib::signal_idle().connect([this, state]() -> bool
-        {
-            size_t& i = state -> second;
-            auto& paths = state -> first;
-            
-            if (i < paths.size())
-            {
-                signal_loading_videos_count.emit((int) i + 1, (int) paths.size());
-                add_video(paths[i]);
-                i++;
-                return true;
-            }
-            
-            signal_loading_videos.emit(false);
-            return false;
-        });
-    }
-    catch (const Gtk::DialogError& error)
-    {
-        if (error.code() != Gtk::DialogError::DISMISSED)
-        {
-            cerr << YELLOW << "File picker cancelled by user. " << RESET << endl;
-        }
-        
-        signal_loading_videos.emit(false);
-    }
-    catch (const Glib::Error& error)
-    {
-        cerr << RED << "Error opening files with file picker! " << error.what() << RESET << endl;
-
-        auto error_dialog = Gtk::AlertDialog::create();
-        error_dialog -> set_message("Error opening files with file picker! ");
-        error_dialog -> set_detail("There was a problem with opening files: \n\n");
-        error_dialog -> set_buttons({"Okay"});
-        error_dialog -> set_cancel_button(0);
-
-        error_dialog -> show(* dynamic_cast<Gtk::Window *>(get_root()));
-        signal_loading_videos.emit(false);
-    }
-}
-
-
-void QueueFrame::on_import_video_clicked()
-{
-    signal_loading_videos.emit(true);
-    auto file_picker = Gtk::FileDialog::create();
-    file_picker -> set_title("Select video(s) to import");
-    file_picker -> set_modal();
-
-    // Filtry videí
-    auto video_filter = Gtk::FileFilter::create();
-    video_filter -> set_name("Video files");
-    video_filter -> add_mime_type("video/*");
-
-    auto all_files_filter = Gtk::FileFilter::create();
-    all_files_filter -> set_name("All files");
-    all_files_filter -> add_pattern("*");
-
-    auto filter_list = Gio::ListStore<Gtk::FileFilter>::create();
-    filter_list -> append(video_filter);
-    filter_list -> append(all_files_filter);
-    file_picker -> set_filters(filter_list);
-    file_picker -> set_default_filter(video_filter);
-
-    // Otevření file pickeru
-    file_picker -> open_multiple(* dynamic_cast<Gtk::Window *>(get_root()), sigc::bind(sigc::mem_fun(* this, &QueueFrame::file_picker_add_videos), file_picker));
 }
 
 void QueueFrame::on_row_selected(Gtk::ListBoxRow * row)

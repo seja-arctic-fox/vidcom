@@ -3,6 +3,8 @@
 #include "gtkmm/headerbar.h"
 #include "gtkmm/object.h"
 #include "sigc++/functors/mem_fun.h"
+#include "src/cli/cli.h"
+#include <iostream>
 #include <mutex>
 #include <thread>
 #include <vector>
@@ -31,10 +33,14 @@ MainWindow::MainWindow()
     
     menu_button.set_icon_name("open-menu-symbolic");;
     menu_button.set_menu_model(main_menu);
-    menu_button.add_css_class("flat");
+    
+    // Přidat video
+    add_videos_button.set_icon_name("tab-new-symbolic");
+    add_videos_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_import_video_clicked));
     
     // Postranní panel
     sidebar_header = ADW_HEADER_BAR(adw_header_bar_new());
+    adw_header_bar_pack_start(sidebar_header, GTK_WIDGET(add_videos_button.gobj()));
     adw_header_bar_pack_end(sidebar_header, GTK_WIDGET(menu_button.gobj()));
     
     sidebar_view = ADW_TOOLBAR_VIEW(adw_toolbar_view_new());
@@ -85,6 +91,8 @@ MainWindow::MainWindow()
     runner_panel.signal_stop_encoding.connect(sigc::mem_fun(*this, &MainWindow::stop_encoding));
     video_queue.signal_loading_videos.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_loading_state));
     video_queue.signal_loading_videos_count.connect(sigc::mem_fun(runner_panel, &RunnerPanel::update_loading_progress));
+    signal_loading_videos.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_loading_state));
+    signal_loading_videos_count.connect(sigc::mem_fun(runner_panel, &RunnerPanel::update_loading_progress));
 
     // Komunikace mezi vlákny
     progress_dispatcher.connect(sigc::mem_fun(*this, &MainWindow::on_progress_update));
@@ -106,12 +114,14 @@ void MainWindow::on_window_resize(int width, int)
     {
         adw_overlay_split_view_set_collapsed(split_view, true);
         adw_overlay_split_view_set_enable_hide_gesture(split_view, true);
+        adw_overlay_split_view_set_enable_show_gesture(split_view, true);
         runner_panel.show_queue_button(true);
     }
     else if (width >= 860)
     {
         adw_overlay_split_view_set_collapsed(split_view, false);
         adw_overlay_split_view_set_enable_hide_gesture(split_view, false);
+        adw_overlay_split_view_set_enable_show_gesture(split_view, false);
         runner_panel.show_queue_button(false);
     }
 }
@@ -292,4 +302,106 @@ void MainWindow::show_results_dialog()
 
     auto result_dialog = Gtk::make_managed<ResultsDialog>(*this, encoding_results);
     result_dialog -> set_visible();
+}
+
+void MainWindow::on_import_video_clicked()
+{
+    signal_loading_videos.emit(true);
+    auto file_picker = Gtk::FileDialog::create();
+    file_picker -> set_title("Select video(s) to import");
+    file_picker -> set_modal();
+
+    // Filtry videí
+    auto video_filter = Gtk::FileFilter::create();
+    video_filter -> set_name("Video files");
+    video_filter -> add_mime_type("video/*");
+
+    auto all_files_filter = Gtk::FileFilter::create();
+    all_files_filter -> set_name("All files");
+    all_files_filter -> add_pattern("*");
+
+    auto filter_list = Gio::ListStore<Gtk::FileFilter>::create();
+    filter_list -> append(video_filter);
+    filter_list -> append(all_files_filter);
+    file_picker -> set_filters(filter_list);
+    file_picker -> set_default_filter(video_filter);
+
+    // Otevření file pickeru
+    file_picker -> open_multiple(* dynamic_cast<Gtk::Window *>(get_root()), sigc::bind(sigc::mem_fun(*this, &MainWindow::file_picker_add_videos), file_picker));
+}
+
+void MainWindow::file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& result, Glib::RefPtr<Gtk::FileDialog> file_picker)
+{
+    try
+    {
+        auto files = file_picker -> open_multiple_finish(result);
+        
+        // Shared pointer pro kontrolu stavu ve voláních
+        // Stavová proměnná musí přežít několik pozdějích volání toho idle handleru
+        // po skončení této metody
+        auto state = std::make_shared<std::pair<std::vector<std::string>, size_t>>();
+        state -> second = 0;
+
+        for (guint i = 0; i < files.size(); i++)
+        {
+            auto file = files.at(i);
+
+            if (file)
+            {
+                auto path = file -> get_path();
+
+                if (!path.empty())
+                {
+                    state -> first.push_back(path);
+                }
+            }
+        }
+        
+        if (state -> first.empty())
+        {
+            signal_loading_videos.emit(false);
+            return;
+        }
+        
+        signal_loading_videos_count.emit(0, (int) state -> first.size());
+        
+        Glib::signal_idle().connect([this, state]() -> bool
+        {
+            size_t& i = state -> second;
+            auto& paths = state -> first;
+            
+            if (i < paths.size())
+            {
+                signal_loading_videos_count.emit((int) i + 1, (int) paths.size());
+                video_queue.add_video(paths[i]);
+                i++;
+                return true;
+            }
+            
+            signal_loading_videos.emit(false);
+            return false;
+        });
+    }
+    catch (const Gtk::DialogError& error)
+    {
+        if (error.code() != Gtk::DialogError::DISMISSED)
+        {
+            cerr << YELLOW << "File picker cancelled by user. " << RESET << endl;
+        }
+        
+        signal_loading_videos.emit(false);
+    }
+    catch (const Glib::Error& error)
+    {
+        cerr << RED << "Error opening files with file picker! " << error.what() << RESET << endl;
+
+        auto error_dialog = Gtk::AlertDialog::create();
+        error_dialog -> set_message("Error opening files with file picker! ");
+        error_dialog -> set_detail("There was a problem with opening files: \n\n");
+        error_dialog -> set_buttons({"Okay"});
+        error_dialog -> set_cancel_button(0);
+
+        error_dialog -> show(* dynamic_cast<Gtk::Window *>(get_root()));
+        signal_loading_videos.emit(false);
+    }
 }
