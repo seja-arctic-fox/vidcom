@@ -220,6 +220,7 @@ VideoSettings_VBox::VideoSettings_VBox()
     cut_desc_trigger.signal_clicked().connect([this](){cut_desc.popup();});
 
     cut_heading.add_css_class("title-4");
+    cut_heading.set_ellipsize(Pango::EllipsizeMode::MIDDLE);
     cut_desc_trigger.set_icon_name("help-about-symbolic");
     cut_desc_trigger.add_css_class("flat");
     cut_heading_hbox.set_margin(10);
