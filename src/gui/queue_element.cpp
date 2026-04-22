@@ -104,6 +104,7 @@ VideoElement::VideoElement(std::string input_path)
     update_labels();
 
     video_name_text.set_halign(Gtk::Align::START);
+    video_name_text.set_tooltip_text(video_info.path.filename().generic_string());
     resolution_text.set_halign(Gtk::Align::START);
     duration_text.set_halign(Gtk::Align::START);
     framerate_text.set_halign(Gtk::Align::START);
