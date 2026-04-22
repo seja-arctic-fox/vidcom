@@ -95,6 +95,7 @@ VideoElement::VideoElement(std::string input_path)
     video_thumbnail.set_pixel_size(64);
     video_thumbnail_frame.add_css_class("rounded");
     video_thumbnail_frame.set_margin(10);
+    video_thumbnail_frame.set_valign(Gtk::Align::CENTER);
     video_thumbnail_frame.set_child(video_thumbnail);
 
     // Textíky - informace o videu
@@ -107,19 +108,22 @@ VideoElement::VideoElement(std::string input_path)
     duration_text.set_halign(Gtk::Align::START);
     framerate_text.set_halign(Gtk::Align::START);
     mode_text.set_halign(Gtk::Align::START);
-    mode_text.set_ellipsize(Pango::EllipsizeMode::MIDDLE);
+    size_text.set_halign(Gtk::Align::START);
 
     resolution_text.add_css_class("caption");
     duration_text.add_css_class("caption");
     framerate_text.add_css_class("caption");
     mode_text.add_css_class("caption");
     mode_text.add_css_class("accent");
+    size_text.add_css_class("caption");
+    size_text.add_css_class("accent");
 
     label_vbox.append(video_name_text);
     label_vbox.append(resolution_text);
     label_vbox.append(duration_text);
     label_vbox.append(framerate_text);
     label_vbox.append(mode_text);
+    label_vbox.append(size_text);
 
     // Tlačítko smazat
     remove_element_button.set_icon_name("user-trash-symbolic");
@@ -276,14 +280,13 @@ void VideoElement::update_labels()
     {
         std::ostringstream str;
         str << std::fixed << std::setprecision(1) << video.get_target_size();
-
-        mode_text_string += "COMPRESS to size "
-                         + str.str()
-                         + " MB with ";
+        mode_text_string += "COMPRESS with ";
+        size_text.set_text("To size " + str.str() + " MB");
     } 
     else
     {
         mode_text_string += "ARCHIVE with ";
+        size_text.set_text("");
     }
 
     switch (video.get_codec())
@@ -301,7 +304,6 @@ void VideoElement::update_labels()
             break;
     }
     mode_text_string += "";
-
     mode_text.set_markup(mode_text_string);
 }
 
@@ -310,4 +312,3 @@ void VideoElement::on_remove_clicked()
     // Pošle sebe signálem do fronty ke smazání
     signal_remove.emit(this);
 }
-

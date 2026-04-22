@@ -123,14 +123,9 @@ class VideoElement : public Gtk::Frame
             VideoInfo video_info;
 
             // Popisky vlastností videa
-            Gtk::Image drag_handle_icon;
-            Gtk::Image video_thumbnail;
+            Gtk::Image drag_handle_icon, video_thumbnail;
             Gtk::Frame video_thumbnail_frame;
-            Gtk::Label video_name_text;
-            Gtk::Label resolution_text;
-            Gtk::Label framerate_text;
-            Gtk::Label duration_text;
-            Gtk::Label mode_text;
+            Gtk::Label video_name_text, resolution_text, framerate_text, duration_text, mode_text, size_text;
             RoundedImage css_rounded;
             
             // Tlačítko pro odstranění prvku z fronty
