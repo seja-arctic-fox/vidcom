@@ -90,7 +90,6 @@ QueueFrame::QueueFrame()
     import_video_button.add_css_class("suggested-action");
     footer_box.set_halign(Gtk::Align::CENTER);
 
-
     // Drag and drop
     drag_and_drop_target = Gtk::DropTarget::create(gdk_file_list_get_type(), Gdk::DragAction::COPY);
     drag_and_drop_target -> signal_drop().connect(sigc::mem_fun(*this, &QueueFrame::on_drop), false);

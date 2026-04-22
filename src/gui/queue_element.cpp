@@ -110,6 +110,7 @@ VideoElement::VideoElement(std::string input_path)
     framerate_text.set_halign(Gtk::Align::START);
     mode_text.set_halign(Gtk::Align::START);
     size_text.set_halign(Gtk::Align::START);
+    size_text.set_visible(false);
 
     resolution_text.add_css_class("caption");
     duration_text.add_css_class("caption");
@@ -283,11 +284,12 @@ void VideoElement::update_labels()
         str << std::fixed << std::setprecision(1) << video.get_target_size();
         mode_text_string += "COMPRESS with ";
         size_text.set_text("To size " + str.str() + " MB");
+        size_text.set_visible();
     } 
     else
     {
         mode_text_string += "ARCHIVE with ";
-        size_text.set_text("");
+        size_text.set_visible(false);
     }
 
     switch (video.get_codec())
