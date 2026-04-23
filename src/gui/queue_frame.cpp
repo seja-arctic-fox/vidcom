@@ -36,6 +36,7 @@ QueueFrame::QueueFrame()
     select_all_box.append(select_all_text);
     select_all_button.set_child(select_all_box);
     select_all_button.set_can_target(false);
+    select_all_button.add_css_class("flat");
 
     clear_queue_icon.set_from_icon_name("edit-clear-all-symbolic");
     clear_queue_icon.set_margin(5);
@@ -43,6 +44,7 @@ QueueFrame::QueueFrame()
     clear_queue_box.append(clear_queue_text);
     clear_queue_button.set_child(clear_queue_box);
     clear_queue_button.set_can_target(false);
+    clear_queue_button.add_css_class("flat");
 
     clear_queue_button.signal_clicked().connect(sigc::mem_fun(*this, &QueueFrame::on_clear_clicked));
     select_all_button.signal_toggled().connect(sigc::mem_fun(*this, &QueueFrame::on_select_all_clicked));
@@ -196,6 +198,8 @@ void QueueFrame::add_video(const std::string& input_path)
                     select_all_button.set_active(false);
                     select_all_button.set_can_target(false);
                     clear_queue_button.set_can_target(false);
+                    select_all_button.add_css_class("flat");
+                    clear_queue_button.add_css_class("flat");
                     signal_queue_cleared.emit();
                 }
             }
@@ -209,6 +213,8 @@ void QueueFrame::on_clear_clicked()
     select_all_button.set_active(false);
     select_all_button.set_can_target(false);
     clear_queue_button.set_can_target(false);
+    select_all_button.add_css_class("flat");
+    clear_queue_button.add_css_class("flat");
     video_listbox.set_selection_mode(Gtk::SelectionMode::SINGLE);
 
     signal_nothing_selected.emit();
