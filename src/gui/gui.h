@@ -198,7 +198,7 @@ class QueueFrame : public Gtk::Box
         void on_clear_clicked();
         void on_select_all_clicked();
         bool on_drop(const Glib::ValueBase& value, double, double);
-        void error_dialog_not_a_video();
+        void error_toast_not_a_video(string file);
         void on_row_selected(Gtk::ListBoxRow * row);
 };
 
@@ -407,6 +407,8 @@ class MainWindow : public Gtk::Window
     public:
         MainWindow();
         ~MainWindow();
+        
+        void show_toast(char const * message);
 
     protected:
         Gtk::HeaderBar header_bar;

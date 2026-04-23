@@ -126,25 +126,19 @@ void MainWindow::on_window_resize(int width, int)
     }
 }
 
+void MainWindow::show_toast(char const * message)
+{
+    AdwToast * toast = adw_toast_new(message);
+    adw_toast_set_timeout(toast, 5);
+    adw_toast_overlay_add_toast(toast_overlay, toast);
+}
+
 void MainWindow::start_encoding()
 {
     if (is_encoding.load())
     {
         return;
     }
-
-    // Když je prázdná fronta, ukázat hlášení a konec
-    if (video_queue.get_all_videos().empty())
-    {
-        auto dialog = Gtk::AlertDialog::create();
-        dialog -> set_message("No videos in queue");
-        dialog -> set_detail("Video queue is empty. Start with adding some videos into the queue. ");
-        dialog -> set_buttons({"Okay"});
-        dialog -> set_modal();
-        dialog -> show(*this);
-        return;
-    }
-
     // Vyčistit předchozí výsledky
     {
         std::lock_guard<std::mutex> lock(encoding_mutex);
@@ -233,20 +227,8 @@ void MainWindow::encoding_worker()
             result.was_cancelled = (exit_code == -2);
             encoding_results.push_back(result);
             
-            auto dialog = Gtk::AlertDialog::create();
-            dialog -> set_message("Cannot create output");
-            dialog -> set_detail("There was an error while creating specified output: \n" + video -> get_output_path() + "\n\nPlease make sure you have sufficient rights to write in this folder or set a different output. \n\n Encoding was cancelled. ");
-            dialog -> set_buttons({"Okay"});
-            dialog -> set_cancel_button(0);
-            dialog -> set_modal();
-            
-            // Po uzavření dialogového okna se objeví výsledky
-            dialog -> choose(*this, 
-            [this](Glib::RefPtr<Gio::AsyncResult>&) 
-            {
-                show_results_dialog();
-            });
-            
+            show_toast("Error while creating output: Insufficient rights");
+            show_results_dialog();
             return;
         }
 
@@ -394,14 +376,7 @@ void MainWindow::file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& re
     catch (const Glib::Error& error)
     {
         cerr << RED << "Error opening files with file picker! " << error.what() << RESET << endl;
-
-        auto error_dialog = Gtk::AlertDialog::create();
-        error_dialog -> set_message("Error opening files with file picker! ");
-        error_dialog -> set_detail("There was a problem with opening files: \n\n");
-        error_dialog -> set_buttons({"Okay"});
-        error_dialog -> set_cancel_button(0);
-
-        error_dialog -> show(* dynamic_cast<Gtk::Window *>(get_root()));
+        show_toast("Error opening files with file picker!");
         signal_loading_videos.emit(false);
     }
 }

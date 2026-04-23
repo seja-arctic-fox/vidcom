@@ -1,17 +1,14 @@
 #include "gio/gio.h"
 #include "glib-object.h"
+#include "glibmm/convert.h"
 #include "glibmm/main.h"
 #include "glibmm/refptr.h"
 #include "glibmm/ustring.h"
 #include "glibmm/value.h"
-#include "gtkmm/alertdialog.h"
 #include "gtkmm/droptarget.h"
 #include "gtkmm/enums.h"
-#include "gtkmm/filedialog.h"
 #include "gtkmm/object.h"
 #include "gtkmm/scrolledwindow.h"
-#include "gtkmm/widget.h"
-#include "gtkmm/window.h"
 #include "gui.h"
 #include "sigc++/functors/mem_fun.h"
 #include <string>
@@ -144,15 +141,17 @@ void QueueFrame::on_row_selected(Gtk::ListBoxRow * row)
 
 }
 
-void QueueFrame::error_dialog_not_a_video()
+void QueueFrame::error_toast_not_a_video(string file)
 {
-    auto dialog = Gtk::AlertDialog::create();
-    dialog -> set_message("Imported file is not a video!");
-    dialog -> set_detail("Input file is not a video file or no video streams were found. ");
-    dialog -> set_buttons({"Got it"});
-    dialog -> set_cancel_button(0);
-
-    dialog -> show(* dynamic_cast<Gtk::Window *>(get_root()));
+    Glib::ustring filename = Glib::filename_display_name(file);
+    
+    if (filename.length() > 20)
+        filename = filename.substr(0, 17) + "...";
+    
+    std::ostringstream os;
+    os << "Imported file (" << filename << ") is not a video!";
+    string message = os.str();
+    dynamic_cast<MainWindow *>(get_root()) -> show_toast(os.str().c_str());
 }
 
 void QueueFrame::add_video(const std::string& input_path)
@@ -166,7 +165,7 @@ void QueueFrame::add_video(const std::string& input_path)
 
     if (duration == -1)
     {
-        error_dialog_not_a_video();
+        error_toast_not_a_video(fs::path(input_path).filename().generic_string());
         return;
     }
 
