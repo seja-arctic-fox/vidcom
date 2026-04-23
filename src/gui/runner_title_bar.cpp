@@ -113,6 +113,7 @@ void RunnerPanel::set_loading_state(bool is_loading)
     { 
         update_status("Loading", "warning"); 
         EncodingIconStatus.set_from_icon_name("applications-system-symbolic");
+        block_encoding_button();
     }
     else if (request_button_unblock)
     { 
