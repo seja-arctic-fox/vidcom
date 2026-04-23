@@ -124,8 +124,9 @@ class RunnerPanel : public Gtk::HeaderBar
         void update_encoding_progress(const EncodingProgress& progress);
         void set_encoding_state(bool is_encoding);
         void update_status(const std::string& status, const std::string& css_class = "");
-        void set_block_encoding_button(bool block);
+        void block_encoding_button(bool block = true);
         void set_loading_state(bool is_loading);
+        void request_encoding_button_unblock(){ request_button_unblock = true; };
         void update_loading_progress(int video_index, int video_count);
         void show_queue_button(bool show);
         void set_title(VideoElement * video_element);
@@ -138,7 +139,8 @@ class RunnerPanel : public Gtk::HeaderBar
         sigc::signal<void()> signal_toggle_queue;
 
     protected:
-        bool isEncoding;
+        bool isEncoding = false;
+        bool request_button_unblock = false;
 
         Gtk::Button queue_display_button;
         Gtk::ProgressBar EncodingProgressBar;

@@ -156,18 +156,30 @@ void QueueFrame::error_toast_not_a_video(string file)
 
 void QueueFrame::add_video(const std::string& input_path)
 {
-    select_all_button.set_can_target();
-    select_all_button.set_active(false);
-    clear_queue_button.set_can_target();
-
     VideoElement * new_video = Gtk::make_managed<VideoElement>(input_path);
     float duration = new_video->video.get_video_info().duration;
 
     if (duration == -1)
     {
         error_toast_not_a_video(fs::path(input_path).filename().generic_string());
+        if (clear_queue_button.get_can_target())
+            signal_enable_encoding.emit();
+        else
+            signal_queue_cleared.emit();
+        
         return;
     }
+    
+    signal_enable_encoding.emit();
+    
+    select_all_button.set_can_target();
+    select_all_button.set_active(false);
+    clear_queue_button.set_can_target();
+    select_all_button.remove_css_class("flat");
+    clear_queue_button.remove_css_class("flat");
+    
+    video_listbox.append(* new_video);
+    video_listbox.select_row(*video_listbox.get_row_at_index(0));
 
     // Signál odstranění odstraní video ze seznamu
     new_video -> signal_remove.connect([this, new_video](VideoElement *)
@@ -189,10 +201,6 @@ void QueueFrame::add_video(const std::string& input_path)
             }
         }
     );
-
-    video_listbox.append(* new_video);
-    video_listbox.select_row(*video_listbox.get_row_at_index(0));
-    signal_enable_encoding.emit();
 }
 
 void QueueFrame::on_clear_clicked()

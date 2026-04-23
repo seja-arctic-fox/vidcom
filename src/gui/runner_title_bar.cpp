@@ -5,8 +5,7 @@
 #include <string>
 
 RunnerPanel::RunnerPanel()
-:   isEncoding(false),
-    EncodingProgressBar(),
+:   EncodingProgressBar(),
     EncodingButton(),
     WindowTitle("No video selected")
 {
@@ -45,7 +44,7 @@ RunnerPanel::RunnerPanel()
         { signal_toggle_queue.emit(); });
     
     // Stavový text a ikona
-    EncodingIconStatus.set_from_icon_name("selection-mode-symbolic");
+    EncodingIconStatus.set_from_icon_name("tool-select-ellipse-symbolic");
     EncodingIconStatus.set_margin_start(10);
     EncodingTextStatus.set_expand(false);
 
@@ -63,7 +62,8 @@ RunnerPanel::RunnerPanel()
     // Spouštěcí tlačítko
     EncodingButton.set_expand(false);
     EncodingButton.set_icon_name("media-playback-start-symbolic");
-    set_block_encoding_button(true);
+    block_encoding_button(true);
+    update_status("Queue Empty", "warning");
     EncodingButton.set_halign(Gtk::Align::START);
 
     pack_start(queue_display_button);
@@ -114,13 +114,20 @@ void RunnerPanel::set_loading_state(bool is_loading)
         update_status("Loading", "warning"); 
         EncodingIconStatus.set_from_icon_name("applications-system-symbolic");
     }
-    else 
+    else if (request_button_unblock)
     { 
-        update_status("Ready", "success"); 
+        update_status("Ready", "success");
+        block_encoding_button(false);
         EncodingIconStatus.set_from_icon_name("selection-mode-symbolic");
         EncodingProgressBar.set_text("Nothing to do...");
-        EncodingProgressBar.set_fraction(0);
+        request_button_unblock = false;
     }
+    else
+    {
+        block_encoding_button();
+    }
+    
+    EncodingProgressBar.set_fraction(0);
 }
 
 void RunnerPanel::on_start_stop_clicked()
@@ -201,22 +208,22 @@ void RunnerPanel::update_status(const std::string& status, const std::string& cs
         EncodingTextStatus.remove_css_class("error");
         EncodingTextStatus.add_css_class(css_class);
     }
+    
+    if (status == "Queue Empty")
+        EncodingIconStatus.set_from_icon_name("tool-select-ellipse-symbolic");
 }
 
-void RunnerPanel::set_block_encoding_button(bool block)
+void RunnerPanel::block_encoding_button(bool block)
 {
     EncodingButton.set_sensitive(!block);
     
     if (block)
     {
         EncodingButton.remove_css_class("suggested-action");
-        EncodingButton.add_css_class("flat");
-        update_status("Queue Empty", "warning");
+        EncodingButton.remove_css_class("destructive-action");
     }
     else
     {
-        EncodingButton.remove_css_class("flat");
         EncodingButton.add_css_class("suggested-action");
-        update_status("Ready");
     }
 }
