@@ -124,7 +124,7 @@ class RunnerPanel : public Gtk::HeaderBar
         void update_encoding_progress(const EncodingProgress& progress);
         void set_encoding_state(bool is_encoding);
         void update_status(const std::string& status, const std::string& css_class = "");
-        void block_encoding_button(bool block);
+        void set_block_encoding_button(bool block);
         void set_loading_state(bool is_loading);
         void update_loading_progress(int video_index, int video_count);
         void show_queue_button(bool show);
@@ -164,6 +164,8 @@ class QueueFrame : public Gtk::Box
         sigc::signal<void()> signal_nothing_selected;
         sigc::signal<void(bool)> signal_loading_videos;
         sigc::signal<void(int, int)> signal_loading_videos_count;
+        sigc::signal<void()> signal_queue_cleared;
+        sigc::signal<void()> signal_enable_encoding;
     
     protected:
         // Prostor pro prvky fronty a seznam prvků

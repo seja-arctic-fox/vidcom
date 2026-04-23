@@ -45,11 +45,8 @@ RunnerPanel::RunnerPanel()
         { signal_toggle_queue.emit(); });
     
     // Stavový text a ikona
-    EncodingIconStatus.add_css_class("success");
     EncodingIconStatus.set_from_icon_name("selection-mode-symbolic");
     EncodingIconStatus.set_margin_start(10);
-    EncodingTextStatus.add_css_class("success");
-    EncodingTextStatus.set_markup("<b>Ready</b>");
     EncodingTextStatus.set_expand(false);
 
     // Postup
@@ -66,7 +63,7 @@ RunnerPanel::RunnerPanel()
     // Spouštěcí tlačítko
     EncodingButton.set_expand(false);
     EncodingButton.set_icon_name("media-playback-start-symbolic");
-    EncodingButton.add_css_class("suggested-action");
+    set_block_encoding_button(true);
     EncodingButton.set_halign(Gtk::Align::START);
 
     pack_start(queue_display_button);
@@ -206,7 +203,20 @@ void RunnerPanel::update_status(const std::string& status, const std::string& cs
     }
 }
 
-void RunnerPanel::block_encoding_button(bool block)
+void RunnerPanel::set_block_encoding_button(bool block)
 {
     EncodingButton.set_sensitive(!block);
+    
+    if (block)
+    {
+        EncodingButton.remove_css_class("suggested-action");
+        EncodingButton.add_css_class("flat");
+        update_status("Queue Empty", "warning");
+    }
+    else
+    {
+        EncodingButton.remove_css_class("flat");
+        EncodingButton.add_css_class("suggested-action");
+        update_status("Ready");
+    }
 }

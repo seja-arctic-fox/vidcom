@@ -76,10 +76,12 @@ MainWindow::MainWindow()
     runner_panel.signal_toggle_queue.connect([this]()
         { adw_overlay_split_view_set_show_sidebar(split_view, true); });
     
-    // Signály pro změny názvu videa v runneru
+    // Signály pro změny názvu videa v runneru a změnu stavu tlačítka pro kódování
     video_queue.signal_video_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_title));
     video_queue.signal_all_videos_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_title_multiple));
     video_queue.signal_nothing_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::clear_title));
+    video_queue.signal_enable_encoding.connect([this]() { runner_panel.set_block_encoding_button(false); } );
+    video_queue.signal_queue_cleared.connect([this]() { runner_panel.set_block_encoding_button(true); } );
     
     // Propojení signálů pro aktualizaci nastavení videa
     video_queue.signal_video_selected.connect(sigc::mem_fun(options_page, &VideoSettings_VBox::read_video_options));
@@ -169,7 +171,7 @@ void MainWindow::stop_encoding()
     // Zastavit kódování
     is_encoding.store(false);
     runner_panel.update_status("Cancelling...");
-    runner_panel.block_encoding_button(true);
+    runner_panel.set_block_encoding_button(true);
 
     // Zrušit kódování pro všechna videa
     std::vector<Video *> all_videos = video_queue.get_all_videos();
@@ -263,7 +265,7 @@ void MainWindow::on_progress_update()
 void MainWindow::on_encoding_complete()
 {
     runner_panel.set_encoding_state(false);
-    runner_panel.block_encoding_button(false);
+    runner_panel.set_block_encoding_button(false);
     paned.set_sensitive();
 
     if (encoding_thread.joinable())

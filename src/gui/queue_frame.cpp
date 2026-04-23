@@ -184,6 +184,7 @@ void QueueFrame::add_video(const std::string& input_path)
                     select_all_button.set_active(false);
                     select_all_button.set_can_target(false);
                     clear_queue_button.set_can_target(false);
+                    signal_queue_cleared.emit();
                 }
             }
         }
@@ -191,6 +192,7 @@ void QueueFrame::add_video(const std::string& input_path)
 
     video_listbox.append(* new_video);
     video_listbox.select_row(*video_listbox.get_row_at_index(0));
+    signal_enable_encoding.emit();
 }
 
 void QueueFrame::on_clear_clicked()
@@ -202,6 +204,7 @@ void QueueFrame::on_clear_clicked()
     video_listbox.set_selection_mode(Gtk::SelectionMode::SINGLE);
 
     signal_nothing_selected.emit();
+    signal_queue_cleared.emit();
 
     // Nastavit zpět placeholder
     video_listbox.set_placeholder(empty_queue_box);
