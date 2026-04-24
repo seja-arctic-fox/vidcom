@@ -63,7 +63,7 @@ QueueFrame::QueueFrame()
     empty_queue_icon.set_from_icon_name("camera-video-symbolic");
     empty_queue_icon.set_pixel_size(128);
     empty_queue_icon.add_css_class("dimmed");
-    empty_queue_caption.set_text("...or click the button below to import them. ");
+    empty_queue_caption.set_text("...or click the button to import them. ");
     empty_queue_caption.add_css_class("caption");
     empty_queue_icon.set_margin(20);
     empty_queue_label.set_margin(10);

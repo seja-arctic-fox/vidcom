@@ -14,11 +14,33 @@ MainWindow::MainWindow()
     header_bar(),
     runner_panel(),
     options_page(),
+    main_page_stack(),
+    add_videos_pill_button("Add Video(s)"),
     is_encoding(false)
 {
     set_title("VidCom");
     set_default_size(960, 540);
     gtk_window_set_titlebar(GTK_WINDOW(gobj()), gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
+    
+    // Stránka pro prázdnou frontu
+    add_videos_pill_button.add_css_class("pill");
+    add_videos_pill_button.add_css_class("suggested-action");
+    add_videos_pill_button.set_hexpand(false);
+    add_videos_pill_button.set_halign(Gtk::Align::CENTER);
+    add_videos_pill_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_import_video_clicked));
+    
+    queue_empty_page = ADW_STATUS_PAGE(adw_status_page_new());
+    adw_status_page_set_icon_name(queue_empty_page, "folder-templates-symbolic");
+    adw_status_page_set_title(queue_empty_page, "Video queue is empty");
+    adw_status_page_set_description(queue_empty_page, "Start with importing videos into the queue");
+    adw_status_page_set_child(queue_empty_page, GTK_WIDGET(add_videos_pill_button.gobj()));
+    
+    // Zásobník pro stránky na hlavní části
+    main_page_stack.set_transition_type(Gtk::StackTransitionType::CROSSFADE);
+    main_page_stack.set_transition_duration(250);
+    
+    main_page_stack.add(*Glib::wrap(GTK_WIDGET(queue_empty_page)), "queue_empty_page");
+    main_page_stack.add(options_page, "options_page");
     
     // Hlavní nabídka
     main_menu = Gio::Menu::create();
@@ -32,10 +54,12 @@ MainWindow::MainWindow()
         }());
     
     menu_button.set_icon_name("open-menu-symbolic");;
+    menu_button.set_tooltip_text("Main menu");
     menu_button.set_menu_model(main_menu);
     
     // Přidat video
     add_videos_button.set_icon_name("tab-new-symbolic");
+    add_videos_button.set_tooltip_text("Add video(s)");
     add_videos_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_import_video_clicked));
     
     // Postranní panel
@@ -52,7 +76,7 @@ MainWindow::MainWindow()
     adw_toolbar_view_add_top_bar(content_view, GTK_WIDGET(runner_panel.gobj()));
     
     toast_overlay = ADW_TOAST_OVERLAY(adw_toast_overlay_new());
-    adw_toast_overlay_set_child(toast_overlay, GTK_WIDGET(options_page.gobj()));
+    adw_toast_overlay_set_child(toast_overlay, GTK_WIDGET(main_page_stack.gobj()));
     adw_toolbar_view_set_content(content_view, GTK_WIDGET(toast_overlay));
     
     // Složení hlavní části a postranního panelu
@@ -76,12 +100,25 @@ MainWindow::MainWindow()
     runner_panel.signal_toggle_queue.connect([this]()
         { adw_overlay_split_view_set_show_sidebar(split_view, true); });
     
-    // Signály pro změny názvu videa v runneru a změnu stavu tlačítka pro kódování
+    // Signály pro změny názvu videa v runneru
     video_queue.signal_video_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_title));
     video_queue.signal_all_videos_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_title_multiple));
     video_queue.signal_nothing_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::clear_title));
-    video_queue.signal_enable_encoding.connect([this]() { runner_panel.request_encoding_button_unblock(); } );
-    video_queue.signal_queue_cleared.connect([this]() { runner_panel.block_encoding_button(); runner_panel.update_status("Queue Empty", "warning"); } );
+    
+    // Přepínání stavů a (od)blokování tlačítka pro kódování
+    video_queue.signal_enable_encoding.connect([this]() 
+        {
+            runner_panel.request_encoding_button_unblock(); 
+            main_page_stack.set_visible_child("options_page");
+        }
+    );
+    video_queue.signal_queue_cleared.connect([this]() 
+        {
+            runner_panel.block_encoding_button(); 
+            runner_panel.update_status("Queue Empty", "warning");
+            main_page_stack.set_visible_child("queue_empty_page");
+        }
+    );
     
     // Propojení signálů pro aktualizaci nastavení videa
     video_queue.signal_video_selected.connect(sigc::mem_fun(options_page, &VideoSettings_VBox::read_video_options));

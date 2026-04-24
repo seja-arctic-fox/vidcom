@@ -420,7 +420,11 @@ class MainWindow : public Gtk::Window
         QueueFrame video_queue;
         VideoSettings_VBox options_page;
         Gtk::Paned paned;
+        Gtk::Stack main_page_stack;
+        AdwStatusPage * queue_empty_page;
+        Gtk::Button add_videos_pill_button;
         
+        // Layout aplikace
         Glib::RefPtr<Gio::Menu> main_menu;
         Gtk::MenuButton menu_button;
         Gtk::Button add_videos_button;
