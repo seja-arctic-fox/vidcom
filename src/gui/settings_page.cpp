@@ -220,6 +220,7 @@ VideoSettings_VBox::VideoSettings_VBox()
     cut_desc_trigger.signal_clicked().connect([this](){cut_desc.popup();});
 
     cut_heading.add_css_class("title-4");
+    cut_heading.set_ellipsize(Pango::EllipsizeMode::MIDDLE);
     cut_desc_trigger.set_icon_name("help-about-symbolic");
     cut_desc_trigger.add_css_class("flat");
     cut_heading_hbox.set_margin(10);
@@ -403,6 +404,8 @@ VideoSettings_VBox::VideoSettings_VBox()
     cut_widget.signal_cut_change.connect(sigc::mem_fun(*this, &VideoSettings_VBox::update));
     set_prefix_field.signal_changed().connect(sigc::mem_fun(*this, &VideoSettings_VBox::update));
     set_output_folder_button.signal_clicked().connect(sigc::mem_fun(*this, &VideoSettings_VBox::set_output_path));
+    fps_field.signal_value_changed().connect(sigc::mem_fun(*this, &VideoSettings_VBox::update));
+    res_field.signal_value_changed().connect(sigc::mem_fun(*this, &VideoSettings_VBox::update));
 }
 
 VideoSettings_VBox::~VideoSettings_VBox()
@@ -489,14 +492,7 @@ void VideoSettings_VBox::on_folder_selected(Glib::RefPtr<Gio::AsyncResult> &resu
     catch (const Glib::Error& error)
     {
         cerr << "Error selecting folder: " << error.what() << endl;
-        
-        auto error_dialog = Gtk::AlertDialog::create();
-        error_dialog->set_message("Error selecting folder!");
-        error_dialog->set_detail("There was a problem selecting the folder:\n\n" + Glib::ustring(error.what()));
-        error_dialog->set_buttons({"OK"});
-        error_dialog->set_cancel_button(0);
-        
-        error_dialog->show(*dynamic_cast<Gtk::Window*>(get_root()));
+        dynamic_cast<MainWindow *>(get_root()) -> show_toast("Error selecting folder!");
     }
 }
 
