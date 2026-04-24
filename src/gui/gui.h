@@ -4,6 +4,7 @@
 #include "glibmm/dispatcher.h"
 #include "glibmm/refptr.h"
 #include "glibmm/value.h"
+#include "glibmm/variant.h"
 #include "gtkmm/adjustment.h"
 #include "gtkmm/box.h"
 #include "gtkmm/button.h"
@@ -458,6 +459,7 @@ class MainWindow : public Gtk::Window
         
         void on_window_resize(int width, int height);
         void on_import_video_clicked();
+        void display_about_dialog(const Glib::VariantBase&);
         void file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& result, Glib::RefPtr<Gtk::FileDialog> file_picker);
 
         //Signály načítání - file picker

@@ -1,5 +1,7 @@
 #include "gui.h"
 #include "adwaita.h"
+#include "giomm/simpleaction.h"
+#include "gtk/gtk.h"
 #include "gtkmm/headerbar.h"
 #include "sigc++/functors/mem_fun.h"
 #include "src/cli/cli.h"
@@ -44,18 +46,26 @@ MainWindow::MainWindow()
     
     // Hlavní nabídka
     main_menu = Gio::Menu::create();
-    main_menu -> append("Settings", "app.preferences");
+    main_menu -> append("Preferences", "app.preferences");
     main_menu -> append("Keyboard Shortcuts", "app.shortcuts");
     main_menu -> append_section({}, []
         {
             auto s = Gio::Menu::create();
-            s -> append("About VidCom");
+            s -> append("About VidCom", "app.about");
             return s;
         }());
     
     menu_button.set_icon_name("open-menu-symbolic");;
     menu_button.set_tooltip_text("Main menu");
     menu_button.set_menu_model(main_menu);
+    
+    // Akce
+    auto app = Gtk::Application::get_default();
+    
+    // O aplikaci
+    auto about_action = Gio::SimpleAction::create("about");
+    about_action -> signal_activate().connect(sigc::mem_fun(*this, &MainWindow::display_about_dialog));
+    app -> add_action(about_action);
     
     // Přidat video
     add_videos_button.set_icon_name("tab-new-symbolic");
@@ -139,6 +149,21 @@ MainWindow::MainWindow()
     // Komunikace mezi vlákny
     progress_dispatcher.connect(sigc::mem_fun(*this, &MainWindow::on_progress_update));
     completion_dispatcher.connect(sigc::mem_fun(*this, &MainWindow::on_encoding_complete));
+}
+
+void MainWindow::display_about_dialog(const Glib::VariantBase&)
+{
+    auto dialog = ADW_ABOUT_DIALOG(adw_about_dialog_new());
+    
+    adw_about_dialog_set_application_name(dialog, "VidCom");
+    adw_about_dialog_set_version(dialog, "0.82 Beta");
+    adw_about_dialog_set_developer_name(dialog, "seja-arctic-fox");
+    adw_about_dialog_set_application_icon(dialog, "io.github.seja_arctic_fox.vidcom");
+    adw_about_dialog_set_website(dialog, "https://seja-arctic-fox.github.io/");
+    adw_about_dialog_set_issue_url(dialog, "https://github.com/seja-arctic-fox/vidcom/issues");
+    adw_about_dialog_set_license_type(dialog, GTK_LICENSE_GPL_3_0);
+    
+    adw_dialog_present(ADW_DIALOG(dialog), GTK_WIDGET(gobj()));
 }
 
 MainWindow::~MainWindow()
