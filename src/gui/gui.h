@@ -398,9 +398,33 @@ class ResultsPage : public Gtk::Box
         sigc::signal<void()> signal_close_results;
         
     protected:
+        Gtk::Label result_label;
         Gtk::ScrolledWindow scrolled_window;
         Gtk::ListBox results_listbox;
         Gtk::Button ok_button;
+};
+
+class ResultRow : public Gtk::Box
+{
+    friend class ResultsPage;
+    
+    public:
+        ResultRow(fs::path video_path, int status);
+        ~ResultRow();
+        
+    protected:
+        fs::path video_path;
+        int status;
+    
+        Gtk::Label result_label, video_name, status_text;
+        Gtk::Image status_icon;
+        Gtk::Button output_folder_button;
+        Gtk::Box box_right;
+        
+        void open_video();
+        void on_video_folder_open();
+        void set_status();
+        void set_output_folder_button();
 };
 
 class MainWindow : public Gtk::Window
