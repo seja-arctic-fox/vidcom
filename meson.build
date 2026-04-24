@@ -27,7 +27,7 @@ gui = [
   './src/gui/av1_page.cpp',
   './src/gui/hevc_page.cpp',
   './src/gui/vp9_page.cpp',
-  './src/gui/results_dialog.cpp',
+  './src/gui/results_page.cpp',
   './src/gui/time_setter.cpp',
   './src/gui/cut_widget.cpp'
 ]
