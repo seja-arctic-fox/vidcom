@@ -13,6 +13,7 @@ ResultsPage::ResultsPage()
     result_label.set_margin(10);
     result_label.set_halign(Gtk::Align::CENTER);
     result_label.add_css_class("heading");
+    result_label.set_ellipsize(Pango::EllipsizeMode::END);
     
     results_listbox.set_expand();
     results_listbox.add_css_class("card");
