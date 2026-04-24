@@ -2,7 +2,6 @@
 #include "adwaita.h"
 #include "giomm/simpleaction.h"
 #include "gtk/gtk.h"
-#include "gtkmm/headerbar.h"
 #include "sigc++/functors/mem_fun.h"
 #include "src/cli/cli.h"
 #include <iostream>
@@ -12,7 +11,6 @@
 
 MainWindow::MainWindow()
 :
-    header_bar(),
     runner_panel(),
     options_page(),
     main_page_stack(),
@@ -36,6 +34,19 @@ MainWindow::MainWindow()
     adw_status_page_set_description(queue_empty_page, "Start with importing videos into the queue");
     adw_status_page_set_child(queue_empty_page, GTK_WIDGET(add_videos_pill_button.gobj()));
     
+    // Stránka pro kódování
+    encoding_page_progress.add_css_class("chunky-progress");
+    encoding_page_progress.set_show_text(false);
+    encoding_page_progress.set_margin(20);
+    encoding_page_progress.set_valign(Gtk::Align::CENTER);
+    encoding_page_progress.set_fraction(0);
+    
+    encoding_page = ADW_STATUS_PAGE(adw_status_page_new());
+    adw_status_page_set_icon_name(encoding_page, "system-run-symbolic");
+    adw_status_page_set_title(encoding_page, "Encoding videos...");
+    adw_status_page_set_description(encoding_page, "");
+    adw_status_page_set_child(encoding_page, GTK_WIDGET(encoding_page_progress.gobj()));
+    
     // Zásobník pro stránky na hlavní části
     main_page_stack.set_transition_type(Gtk::StackTransitionType::CROSSFADE);
     main_page_stack.set_transition_duration(250);
@@ -44,6 +55,7 @@ MainWindow::MainWindow()
     main_page_stack.add(*Glib::wrap(GTK_WIDGET(queue_empty_page)), "queue_empty_page");
     main_page_stack.add(options_page, "options_page");
     main_page_stack.add(results_page, "results_page");
+    main_page_stack.add(*Glib::wrap(GTK_WIDGET(encoding_page)), "encoding_page");
     
     // Hlavní nabídka
     main_menu = Gio::Menu::create();
@@ -215,7 +227,7 @@ void MainWindow::start_encoding()
 
     // Start kódování
     runner_panel.set_encoding_state(true);
-    paned.set_sensitive(false);
+    main_page_stack.set_visible_child("encoding_page");
 
     is_encoding.store(true);
 
@@ -326,13 +338,17 @@ void MainWindow::on_progress_update()
 {
     std::lock_guard<std::mutex> lock(encoding_mutex);
     runner_panel.update_encoding_progress(current_progress);
+    encoding_page_progress.set_fraction(current_progress.progress_percent / 100.0);
+    std::ostringstream new_text;
+    new_text << "Encoding: " << current_progress.video_name;
+    adw_status_page_set_description(encoding_page, new_text.str().c_str());
 }
 
 void MainWindow::on_encoding_complete()
 {
     runner_panel.set_encoding_state(false);
     runner_panel.block_encoding_button(false);
-    paned.set_sensitive();
+    encoding_page_progress.set_fraction(0);
 
     if (encoding_thread.joinable())
     {

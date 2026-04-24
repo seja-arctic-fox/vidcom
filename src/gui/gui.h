@@ -437,13 +437,15 @@ class MainWindow : public Gtk::Window
         void show_toast(char const * message);
 
     protected:
-        Gtk::HeaderBar header_bar;
+        // Gtk::HeaderBar header_bar;
         RunnerPanel runner_panel;
         QueueFrame video_queue;
         VideoSettings_VBox options_page;
-        Gtk::Paned paned;
+        // Gtk::Paned paned;
         Gtk::Stack main_page_stack;
         AdwStatusPage * queue_empty_page;
+        AdwStatusPage * encoding_page;
+        Gtk::ProgressBar encoding_page_progress;
         Gtk::Button add_videos_pill_button;
         ResultsPage results_page;
         

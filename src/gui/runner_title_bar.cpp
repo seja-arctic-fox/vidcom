@@ -145,7 +145,8 @@ void RunnerPanel::on_start_stop_clicked()
 
 void RunnerPanel::update_encoding_progress(const EncodingProgress& progress)
 {
-    double fraction = progress.progress_percent / 100.0;
+    double fraction = (progress.current_index - 1.0) / progress.total_count;
+    fraction += (progress.progress_percent / 100.0) / progress.total_count;
     if (fraction > 1) fraction = 1;
     int percentage = fraction * 100;
     
