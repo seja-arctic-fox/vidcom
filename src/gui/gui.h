@@ -22,7 +22,6 @@
 #include "gtkmm/label.h"
 #include "gtkmm/listbox.h"
 #include "gtkmm/listboxrow.h"
-#include "gtkmm/paned.h"
 #include "gtkmm/popover.h"
 #include "gtkmm/progressbar.h"
 #include "gtkmm/scale.h"
@@ -437,11 +436,9 @@ class MainWindow : public Gtk::Window
         void show_toast(char const * message);
 
     protected:
-        // Gtk::HeaderBar header_bar;
         RunnerPanel runner_panel;
         QueueFrame video_queue;
         VideoSettings_VBox options_page;
-        // Gtk::Paned paned;
         Gtk::Stack main_page_stack;
         AdwStatusPage * queue_empty_page;
         AdwStatusPage * encoding_page;
