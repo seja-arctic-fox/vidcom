@@ -1,7 +1,6 @@
 #include "gui.h"
 #include "adwaita.h"
 #include "gtkmm/headerbar.h"
-#include "gtkmm/object.h"
 #include "sigc++/functors/mem_fun.h"
 #include "src/cli/cli.h"
 #include <iostream>
@@ -41,6 +40,7 @@ MainWindow::MainWindow()
     
     main_page_stack.add(*Glib::wrap(GTK_WIDGET(queue_empty_page)), "queue_empty_page");
     main_page_stack.add(options_page, "options_page");
+    main_page_stack.add(results_page, "results_page");
     
     // Hlavní nabídka
     main_menu = Gio::Menu::create();
@@ -132,6 +132,9 @@ MainWindow::MainWindow()
     video_queue.signal_loading_videos_count.connect(sigc::mem_fun(runner_panel, &RunnerPanel::update_loading_progress));
     signal_loading_videos.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_loading_state));
     signal_loading_videos_count.connect(sigc::mem_fun(runner_panel, &RunnerPanel::update_loading_progress));
+    
+    // Signál pro přepnutí zpět z výsledkové stránky
+    results_page.signal_close_results.connect([this]() { main_page_stack.set_visible_child("options_page"); });
 
     // Komunikace mezi vlákny
     progress_dispatcher.connect(sigc::mem_fun(*this, &MainWindow::on_progress_update));
@@ -321,8 +324,8 @@ void MainWindow::show_results_dialog()
     notification_finish -> set_body("Queued videos have been compressed. Click here to see results");
     app -> send_notification(notification_finish);
 
-    auto result_dialog = Gtk::make_managed<ResultsDialog>(*this, encoding_results);
-    result_dialog -> set_visible();
+    results_page.load_results(encoding_results);
+    main_page_stack.set_visible_child("results_page");
 }
 
 void MainWindow::on_import_video_clicked()

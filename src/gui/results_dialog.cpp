@@ -14,47 +14,39 @@
 #include <iostream>
 #include "../cli/cli.h"
 
-ResultsDialog::ResultsDialog(Gtk::Window& parent, const std::vector<EncodingResult>& encoding_results)
-:   encoding_results(encoding_results),
-    scrolled_window(),
+ResultsPage::ResultsPage()
+:   
     results_listbox(),
-    window_content(Gtk::Orientation::VERTICAL),
     ok_button("Okay")
 {
-    set_transient_for(parent);
-    set_modal();
-    set_title("Encoding Results");
-    set_child(scrolled_window);
-    set_size_request(960, 540);
-
     results_listbox.set_expand();
     results_listbox.add_css_class("card");
     results_listbox.add_css_class("flat");
-    load_results();
     results_listbox.set_selection_mode(Gtk::SelectionMode::NONE);
 
     ok_button.set_margin(20);
-
-    window_content.set_margin(20);
-    window_content.append(results_listbox);
-    window_content.append(ok_button);
+    ok_button.set_hexpand(false);
+    ok_button.add_css_class("suggested-action");
+    ok_button.add_css_class("pill");
+    ok_button.signal_clicked().connect([this]() { signal_close_results.emit(); });
 
     scrolled_window.set_policy(Gtk::PolicyType::NEVER, Gtk::PolicyType::AUTOMATIC);
     scrolled_window.set_expand();
-    scrolled_window.set_child(window_content);
-
-    ok_button.signal_clicked().connect([this]()
-        {
-            destroy();
-        }
-    );
+    scrolled_window.set_child(results_listbox);
+    
+    set_margin(20);
+    set_orientation(Gtk::Orientation::VERTICAL);
+    append(scrolled_window);
+    append(ok_button);
 }
 
-ResultsDialog::~ResultsDialog()
+ResultsPage::~ResultsPage()
 {}
 
-void ResultsDialog::load_results()
+void ResultsPage::load_results(std::vector<EncodingResult> encoding_results)
 {
+    results_listbox.remove_all();
+    
     for (auto result : encoding_results)
     {
         auto row = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL);

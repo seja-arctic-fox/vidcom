@@ -8,7 +8,6 @@
 #include "gtkmm/box.h"
 #include "gtkmm/button.h"
 #include "gtkmm/checkbutton.h"
-#include "gtkmm/dialog.h"
 #include "gtkmm/dragsource.h"
 #include "gtkmm/droptarget.h"
 #include "gtkmm/entry.h"
@@ -389,21 +388,19 @@ class VideoSettings_VBox : public Gtk::ScrolledWindow
     };
 
 
-class ResultsDialog : public Gtk::Dialog
+class ResultsPage : public Gtk::Box
 {
     public:
-        ResultsDialog(Gtk::Window& parent, const std::vector<EncodingResult>& encoding_results);
-        ~ResultsDialog();
+        ResultsPage();
+        ~ResultsPage();
     
+        void load_results(std::vector<EncodingResult> encoding_results);
+        sigc::signal<void()> signal_close_results;
+        
     protected:
-        std::vector<EncodingResult> encoding_results;
-
         Gtk::ScrolledWindow scrolled_window;
         Gtk::ListBox results_listbox;
-        Gtk::Box window_content;
         Gtk::Button ok_button;
-
-        void load_results();
 };
 
 class MainWindow : public Gtk::Window
@@ -423,6 +420,7 @@ class MainWindow : public Gtk::Window
         Gtk::Stack main_page_stack;
         AdwStatusPage * queue_empty_page;
         Gtk::Button add_videos_pill_button;
+        ResultsPage results_page;
         
         // Layout aplikace
         Glib::RefPtr<Gio::Menu> main_menu;
