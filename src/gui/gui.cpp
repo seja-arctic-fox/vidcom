@@ -39,6 +39,7 @@ MainWindow::MainWindow()
     // Zásobník pro stránky na hlavní části
     main_page_stack.set_transition_type(Gtk::StackTransitionType::CROSSFADE);
     main_page_stack.set_transition_duration(250);
+    main_page_stack.set_hhomogeneous(false);
     
     main_page_stack.add(*Glib::wrap(GTK_WIDGET(queue_empty_page)), "queue_empty_page");
     main_page_stack.add(options_page, "options_page");
