@@ -190,14 +190,25 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_window_resize(int width, int)
 {
-    if (width < 860 && !adw_overlay_split_view_get_collapsed(split_view))
+    int content_min_width = 0;
+    double sidebar_min_width = adw_overlay_split_view_get_min_sidebar_width(split_view);
+    gtk_widget_measure(
+            GTK_WIDGET(content_view),
+            GTK_ORIENTATION_HORIZONTAL,
+            -1,
+            nullptr, &content_min_width, nullptr, nullptr
+        );
+    
+    int min_width = content_min_width + (int) sidebar_min_width;
+    
+    if (width < min_width && !adw_overlay_split_view_get_collapsed(split_view))
     {
         adw_overlay_split_view_set_collapsed(split_view, true);
         adw_overlay_split_view_set_enable_hide_gesture(split_view, true);
         adw_overlay_split_view_set_enable_show_gesture(split_view, true);
         runner_panel.show_queue_button(true);
     }
-    else if (width >= 860)
+    else if (width >= min_width)
     {
         adw_overlay_split_view_set_collapsed(split_view, false);
         adw_overlay_split_view_set_enable_hide_gesture(split_view, false);
