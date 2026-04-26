@@ -476,6 +476,7 @@ class MainWindow : public Gtk::Window
 
         EncodingProgress current_progress;
         std::vector<EncodingResult> encoding_results;
+        bool queue_lock = false;
 
         // Kódování
         void start_encoding();
