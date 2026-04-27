@@ -36,8 +36,13 @@ void Video::set_output_path(string output_path)
 
 void Video::set_bitrate_by_size(float target_size)
 {
+    float video_duration;
+    
+    if (EnableCut) { video_duration = cut.endTime - cut.startTime; }
+    else { video_duration = inputVideo.duration; }
+    
     targetSize = target_size;
-    maxBitrate = (target_size / inputVideo.duration) * 8;
+    maxBitrate = (target_size / video_duration) * 8;
     bitrate = maxBitrate * 0.75;
 }
 
@@ -53,10 +58,13 @@ void Video::set_prefix(string prefix)
 {
     this->prefix = prefix;
     string separator;
+    string extension;
 
     if (this -> prefix == "") { separator = ""; } else { separator = "_"; }
-
-    outputPath = (outputPath.parent_path() / (prefix + separator + inputVideo.path.stem().generic_string() + ".mp4"));
+    if (inputVideo.use_matroska) { extension = ".mkv"; }
+    else                         { extension = ".mp4"; }
+    
+    outputPath = (outputPath.parent_path() / (prefix + separator + inputVideo.path.stem().generic_string() + extension));
 }
 
 void Video::set_output_framerate(unsigned int fps)

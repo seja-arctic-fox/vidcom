@@ -1,36 +1,148 @@
 #include "gui.h"
-#include "gtkmm/enums.h"
-#include "gtkmm/headerbar.h"
-#include "gtkmm/object.h"
+#include "adwaita.h"
+#include "giomm/simpleaction.h"
+#include "gtk/gtk.h"
 #include "sigc++/functors/mem_fun.h"
+#include "src/cli/cli.h"
+#include <iostream>
 #include <mutex>
 #include <thread>
 #include <vector>
 
 MainWindow::MainWindow()
-:   header_bar(),
+:
     runner_panel(),
     options_page(),
+    main_page_stack(),
+    add_videos_pill_button("Add Video(s)"),
     is_encoding(false)
 {
-    set_title("VidCom 0.81 GUI");
+    set_title("VidCom");
     set_default_size(960, 540);
+    gtk_window_set_titlebar(GTK_WINDOW(gobj()), gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
+    
+    // Stránka pro prázdnou frontu
+    add_videos_pill_button.add_css_class("pill");
+    add_videos_pill_button.add_css_class("suggested-action");
+    add_videos_pill_button.set_hexpand(false);
+    add_videos_pill_button.set_halign(Gtk::Align::CENTER);
+    add_videos_pill_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_import_video_clicked));
+    
+    queue_empty_page = ADW_STATUS_PAGE(adw_status_page_new());
+    adw_status_page_set_icon_name(queue_empty_page, "folder-templates-symbolic");
+    adw_status_page_set_title(queue_empty_page, "Video queue is empty");
+    adw_status_page_set_description(queue_empty_page, "Start with importing videos into the queue");
+    adw_status_page_set_child(queue_empty_page, GTK_WIDGET(add_videos_pill_button.gobj()));
+    
+    // Stránka pro kódování
+    encoding_page_progress.add_css_class("chunky-progress");
+    encoding_page_progress.set_show_text(false);
+    encoding_page_progress.set_margin(20);
+    encoding_page_progress.set_valign(Gtk::Align::CENTER);
+    encoding_page_progress.set_fraction(0);
+    
+    encoding_page = ADW_STATUS_PAGE(adw_status_page_new());
+    adw_status_page_set_icon_name(encoding_page, "system-run-symbolic");
+    adw_status_page_set_title(encoding_page, "Encoding videos...");
+    adw_status_page_set_description(encoding_page, "");
+    adw_status_page_set_child(encoding_page, GTK_WIDGET(encoding_page_progress.gobj()));
+    
+    // Zásobník pro stránky na hlavní části
+    main_page_stack.set_transition_type(Gtk::StackTransitionType::CROSSFADE);
+    main_page_stack.set_transition_duration(250);
+    main_page_stack.set_hhomogeneous(false);
+    
+    main_page_stack.add(*Glib::wrap(GTK_WIDGET(queue_empty_page)), "queue_empty_page");
+    main_page_stack.add(options_page, "options_page");
+    main_page_stack.add(results_page, "results_page");
+    main_page_stack.add(*Glib::wrap(GTK_WIDGET(encoding_page)), "encoding_page");
+    
+    // Hlavní nabídka
+    main_menu = Gio::Menu::create();
+    main_menu -> append("Preferences", "app.preferences");
+    main_menu -> append("Keyboard Shortcuts", "app.shortcuts");
+    main_menu -> append_section({}, []
+        {
+            auto s = Gio::Menu::create();
+            s -> append("About VidCom", "app.about");
+            return s;
+        }());
+    
+    menu_button.set_icon_name("open-menu-symbolic");;
+    menu_button.set_tooltip_text("Main menu");
+    menu_button.set_menu_model(main_menu);
+    
+    // Akce
+    auto app = Gtk::Application::get_default();
+    
+    // O aplikaci
+    auto about_action = Gio::SimpleAction::create("about");
+    about_action -> signal_activate().connect(sigc::mem_fun(*this, &MainWindow::display_about_dialog));
+    app -> add_action(about_action);
+    
+    // Přidat video
+    add_videos_button.set_icon_name("tab-new-symbolic");
+    add_videos_button.set_tooltip_text("Add video(s)");
+    add_videos_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_import_video_clicked));
+    
+    // Postranní panel
+    sidebar_header = ADW_HEADER_BAR(adw_header_bar_new());
+    adw_header_bar_pack_start(sidebar_header, GTK_WIDGET(add_videos_button.gobj()));
+    adw_header_bar_pack_end(sidebar_header, GTK_WIDGET(menu_button.gobj()));
+    
+    sidebar_view = ADW_TOOLBAR_VIEW(adw_toolbar_view_new());
+    adw_toolbar_view_add_top_bar(sidebar_view, GTK_WIDGET(sidebar_header));
+    adw_toolbar_view_set_content(sidebar_view, GTK_WIDGET(video_queue.gobj()));
+    
+    // Hlavní část okna
+    content_view = ADW_TOOLBAR_VIEW(adw_toolbar_view_new());
+    adw_toolbar_view_add_top_bar(content_view, GTK_WIDGET(runner_panel.gobj()));
+    
+    toast_overlay = ADW_TOAST_OVERLAY(adw_toast_overlay_new());
+    adw_toast_overlay_set_child(toast_overlay, GTK_WIDGET(main_page_stack.gobj()));
+    adw_toolbar_view_set_content(content_view, GTK_WIDGET(toast_overlay));
+    
+    // Složení hlavní části a postranního panelu
+    split_view = ADW_OVERLAY_SPLIT_VIEW(adw_overlay_split_view_new());
+    adw_overlay_split_view_set_sidebar(split_view, GTK_WIDGET(sidebar_view));
+    adw_overlay_split_view_set_content(split_view, GTK_WIDGET(content_view));
+    adw_overlay_split_view_set_sidebar_position(split_view, GTK_PACK_START);
+    adw_overlay_split_view_set_min_sidebar_width(split_view, 250.0);
+    
+    set_child(*Glib::wrap(GTK_WIDGET(split_view)));
 
-    // Horní lišta
-    header_bar.set_show_title_buttons();
-    header_bar.set_title_widget(runner_panel);
-    set_titlebar(header_bar);
+    signal_realize().connect([this]()
+        {
+            get_surface() -> signal_layout().connect(
+                sigc::mem_fun(*this, &MainWindow::on_window_resize)
+            );
+        }
+    );
 
-    // Rozdělené okno na dvě části
-    paned.set_shrink_start_child(false);
-    paned.set_orientation(Gtk::Orientation::HORIZONTAL);
-    paned.set_start_child(video_queue);
-    paned.set_end_child(options_page);
-    paned.set_resize_end_child();
-    paned.set_shrink_end_child(false);
-    paned.set_position(320);
-    set_child(paned);
-
+    // Signál pro zobrazení/skrývání fronty
+    runner_panel.signal_toggle_queue.connect([this]()
+        { adw_overlay_split_view_set_show_sidebar(split_view, true); });
+    
+    // Signály pro změny názvu videa v runneru
+    video_queue.signal_video_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_title));
+    video_queue.signal_all_videos_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_title_multiple));
+    video_queue.signal_nothing_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::clear_title));
+    
+    // Přepínání stavů a (od)blokování tlačítka pro kódování
+    video_queue.signal_enable_encoding.connect([this]() 
+        {
+            runner_panel.request_encoding_button_unblock(); 
+            main_page_stack.set_visible_child("options_page");
+        }
+    );
+    video_queue.signal_queue_cleared.connect([this]() 
+        {
+            runner_panel.block_encoding_button(); 
+            runner_panel.update_status("Queue Empty", "warning");
+            main_page_stack.set_visible_child("queue_empty_page");
+        }
+    );
+    
     // Propojení signálů pro aktualizaci nastavení videa
     video_queue.signal_video_selected.connect(sigc::mem_fun(options_page, &VideoSettings_VBox::read_video_options));
     video_queue.signal_all_videos_selected.connect(sigc::mem_fun(options_page, &VideoSettings_VBox::read_video_vector_options));
@@ -41,10 +153,35 @@ MainWindow::MainWindow()
     runner_panel.signal_stop_encoding.connect(sigc::mem_fun(*this, &MainWindow::stop_encoding));
     video_queue.signal_loading_videos.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_loading_state));
     video_queue.signal_loading_videos_count.connect(sigc::mem_fun(runner_panel, &RunnerPanel::update_loading_progress));
+    signal_loading_videos.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_loading_state));
+    signal_loading_videos_count.connect(sigc::mem_fun(runner_panel, &RunnerPanel::update_loading_progress));
+    
+    // Signál pro přepnutí zpět z výsledkové stránky
+    results_page.signal_close_results.connect([this]()
+        {
+            main_page_stack.set_visible_child("options_page");
+            runner_panel.show_queue_button(true);
+            queue_lock = false;
+        });
 
     // Komunikace mezi vlákny
     progress_dispatcher.connect(sigc::mem_fun(*this, &MainWindow::on_progress_update));
     completion_dispatcher.connect(sigc::mem_fun(*this, &MainWindow::on_encoding_complete));
+}
+
+void MainWindow::display_about_dialog(const Glib::VariantBase&)
+{
+    auto dialog = ADW_ABOUT_DIALOG(adw_about_dialog_new());
+    
+    adw_about_dialog_set_application_name(dialog, "VidCom");
+    adw_about_dialog_set_version(dialog, "0.82 Beta");
+    adw_about_dialog_set_developer_name(dialog, "seja-arctic-fox");
+    adw_about_dialog_set_application_icon(dialog, "io.github.seja_arctic_fox.vidcom");
+    adw_about_dialog_set_website(dialog, "https://seja-arctic-fox.github.io/");
+    adw_about_dialog_set_issue_url(dialog, "https://github.com/seja-arctic-fox/vidcom/issues");
+    adw_about_dialog_set_license_type(dialog, GTK_LICENSE_GPL_3_0);
+    
+    adw_dialog_present(ADW_DIALOG(dialog), GTK_WIDGET(gobj()));
 }
 
 MainWindow::~MainWindow()
@@ -56,25 +193,50 @@ MainWindow::~MainWindow()
     }
 }
 
+void MainWindow::on_window_resize(int width, int)
+{
+    if (queue_lock) return;
+    
+    int content_min_width = 0;
+    double sidebar_min_width = adw_overlay_split_view_get_min_sidebar_width(split_view);
+    gtk_widget_measure(
+            GTK_WIDGET(content_view),
+            GTK_ORIENTATION_HORIZONTAL,
+            -1,
+            nullptr, &content_min_width, nullptr, nullptr
+        );
+    
+    int min_width = content_min_width + (int) sidebar_min_width;
+    
+    if (width < min_width && !adw_overlay_split_view_get_collapsed(split_view))
+    {
+        adw_overlay_split_view_set_collapsed(split_view, true);
+        adw_overlay_split_view_set_enable_hide_gesture(split_view, true);
+        adw_overlay_split_view_set_enable_show_gesture(split_view, true);
+        runner_panel.show_queue_button(true);
+    }
+    else if (width >= min_width)
+    {
+        adw_overlay_split_view_set_collapsed(split_view, false);
+        adw_overlay_split_view_set_enable_hide_gesture(split_view, false);
+        adw_overlay_split_view_set_enable_show_gesture(split_view, false);
+        runner_panel.show_queue_button(false);
+    }
+}
+
+void MainWindow::show_toast(char const * message)
+{
+    AdwToast * toast = adw_toast_new(message);
+    adw_toast_set_timeout(toast, 5);
+    adw_toast_overlay_add_toast(toast_overlay, toast);
+}
+
 void MainWindow::start_encoding()
 {
     if (is_encoding.load())
     {
         return;
     }
-
-    // Když je prázdná fronta, ukázat hlášení a konec
-    if (video_queue.get_all_videos().empty())
-    {
-        auto dialog = Gtk::AlertDialog::create();
-        dialog -> set_message("No videos in queue");
-        dialog -> set_detail("Video queue is empty. Start with adding some videos into the queue. ");
-        dialog -> set_buttons({"Okay"});
-        dialog -> set_modal();
-        dialog -> show(*this);
-        return;
-    }
-
     // Vyčistit předchozí výsledky
     {
         std::lock_guard<std::mutex> lock(encoding_mutex);
@@ -83,7 +245,10 @@ void MainWindow::start_encoding()
 
     // Start kódování
     runner_panel.set_encoding_state(true);
-    paned.set_sensitive(false);
+    main_page_stack.set_visible_child("encoding_page");
+    queue_lock = true;
+    adw_overlay_split_view_set_collapsed(split_view, true);
+    runner_panel.show_queue_button(false);
 
     is_encoding.store(true);
 
@@ -105,7 +270,7 @@ void MainWindow::stop_encoding()
     // Zastavit kódování
     is_encoding.store(false);
     runner_panel.update_status("Cancelling...");
-    runner_panel.block_encoding_button(true);
+    runner_panel.block_encoding_button();
 
     // Zrušit kódování pro všechna videa
     std::vector<Video *> all_videos = video_queue.get_all_videos();
@@ -163,20 +328,8 @@ void MainWindow::encoding_worker()
             result.was_cancelled = (exit_code == -2);
             encoding_results.push_back(result);
             
-            auto dialog = Gtk::AlertDialog::create();
-            dialog -> set_message("Cannot create output");
-            dialog -> set_detail("There was an error while creating specified output: \n" + video -> get_output_path() + "\n\nPlease make sure you have sufficient rights to write in this folder or set a different output. \n\n Encoding was cancelled. ");
-            dialog -> set_buttons({"Okay"});
-            dialog -> set_cancel_button(0);
-            dialog -> set_modal();
-            
-            // Po uzavření dialogového okna se objeví výsledky
-            dialog -> choose(*this, 
-            [this](Glib::RefPtr<Gio::AsyncResult>&) 
-            {
-                show_results_dialog();
-            });
-            
+            show_toast("Error while creating output: Insufficient rights");
+            show_results_dialog();
             return;
         }
 
@@ -206,13 +359,17 @@ void MainWindow::on_progress_update()
 {
     std::lock_guard<std::mutex> lock(encoding_mutex);
     runner_panel.update_encoding_progress(current_progress);
+    encoding_page_progress.set_fraction(current_progress.progress_percent / 100.0);
+    std::ostringstream new_text;
+    new_text << "Encoding: " << current_progress.video_name;
+    adw_status_page_set_description(encoding_page, new_text.str().c_str());
 }
 
 void MainWindow::on_encoding_complete()
 {
     runner_panel.set_encoding_state(false);
     runner_panel.block_encoding_button(false);
-    paned.set_sensitive();
+    encoding_page_progress.set_fraction(0);
 
     if (encoding_thread.joinable())
     {
@@ -230,6 +387,101 @@ void MainWindow::show_results_dialog()
     notification_finish -> set_body("Queued videos have been compressed. Click here to see results");
     app -> send_notification(notification_finish);
 
-    auto result_dialog = Gtk::make_managed<ResultsDialog>(*this, encoding_results);
-    result_dialog -> set_visible();
+    results_page.load_results(encoding_results);
+    main_page_stack.set_visible_child("results_page");
+}
+
+void MainWindow::on_import_video_clicked()
+{
+    signal_loading_videos.emit(true);
+    auto file_picker = Gtk::FileDialog::create();
+    file_picker -> set_title("Select video(s) to import");
+    file_picker -> set_modal();
+
+    // Filtry videí
+    auto video_filter = Gtk::FileFilter::create();
+    video_filter -> set_name("Video files");
+    video_filter -> add_mime_type("video/*");
+
+    auto all_files_filter = Gtk::FileFilter::create();
+    all_files_filter -> set_name("All files");
+    all_files_filter -> add_pattern("*");
+
+    auto filter_list = Gio::ListStore<Gtk::FileFilter>::create();
+    filter_list -> append(video_filter);
+    filter_list -> append(all_files_filter);
+    file_picker -> set_filters(filter_list);
+    file_picker -> set_default_filter(video_filter);
+
+    // Otevření file pickeru
+    file_picker -> open_multiple(* dynamic_cast<Gtk::Window *>(get_root()), sigc::bind(sigc::mem_fun(*this, &MainWindow::file_picker_add_videos), file_picker));
+}
+
+void MainWindow::file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& result, Glib::RefPtr<Gtk::FileDialog> file_picker)
+{
+    try
+    {
+        auto files = file_picker -> open_multiple_finish(result);
+        
+        // Shared pointer pro kontrolu stavu ve voláních
+        // Stavová proměnná musí přežít několik pozdějích volání toho idle handleru
+        // po skončení této metody
+        auto state = std::make_shared<std::pair<std::vector<std::string>, size_t>>();
+        state -> second = 0;
+
+        for (guint i = 0; i < files.size(); i++)
+        {
+            auto file = files.at(i);
+
+            if (file)
+            {
+                auto path = file -> get_path();
+
+                if (!path.empty())
+                {
+                    state -> first.push_back(path);
+                }
+            }
+        }
+        
+        if (state -> first.empty())
+        {
+            signal_loading_videos.emit(false);
+            return;
+        }
+        
+        signal_loading_videos_count.emit(0, (int) state -> first.size());
+        
+        Glib::signal_idle().connect([this, state]() -> bool
+        {
+            size_t& i = state -> second;
+            auto& paths = state -> first;
+            
+            if (i < paths.size())
+            {
+                signal_loading_videos_count.emit((int) i + 1, (int) paths.size());
+                video_queue.add_video(paths[i]);
+                i++;
+                return true;
+            }
+            
+            signal_loading_videos.emit(false);
+            return false;
+        });
+    }
+    catch (const Gtk::DialogError& error)
+    {
+        if (error.code() != Gtk::DialogError::DISMISSED)
+        {
+            cerr << YELLOW << "File picker cancelled by user. " << RESET << endl;
+        }
+        
+        signal_loading_videos.emit(false);
+    }
+    catch (const Glib::Error& error)
+    {
+        cerr << RED << "Error opening files with file picker! " << error.what() << RESET << endl;
+        show_toast("Error opening files with file picker!");
+        signal_loading_videos.emit(false);
+    }
 }
