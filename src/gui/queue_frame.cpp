@@ -321,8 +321,6 @@ bool QueueFrame::on_drop(const Glib::ValueBase& value, double, double)
         if (!failed -> empty())
         {
             dynamic_cast<MainWindow *>(get_root()) -> show_toast_grant_access(*failed);
-            for (auto video : *failed)
-                add_video(video);
         }
        
         // Hotovo, už mě nevolej

@@ -272,10 +272,19 @@ void MainWindow::file_picker_grant_access(std::vector<std::string> file_paths)
         auto initial_folder = Gio::File::create_for_path(fs::path(folder).parent_path().string());
         file_picker -> set_initial_folder(initial_folder);
         
-        file_picker -> select_folder(*this, [folder, file_picker](Glib::RefPtr<Gio::AsyncResult>& result)
+        file_picker -> select_folder(*this, [this, folder, file_picker, file_paths](Glib::RefPtr<Gio::AsyncResult>& result)
         {
             try
-                { auto folder = file_picker -> select_folder_finish(result); }
+                {
+                    auto folder = file_picker -> select_folder_finish(result);
+                    std::string folder_path = folder -> get_path();
+                    
+                    for (const auto& path : file_paths)
+                    {
+                        if (path.starts_with(folder_path))
+                            video_queue.add_video(path);
+                    }
+                }
             catch (const Gtk::DialogError&) {}
         });
     }
