@@ -269,7 +269,8 @@ void MainWindow::file_picker_grant_access(std::vector<std::string> file_paths)
                 
                 for (const auto& path : file_paths)
                 {
-                    video_queue.add_video(path);
+                    fs::path portal_path = folder_path / fs::path(path).filename();
+                    video_queue.add_video(portal_path.string());
                 }
             }
         catch (const Gtk::DialogError&) {}
