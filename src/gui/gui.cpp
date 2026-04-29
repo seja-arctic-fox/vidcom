@@ -255,6 +255,7 @@ void MainWindow::file_picker_grant_access(std::vector<std::string> file_paths)
     // Pro každou složku zobrazit FileChooser
     auto file_picker = Gtk::FileDialog::create();
     file_picker -> set_title("Give access to this folder");
+    file_picker -> set_accept_label("Give access");
     file_picker -> set_modal();
 
     auto initial_folder = Gio::File::create_for_path(file_paths[0]);
@@ -274,6 +275,8 @@ void MainWindow::file_picker_grant_access(std::vector<std::string> file_paths)
                 }
             }
         catch (const Gtk::DialogError&) {}
+        
+        video_queue.signal_loading_videos.emit(false);
     });
 }
 
