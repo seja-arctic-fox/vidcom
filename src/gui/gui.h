@@ -434,6 +434,7 @@ class MainWindow : public Gtk::Window
         ~MainWindow();
         
         void show_toast(char const * message);
+        void show_toast_grant_access(std::vector<std::string> file_paths);
 
     protected:
         RunnerPanel runner_panel;
@@ -460,7 +461,8 @@ class MainWindow : public Gtk::Window
         void on_import_video_clicked();
         void display_about_dialog(const Glib::VariantBase&);
         void file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& result, Glib::RefPtr<Gtk::FileDialog> file_picker);
-
+        void file_picker_grant_access(std::vector<std::string> file_paths);
+        
         //Signály načítání - file picker
         sigc::signal<void(bool)> signal_loading_videos;
         sigc::signal<void(int, int)> signal_loading_videos_count;

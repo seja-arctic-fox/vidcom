@@ -231,6 +231,56 @@ void MainWindow::show_toast(char const * message)
     adw_toast_overlay_add_toast(toast_overlay, toast);
 }
 
+void MainWindow::show_toast_grant_access(std::vector<std::string> file_paths)
+{
+    auto grant_access_dnd = Gio::SimpleAction::create("grant_access_dnd");
+    grant_access_dnd -> signal_activate().connect([this, file_paths](const Glib::VariantBase&)
+        {
+            file_picker_grant_access(file_paths);
+        });
+    
+    auto app = Gtk::Application::get_default();
+    app -> remove_action("grant_access_dnd");
+    app -> add_action(grant_access_dnd);
+    
+    AdwToast * toast = adw_toast_new("Access to files needs to be granted");
+    adw_toast_set_timeout(toast, 15);
+    adw_toast_set_button_label(toast, "Give access");
+    adw_toast_set_action_name(toast, "app.grant_access_dnd");
+    adw_toast_overlay_add_toast(toast_overlay, toast);
+}
+
+void MainWindow::file_picker_grant_access(std::vector<std::string> file_paths)
+{
+    // Najít všechny složky, kde jsou dané soubory, s přeskočením duplicit
+    std::vector<std::string> pf;
+    for (auto file : file_paths)
+    {
+        string parent_folder = fs::path(file).parent_path();
+        
+        if (find(pf.begin(), pf.end(), parent_folder) == pf.end())
+            pf.push_back(parent_folder);
+    }
+    
+    // Pro každou složku zobrazit FileChooser
+    for (auto folder : pf)
+    {
+        auto file_picker = Gtk::FileDialog::create();
+        file_picker -> set_title("Give access to this folder");
+        file_picker -> set_modal();
+    
+        auto initial_folder = Gio::File::create_for_path(fs::path(folder).parent_path().string());
+        file_picker -> set_initial_folder(initial_folder);
+        
+        file_picker -> select_folder(*this, [folder, file_picker](Glib::RefPtr<Gio::AsyncResult>& result)
+        {
+            try
+                { auto folder = file_picker -> select_folder_finish(result); }
+            catch (const Gtk::DialogError&) {}
+        });
+    }
+}
+
 void MainWindow::start_encoding()
 {
     if (is_encoding.load())

@@ -270,6 +270,7 @@ bool QueueFrame::on_drop(const Glib::ValueBase& value, double, double)
 
     // Sestavit seznam cest napřed
     std::vector<std::string> dropped_videos;
+    std::vector<std::string> failed_transfers;
     GSList* list = gdk_file_list_get_files(file_list);
     for (GSList* l = list; l != nullptr; l = l->next)
     {
@@ -296,7 +297,7 @@ bool QueueFrame::on_drop(const Glib::ValueBase& value, double, double)
     // Musím použít idle handler, protože jinak mi to nešlo
     // Akce puštění souboru totiž blokovala všechny signály, dokud se nedokončila
     // Videa se zpracovávají po jednom. Když se vrátí true, idle handler se vykoná znovu
-    Glib::signal_idle().connect([this, state]() -> bool
+    Glib::signal_idle().connect([this, state, &failed_transfers]() -> bool
     {
         size_t& i = state->second;
         auto& paths = state->first;
@@ -304,11 +305,26 @@ bool QueueFrame::on_drop(const Glib::ValueBase& value, double, double)
         if (i < paths.size())
         {
             signal_loading_videos_count.emit((int)i + 1, (int)paths.size());
-            add_video(paths[i]);
+            
+            if (access(paths[i].c_str(), R_OK) == 0)
+                add_video(paths[i]);
+            else
+            {
+                failed_transfers.push_back(paths[i]);
+            }
+            
             i++;
             return true;
         }
 
+        // Pokud byly nějaké problémy s přístupem, požádat uživatele o udělení přístupu
+        if (!failed_transfers.empty())
+        {
+            dynamic_cast<MainWindow *>(get_root()) -> show_toast_grant_access(failed_transfers);
+            for (auto video : failed_transfers)
+                add_video(video);
+        }
+       
         // Hotovo, už mě nevolej
         signal_loading_videos.emit(false);
         return false;
