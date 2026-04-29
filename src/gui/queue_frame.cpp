@@ -292,15 +292,15 @@ bool QueueFrame::on_drop(const Glib::ValueBase& value, double, double)
     (
         std::move(dropped_videos), 0
     );
+    auto failed = std::make_shared<bool>(false);
 
     // Musím použít idle handler, protože jinak mi to nešlo
     // Akce puštění souboru totiž blokovala všechny signály, dokud se nedokončila
     // Videa se zpracovávají po jednom. Když se vrátí true, idle handler se vykoná znovu
-    Glib::signal_idle().connect([this, state]() -> bool
+    Glib::signal_idle().connect([this, state, failed]() -> bool
     {
         size_t& i = state->second;
         auto& paths = state->first;
-        bool failed = false;
 
         if (i < paths.size())
         {
@@ -309,19 +309,15 @@ bool QueueFrame::on_drop(const Glib::ValueBase& value, double, double)
             if (access(paths[i].c_str(), R_OK) == 0)
                 add_video(paths[i]);
             else
-            {
-                failed = true;
-            }
+                *failed = true;
             
             i++;
             return true;
         }
 
         // Pokud byly nějaké problémy s přístupem, požádat uživatele o udělení přístupu
-        if (failed)
-        {
+        if (*failed)
             dynamic_cast<MainWindow *>(get_root()) -> show_toast_grant_access(paths);
-        }
        
         // Hotovo, už mě nevolej
         signal_loading_videos.emit(false);
