@@ -252,42 +252,28 @@ void MainWindow::show_toast_grant_access(std::vector<std::string> file_paths)
 
 void MainWindow::file_picker_grant_access(std::vector<std::string> file_paths)
 {
-    // Najít všechny složky, kde jsou dané soubory, s přeskočením duplicit
-    std::vector<std::string> pf;
-    for (auto file : file_paths)
-    {
-        string parent_folder = fs::path(file).parent_path();
-        
-        if (find(pf.begin(), pf.end(), parent_folder) == pf.end())
-            pf.push_back(parent_folder);
-    }
-    
     // Pro každou složku zobrazit FileChooser
-    for (auto folder : pf)
-    {
-        auto file_picker = Gtk::FileDialog::create();
-        file_picker -> set_title("Give access to this folder");
-        file_picker -> set_modal();
+    auto file_picker = Gtk::FileDialog::create();
+    file_picker -> set_title("Give access to this folder");
+    file_picker -> set_modal();
+
+    auto initial_folder = Gio::File::create_for_path(file_paths[0]);
+    file_picker -> set_initial_folder(initial_folder);
     
-        auto initial_folder = Gio::File::create_for_path(fs::path(folder).parent_path().string());
-        file_picker -> set_initial_folder(initial_folder);
-        
-        file_picker -> select_folder(*this, [this, folder, file_picker, file_paths](Glib::RefPtr<Gio::AsyncResult>& result)
-        {
-            try
+    file_picker -> select_folder(*this, [this, file_picker, file_paths](Glib::RefPtr<Gio::AsyncResult>& result)
+    {
+        try
+            {
+                auto folder = file_picker -> select_folder_finish(result);
+                std::string folder_path = folder -> get_path();
+                
+                for (const auto& path : file_paths)
                 {
-                    auto folder = file_picker -> select_folder_finish(result);
-                    std::string folder_path = folder -> get_path();
-                    
-                    for (const auto& path : file_paths)
-                    {
-                        if (path.starts_with(folder_path))
-                            video_queue.add_video(path);
-                    }
+                    video_queue.add_video(path);
                 }
-            catch (const Gtk::DialogError&) {}
-        });
-    }
+            }
+        catch (const Gtk::DialogError&) {}
+    });
 }
 
 void MainWindow::start_encoding()
