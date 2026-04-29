@@ -157,7 +157,12 @@ MainWindow::MainWindow()
     signal_loading_videos_count.connect(sigc::mem_fun(runner_panel, &RunnerPanel::update_loading_progress));
     
     // Signál pro přepnutí zpět z výsledkové stránky
-    results_page.signal_close_results.connect([this]() { main_page_stack.set_visible_child("options_page"); });
+    results_page.signal_close_results.connect([this]()
+        {
+            main_page_stack.set_visible_child("options_page");
+            runner_panel.show_queue_button(true);
+            queue_lock = false;
+        });
 
     // Komunikace mezi vlákny
     progress_dispatcher.connect(sigc::mem_fun(*this, &MainWindow::on_progress_update));
@@ -190,14 +195,27 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_window_resize(int width, int)
 {
-    if (width < 860 && !adw_overlay_split_view_get_collapsed(split_view))
+    if (queue_lock) return;
+    
+    int content_min_width = 0;
+    double sidebar_min_width = adw_overlay_split_view_get_min_sidebar_width(split_view);
+    gtk_widget_measure(
+            GTK_WIDGET(content_view),
+            GTK_ORIENTATION_HORIZONTAL,
+            -1,
+            nullptr, &content_min_width, nullptr, nullptr
+        );
+    
+    int min_width = content_min_width + (int) sidebar_min_width;
+    
+    if (width < min_width && !adw_overlay_split_view_get_collapsed(split_view))
     {
         adw_overlay_split_view_set_collapsed(split_view, true);
         adw_overlay_split_view_set_enable_hide_gesture(split_view, true);
         adw_overlay_split_view_set_enable_show_gesture(split_view, true);
         runner_panel.show_queue_button(true);
     }
-    else if (width >= 860)
+    else if (width >= min_width)
     {
         adw_overlay_split_view_set_collapsed(split_view, false);
         adw_overlay_split_view_set_enable_hide_gesture(split_view, false);
@@ -228,6 +246,9 @@ void MainWindow::start_encoding()
     // Start kódování
     runner_panel.set_encoding_state(true);
     main_page_stack.set_visible_child("encoding_page");
+    queue_lock = true;
+    adw_overlay_split_view_set_collapsed(split_view, true);
+    runner_panel.show_queue_button(false);
 
     is_encoding.store(true);
 
