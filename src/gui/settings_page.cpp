@@ -55,28 +55,8 @@ VideoSettings_VBox::VideoSettings_VBox()
     cut_heading_hbox(Gtk::Orientation::HORIZONTAL),
     cut_switch_box(Gtk::Orientation::HORIZONTAL),
     cut_switch_text_vbox(Gtk::Orientation::VERTICAL),
-    cut_start_h_box(Gtk::Orientation::HORIZONTAL),
-    cut_start_m_box(Gtk::Orientation::HORIZONTAL),
-    cut_start_s_box(Gtk::Orientation::HORIZONTAL),
-    cut_stop_h_box(Gtk::Orientation::HORIZONTAL),
-    cut_stop_m_box(Gtk::Orientation::HORIZONTAL),
-    cut_stop_s_box(Gtk::Orientation::HORIZONTAL),
-    cut_start_text("Start time: "), 
-    cut_stop_text("End time:  "),
-    cut_h_text(" h\t"), 
-    cut_h2_text(" h\t"), 
-    cut_m_text(" min\t"),
-    cut_m2_text(" min\t"),
-    cut_s_text(" s\t"),
-    cut_s2_text(" s\t"),
     cut_switch_text("Enable Cut"),
     cut_switch_desc("Enables a feature that trims the video from start time to end time. "),
-    lim_start_h(Gtk::Adjustment::create(0, 0, 0)),
-    lim_start_m(Gtk::Adjustment::create(0, 0, 0)),
-    lim_start_s(Gtk::Adjustment::create(0, 0, 0)),
-    lim_stop_h(Gtk::Adjustment::create(0, 0, 0)),
-    lim_stop_m(Gtk::Adjustment::create(0, 0, 0)),
-    lim_stop_s(Gtk::Adjustment::create(0, 0, 0)), 
     // Rozlišení a fps
     res_hbox(Gtk::Orientation::HORIZONTAL),
     res_text_vbox(Gtk::Orientation::VERTICAL),
@@ -240,6 +220,7 @@ VideoSettings_VBox::VideoSettings_VBox()
     cut_desc_trigger.signal_clicked().connect([this](){cut_desc.popup();});
 
     cut_heading.add_css_class("title-4");
+    cut_heading.set_ellipsize(Pango::EllipsizeMode::MIDDLE);
     cut_desc_trigger.set_icon_name("help-about-symbolic");
     cut_desc_trigger.add_css_class("flat");
     cut_heading_hbox.set_margin(10);
@@ -264,67 +245,14 @@ VideoSettings_VBox::VideoSettings_VBox()
     cut_switch_box.append(cut_switch);
     cut_switch_box.append(cut_switch_text_vbox);
 
-    cut_h_text.set_margin(5);
-    cut_m_text.set_margin(5);
-    cut_s_text.set_margin(5);
-    cut_h2_text.set_margin(5);
-    cut_m2_text.set_margin(5);
-    cut_s2_text.set_margin(5);
-
-    cut_start_h.set_numeric();
-    cut_start_m.set_numeric();
-    cut_start_s.set_numeric();
-    cut_stop_h.set_numeric();
-    cut_stop_m.set_numeric();
-    cut_stop_s.set_numeric();
-
-    cut_start_box.set_margin(5);
-    cut_start_text.add_css_class("heading");
-    cut_start_text.set_margin(5);
-    cut_start_h_box.append(cut_start_h);
-    cut_start_h_box.append(cut_h_text);
-    cut_start_m_box.append(cut_start_m);
-    cut_start_m_box.append(cut_m_text);
-    cut_start_s_box.append(cut_start_s);
-    cut_start_s_box.append(cut_s_text);
-    cut_start_time_box.set_expand();
-    cut_start_time_box.set_halign(Gtk::Align::END);
-    cut_start_time_box.append(cut_start_h_box);
-    cut_start_time_box.append(cut_start_m_box);
-    cut_start_time_box.append(cut_start_s_box);
-    cut_start_box.append(cut_start_text);
-    cut_start_box.append(cut_start_time_box);
-    cut_start_box.set_sensitive(false);
-    
-    cut_stop_box.set_margin(5);
-    cut_stop_text.add_css_class("heading");
-    cut_stop_text.set_margin(5);
-    cut_stop_h_box.append(cut_stop_h);
-    cut_stop_h_box.append(cut_h2_text);
-    cut_stop_m_box.append(cut_stop_m);
-    cut_stop_m_box.append(cut_m2_text);
-    cut_stop_s_box.append(cut_stop_s);
-    cut_stop_s_box.append(cut_s2_text);
-    cut_stop_time_box.set_expand();
-    cut_stop_time_box.set_halign(Gtk::Align::END);
-    cut_stop_time_box.append(cut_stop_h_box);
-    cut_stop_time_box.append(cut_stop_m_box);
-    cut_stop_time_box.append(cut_stop_s_box);
-    cut_stop_box.append(cut_stop_text);
-    cut_stop_box.append(cut_stop_time_box);
-    cut_stop_box.set_sensitive(false);
-
     cut_listbox.add_css_class("navigation-sidebar");
     cut_listbox.add_css_class("card");
     cut_listbox.set_margin_bottom(20);
     cut_listbox.append(cut_switch_box);
-    cut_listbox.append(cut_start_box);
-    cut_listbox.append(cut_stop_box);
+    cut_listbox.append(cut_widget);
     cut_listbox.get_row_at_index(1) -> set_activatable(false);
     cut_listbox.get_row_at_index(1) -> set_selectable(false);
-    cut_listbox.get_row_at_index(2) -> set_activatable(false);
-    cut_listbox.get_row_at_index(2) -> set_selectable(false);
-
+    
     // Rozlišení a fps
     res_text.set_halign(Gtk::Align::START);
     fps_text.set_halign(Gtk::Align::START);
@@ -473,13 +401,11 @@ VideoSettings_VBox::VideoSettings_VBox()
     target_size_field.signal_value_changed().connect(sigc::mem_fun(*this, &VideoSettings_VBox::update));
     codec_flowbox.signal_child_activated().connect(sigc::mem_fun(*this, &VideoSettings_VBox::on_select_flowbox));
     cut_listbox.signal_row_activated().connect(sigc::mem_fun(*this, &VideoSettings_VBox::on_select_row));
-    vector<Gtk::SpinButton *> cut_spinbuttons = {&cut_start_h, &cut_start_m, &cut_start_s, &cut_stop_h, &cut_stop_m, &cut_stop_s, &res_field, &fps_field};
-    for (auto c_sb : cut_spinbuttons)
-    {
-        c_sb -> signal_value_changed().connect(sigc::mem_fun(*this, &VideoSettings_VBox::update));
-    }
+    cut_widget.signal_cut_change.connect(sigc::mem_fun(*this, &VideoSettings_VBox::update));
     set_prefix_field.signal_changed().connect(sigc::mem_fun(*this, &VideoSettings_VBox::update));
     set_output_folder_button.signal_clicked().connect(sigc::mem_fun(*this, &VideoSettings_VBox::set_output_path));
+    fps_field.signal_value_changed().connect(sigc::mem_fun(*this, &VideoSettings_VBox::update));
+    res_field.signal_value_changed().connect(sigc::mem_fun(*this, &VideoSettings_VBox::update));
 }
 
 VideoSettings_VBox::~VideoSettings_VBox()
@@ -566,14 +492,7 @@ void VideoSettings_VBox::on_folder_selected(Glib::RefPtr<Gio::AsyncResult> &resu
     catch (const Glib::Error& error)
     {
         cerr << "Error selecting folder: " << error.what() << endl;
-        
-        auto error_dialog = Gtk::AlertDialog::create();
-        error_dialog->set_message("Error selecting folder!");
-        error_dialog->set_detail("There was a problem selecting the folder:\n\n" + Glib::ustring(error.what()));
-        error_dialog->set_buttons({"OK"});
-        error_dialog->set_cancel_button(0);
-        
-        error_dialog->show(*dynamic_cast<Gtk::Window*>(get_root()));
+        dynamic_cast<MainWindow *>(get_root()) -> show_toast("Error selecting folder!");
     }
 }
 
@@ -633,18 +552,15 @@ void VideoSettings_VBox::on_select_row(Gtk::ListBoxRow * selected_row)
             if (cut_switch.get_active())
             {
                 cut_switch.set_active(false);
-                cut_start_box.set_sensitive(false);
-                cut_stop_box.set_sensitive(false);
+                cut_widget.set_sensitive(false);
             }
             else
             {
                 cut_switch.set_active();
-                cut_start_box.set_sensitive();
-                cut_stop_box.set_sensitive();
+                cut_widget.set_sensitive();
             }
 
             cut_listbox.unselect_all();
-            cut_listbox.select_row(*cut_listbox.get_row_at_index(2));
         }
     }
 
@@ -687,21 +603,8 @@ void VideoSettings_VBox::save_options(VideoElement * element)
     // Střih
     if (cut_switch.get_active())
     {
-        float start_secs = cut_start_s.get_value();
-        float stop_secs = cut_stop_s.get_value();
-        start_secs += cut_start_m.get_value() * 60;
-        start_secs += cut_start_h.get_value() * 60 * 60;
-        stop_secs += cut_stop_m.get_value() * 60;
-        stop_secs += cut_stop_h.get_value() * 60 * 60;
-        
-        if (( start_secs < stop_secs ) && ( stop_secs <= video -> get_video_info().duration ))
-        {
-            video -> enable_cut(true);
-            video -> set_cut(start_secs, stop_secs);
-            calculate_cut_limits(video -> get_video_info().duration, video -> get_cut_info());
-        }
-        else set_cut_values(video -> get_cut_info());
-        
+        video -> enable_cut(true);
+        video -> set_cut(cut_widget.get_start(), cut_widget.get_end());
     }
     else video -> enable_cut(false);
     
@@ -750,74 +653,6 @@ void VideoSettings_VBox::update()
     }
 }
 
-void VideoSettings_VBox::set_cut_values(Cut cut_info)
-{
-    int start_s = (int) cut_info.startTime % 60;
-    int start_m = ( (int) cut_info.startTime / 60 ) % 60;
-    int start_h = (int) cut_info.startTime / 3600;
-    int stop_s = (int) cut_info.endTime % 60;
-    int stop_m = ( (int) cut_info.endTime / 60 ) % 60;
-    int stop_h = (int) cut_info.endTime / 3600;
-    
-    cut_start_h.set_value(start_h);
-    cut_start_m.set_value(start_m);
-    cut_start_s.set_value(start_s);
-    cut_stop_h.set_value(stop_h);
-    cut_stop_m.set_value(stop_m);
-    cut_stop_s.set_value(stop_s);
-}
-
-void VideoSettings_VBox::calculate_cut_limits(float duration, Cut cut_info)
-{
-    // Získat časy pro současné nastavení
-    int stop_s = (int) cut_info.endTime % 60;
-    int stop_m = ( (int) cut_info.endTime / 60 ) % 60;
-    int stop_h = (int) cut_info.endTime / 3600;
-    
-    int start_s = (int) cut_info.startTime % 60;
-    int start_m = ( (int) cut_info.startTime / 60 ) % 60;
-    int start_h = (int) cut_info.startTime / 3600;
-    
-    int duration_s = (int) duration % 60;
-    int duration_m = ( (int) duration / 60 ) % 60;
-    int duration_h = (int) duration / 3600;
-    
-    // Časové limity
-    int stop_max_h = duration_h;
-    int stop_max_m = (stop_h >= duration_h) ? duration_m : 59;
-    int stop_max_s = (stop_h >= duration_h && stop_m >= duration_m) ? duration_s : 59;
-    
-    int stop_min_h = start_h;
-    int stop_min_m = (stop_h <= start_h) ? start_m : 0;
-    int stop_min_s = (stop_h <= start_h && stop_m <= start_m) ? start_s : 0;
-    
-    int start_max_h = stop_h;
-    int start_max_m = (start_h >= stop_h) ? stop_m : 59;
-    int start_max_s = (start_h >= stop_h && start_m >= stop_m) ? stop_s - 1 : 59;
-    if (start_max_s < 0) start_max_s = 0;
-    
-    // Nastavení limitů v GUI
-    lim_start_h -> set_upper(start_max_h);
-    lim_start_m -> set_upper(start_max_m);
-    lim_start_s -> set_upper(start_max_s);
-    
-    lim_stop_h -> set_upper(stop_max_h);
-    lim_stop_m -> set_upper(stop_max_m);
-    lim_stop_s -> set_upper(stop_max_s);
-    
-    lim_stop_h -> set_lower(stop_min_h);
-    lim_stop_m -> set_lower(stop_min_m);
-    lim_stop_s -> set_lower(stop_min_s);
-    
-    cut_start_h.set_adjustment(lim_start_h);
-    cut_start_m.set_adjustment(lim_start_m);
-    cut_start_s.set_adjustment(lim_start_s);
-    
-    cut_stop_h.set_adjustment(lim_stop_h);
-    cut_stop_m.set_adjustment(lim_stop_m);
-    cut_stop_s.set_adjustment(lim_stop_s);
-}
-
 void VideoSettings_VBox::load_options_into_GUI(Video * video)
 {
     SafeReset safe_reset(is_loading);
@@ -863,13 +698,10 @@ void VideoSettings_VBox::load_options_into_GUI(Video * video)
     }
 
     // Střih
-    calculate_cut_limits(video -> get_video_info().duration, video -> get_cut_info());
-    set_cut_values(video -> get_cut_info());
-    
     cut_switch.set_active(video -> is_cutting_enabled());
-    cut_start_box.set_sensitive(video -> is_cutting_enabled());
-    cut_stop_box.set_sensitive(video -> is_cutting_enabled());
-
+    cut_widget.set_sensitive(video -> is_cutting_enabled());
+    cut_widget.set_cut(video -> get_video_info().duration, video -> get_cut_info());
+    
     // Rozlišení a fps
     res_field.set_value(video -> get_downscale_factor());
     fps_field.set_range(0, video -> get_video_info().framerate);
@@ -921,7 +753,6 @@ void VideoSettings_VBox::read_video_options(VideoElement * video_element)
     output_path = filesystem::path(output_path).parent_path().generic_string().substr(0, output_path.find("encoded_videos/"));
     batch_settings = false;
 
-    cut_listbox.set_sensitive();
     cut_heading.remove_css_class("warning");
     cut_heading.set_text("Cut Feature");
 

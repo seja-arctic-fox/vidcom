@@ -1,7 +1,7 @@
 project(
   'vidcom-gui',
   'cpp',
-  version : '0.81',
+  version : '0.82',
   meson_version : '>= 1.3.0',
   default_options : ['warning_level=3', 'cpp_std=c++20'],
 )
@@ -27,7 +27,10 @@ gui = [
   './src/gui/av1_page.cpp',
   './src/gui/hevc_page.cpp',
   './src/gui/vp9_page.cpp',
-  './src/gui/results_dialog.cpp'
+  './src/gui/results_page.cpp',
+  './src/gui/result_row.cpp',
+  './src/gui/time_setter.cpp',
+  './src/gui/cut_widget.cpp'
 ]
 
 video = [

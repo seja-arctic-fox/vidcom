@@ -1,28 +1,19 @@
 #include "gio/gio.h"
-#include "giomm/liststore.h"
 #include "glib-object.h"
-#include "glibmm/error.h"
+#include "glibmm/convert.h"
 #include "glibmm/main.h"
 #include "glibmm/refptr.h"
 #include "glibmm/ustring.h"
 #include "glibmm/value.h"
-#include "gtkmm/alertdialog.h"
 #include "gtkmm/droptarget.h"
 #include "gtkmm/enums.h"
-#include "gtkmm/error.h"
-#include "gtkmm/filedialog.h"
-#include "gtkmm/filefilter.h"
 #include "gtkmm/object.h"
 #include "gtkmm/scrolledwindow.h"
-#include "gtkmm/widget.h"
-#include "gtkmm/window.h"
 #include "gui.h"
 #include "sigc++/functors/mem_fun.h"
-#include <iostream>
 #include <string>
 #include <gdk/gdk.h>
 #include <vector>
-#include "../cli/cli.h"
 
 QueueFrame::QueueFrame()
 :   scrolled_window(),
@@ -45,6 +36,7 @@ QueueFrame::QueueFrame()
     select_all_box.append(select_all_text);
     select_all_button.set_child(select_all_box);
     select_all_button.set_can_target(false);
+    select_all_button.add_css_class("flat");
 
     clear_queue_icon.set_from_icon_name("edit-clear-all-symbolic");
     clear_queue_icon.set_margin(5);
@@ -52,6 +44,7 @@ QueueFrame::QueueFrame()
     clear_queue_box.append(clear_queue_text);
     clear_queue_button.set_child(clear_queue_box);
     clear_queue_button.set_can_target(false);
+    clear_queue_button.add_css_class("flat");
 
     clear_queue_button.signal_clicked().connect(sigc::mem_fun(*this, &QueueFrame::on_clear_clicked));
     select_all_button.signal_toggled().connect(sigc::mem_fun(*this, &QueueFrame::on_select_all_clicked));
@@ -70,7 +63,7 @@ QueueFrame::QueueFrame()
     empty_queue_icon.set_from_icon_name("camera-video-symbolic");
     empty_queue_icon.set_pixel_size(128);
     empty_queue_icon.add_css_class("dimmed");
-    empty_queue_caption.set_text("...or click the button below to import them. ");
+    empty_queue_caption.set_text("...or click the button to import them. ");
     empty_queue_caption.add_css_class("caption");
     empty_queue_icon.set_margin(20);
     empty_queue_label.set_margin(10);
@@ -94,9 +87,7 @@ QueueFrame::QueueFrame()
     // Spodní lišta
     import_video_button.set_margin(10);
     import_video_button.add_css_class("suggested-action");
-    import_video_button.signal_clicked().connect(sigc::mem_fun(*this, &QueueFrame::on_import_video_clicked));
     footer_box.set_halign(Gtk::Align::CENTER);
-    footer_box.append(import_video_button);
 
     // Drag and drop
     drag_and_drop_target = Gtk::DropTarget::create(gdk_file_list_get_type(), Gdk::DragAction::COPY);
@@ -133,109 +124,6 @@ std::vector<Video *> QueueFrame::get_all_videos()
     return all_elements;
 }
 
-void QueueFrame::file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& result, Glib::RefPtr<Gtk::FileDialog> file_picker)
-{
-    try
-    {
-        auto files = file_picker -> open_multiple_finish(result);
-        
-        // Shared pointer pro kontrolu stavu ve voláních
-        // Stavová proměnná musí přežít několik pozdějích volání toho idle handleru
-        // po skončení této metody
-        auto state = std::make_shared<std::pair<std::vector<std::string>, size_t>>();
-        state -> second = 0;
-
-        for (guint i = 0; i < files.size(); i++)
-        {
-            auto file = files.at(i);
-
-            if (file)
-            {
-                auto path = file -> get_path();
-
-                if (!path.empty())
-                {
-                    state -> first.push_back(path);
-                }
-            }
-        }
-        
-        if (state -> first.empty())
-        {
-            signal_loading_videos.emit(false);
-            return;
-        }
-        
-        signal_loading_videos_count.emit(0, (int) state -> first.size());
-        
-        Glib::signal_idle().connect([this, state]() -> bool
-        {
-            size_t& i = state -> second;
-            auto& paths = state -> first;
-            
-            if (i < paths.size())
-            {
-                signal_loading_videos_count.emit((int) i + 1, (int) paths.size());
-                add_video(paths[i]);
-                i++;
-                return true;
-            }
-            
-            signal_loading_videos.emit(false);
-            return false;
-        });
-    }
-    catch (const Gtk::DialogError& error)
-    {
-        if (error.code() != Gtk::DialogError::DISMISSED)
-        {
-            cerr << YELLOW << "File picker cancelled by user. " << RESET << endl;
-        }
-        
-        signal_loading_videos.emit(false);
-    }
-    catch (const Glib::Error& error)
-    {
-        cerr << RED << "Error opening files with file picker! " << error.what() << RESET << endl;
-
-        auto error_dialog = Gtk::AlertDialog::create();
-        error_dialog -> set_message("Error opening files with file picker! ");
-        error_dialog -> set_detail("There was a problem with opening files: \n\n");
-        error_dialog -> set_buttons({"Okay"});
-        error_dialog -> set_cancel_button(0);
-
-        error_dialog -> show(* dynamic_cast<Gtk::Window *>(get_root()));
-        signal_loading_videos.emit(false);
-    }
-}
-
-
-void QueueFrame::on_import_video_clicked()
-{
-    signal_loading_videos.emit(true);
-    auto file_picker = Gtk::FileDialog::create();
-    file_picker -> set_title("Select video(s) to import");
-    file_picker -> set_modal();
-
-    // Filtry videí
-    auto video_filter = Gtk::FileFilter::create();
-    video_filter -> set_name("Video files");
-    video_filter -> add_mime_type("video/*");
-
-    auto all_files_filter = Gtk::FileFilter::create();
-    all_files_filter -> set_name("All files");
-    all_files_filter -> add_pattern("*");
-
-    auto filter_list = Gio::ListStore<Gtk::FileFilter>::create();
-    filter_list -> append(video_filter);
-    filter_list -> append(all_files_filter);
-    file_picker -> set_filters(filter_list);
-    file_picker -> set_default_filter(video_filter);
-
-    // Otevření file pickeru
-    file_picker -> open_multiple(* dynamic_cast<Gtk::Window *>(get_root()), sigc::bind(sigc::mem_fun(* this, &QueueFrame::file_picker_add_videos), file_picker));
-}
-
 void QueueFrame::on_row_selected(Gtk::ListBoxRow * row)
 {
     if (video_listbox.get_selection_mode() == Gtk::SelectionMode::SINGLE && select_all_button.get_active())
@@ -255,31 +143,45 @@ void QueueFrame::on_row_selected(Gtk::ListBoxRow * row)
 
 }
 
-void QueueFrame::error_dialog_not_a_video()
+void QueueFrame::error_toast_not_a_video(string file)
 {
-    auto dialog = Gtk::AlertDialog::create();
-    dialog -> set_message("Imported file is not a video!");
-    dialog -> set_detail("Input file is not a video file or no video streams were found. ");
-    dialog -> set_buttons({"Got it"});
-    dialog -> set_cancel_button(0);
-
-    dialog -> show(* dynamic_cast<Gtk::Window *>(get_root()));
+    Glib::ustring filename = Glib::filename_display_name(file);
+    
+    if (filename.length() > 20)
+        filename = filename.substr(0, 17) + "...";
+    
+    std::ostringstream os;
+    os << "Imported file (" << filename << ") is not a video!";
+    string message = os.str();
+    dynamic_cast<MainWindow *>(get_root()) -> show_toast(os.str().c_str());
 }
 
 void QueueFrame::add_video(const std::string& input_path)
 {
-    select_all_button.set_can_target();
-    select_all_button.set_active(false);
-    clear_queue_button.set_can_target();
-
     VideoElement * new_video = Gtk::make_managed<VideoElement>(input_path);
     float duration = new_video->video.get_video_info().duration;
 
     if (duration == -1)
     {
-        error_dialog_not_a_video();
+        error_toast_not_a_video(fs::path(input_path).filename().generic_string());
+        if (clear_queue_button.get_can_target())
+            signal_enable_encoding.emit();
+        else
+            signal_queue_cleared.emit();
+        
         return;
     }
+    
+    signal_enable_encoding.emit();
+    
+    select_all_button.set_can_target();
+    select_all_button.set_active(false);
+    clear_queue_button.set_can_target();
+    select_all_button.remove_css_class("flat");
+    clear_queue_button.remove_css_class("flat");
+    
+    video_listbox.append(* new_video);
+    video_listbox.select_row(*video_listbox.get_row_at_index(0));
 
     // Signál odstranění odstraní video ze seznamu
     new_video -> signal_remove.connect([this, new_video](VideoElement *)
@@ -296,13 +198,13 @@ void QueueFrame::add_video(const std::string& input_path)
                     select_all_button.set_active(false);
                     select_all_button.set_can_target(false);
                     clear_queue_button.set_can_target(false);
+                    select_all_button.add_css_class("flat");
+                    clear_queue_button.add_css_class("flat");
+                    signal_queue_cleared.emit();
                 }
             }
         }
     );
-
-    video_listbox.append(* new_video);
-    video_listbox.select_row(*video_listbox.get_row_at_index(0));
 }
 
 void QueueFrame::on_clear_clicked()
@@ -311,9 +213,12 @@ void QueueFrame::on_clear_clicked()
     select_all_button.set_active(false);
     select_all_button.set_can_target(false);
     clear_queue_button.set_can_target(false);
+    select_all_button.add_css_class("flat");
+    clear_queue_button.add_css_class("flat");
     video_listbox.set_selection_mode(Gtk::SelectionMode::SINGLE);
 
     signal_nothing_selected.emit();
+    signal_queue_cleared.emit();
 
     // Nastavit zpět placeholder
     video_listbox.set_placeholder(empty_queue_box);
@@ -387,11 +292,12 @@ bool QueueFrame::on_drop(const Glib::ValueBase& value, double, double)
     (
         std::move(dropped_videos), 0
     );
+    auto failed = std::make_shared<bool>(false);
 
     // Musím použít idle handler, protože jinak mi to nešlo
     // Akce puštění souboru totiž blokovala všechny signály, dokud se nedokončila
     // Videa se zpracovávají po jednom. Když se vrátí true, idle handler se vykoná znovu
-    Glib::signal_idle().connect([this, state]() -> bool
+    Glib::signal_idle().connect([this, state, failed]() -> bool
     {
         size_t& i = state->second;
         auto& paths = state->first;
@@ -399,11 +305,20 @@ bool QueueFrame::on_drop(const Glib::ValueBase& value, double, double)
         if (i < paths.size())
         {
             signal_loading_videos_count.emit((int)i + 1, (int)paths.size());
-            add_video(paths[i]);
+            
+            if (access(paths[i].c_str(), R_OK) == 0)
+                add_video(paths[i]);
+            else
+                *failed = true;
+            
             i++;
             return true;
         }
 
+        // Pokud byly nějaké problémy s přístupem, požádat uživatele o udělení přístupu
+        if (*failed)
+            dynamic_cast<MainWindow *>(get_root()) -> show_toast_grant_access(paths);
+       
         // Hotovo, už mě nevolej
         signal_loading_videos.emit(false);
         return false;

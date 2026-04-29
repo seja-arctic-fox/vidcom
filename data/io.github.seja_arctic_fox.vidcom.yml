@@ -1,6 +1,6 @@
 app-id: io.github.seja_arctic_fox.vidcom
 runtime: org.gnome.Platform
-runtime-version: '49'
+runtime-version: '50'
 sdk: org.gnome.Sdk
 command: vidcom
 finish-args:
@@ -8,10 +8,18 @@ finish-args:
   - --socket=fallback-x11
   - --device=dri
   - --share=ipc
+cleanup:
+  - /include
+  - /lib/cmake
+  - /lib/pkgconfig
+  - /lib/giomm-2.68/
+  - /lib/sigc++-3.0/
 
 modules:
   - name: jsoncpp
     buildsystem: meson
+    config-opts:
+      - -Dtests=false
     sources: 
       - type: archive
         url: https://github.com/open-source-parsers/jsoncpp/archive/refs/tags/1.9.6.tar.gz
@@ -20,7 +28,12 @@ modules:
   - name: libsigcplusplus
     buildsystem: meson
     config-opts:
+      - -Dmaintainer-mode=false
       - -Dbuild-documentation=false
+      - -Dbuild-manual=false
+      - -Dvalidation=false
+      - -Dbuild-examples=false
+      - -Dbuild-tests=false
     sources: 
       - type: archive
         url: https://github.com/libsigcplusplus/libsigcplusplus/releases/download/3.8.0/libsigc++-3.8.0.tar.xz
@@ -29,7 +42,11 @@ modules:
   - name: glibmm
     buildsystem: meson
     config-opts:
+      - -Dmaintainer-mode=false
       - -Dbuild-documentation=false
+      - -Dbuild-examples=false
+    cleanup:
+      - '/lib/glibmm-*'
     sources: 
       - type: archive
         url: https://download.gnome.org/sources/glibmm/2.86/glibmm-2.86.0.tar.xz
@@ -38,7 +55,12 @@ modules:
   - name: cairomm
     buildsystem: meson
     config-opts:
+      - -Dmaintainer-mode=false
       - -Dbuild-documentation=false
+      - -Dbuild-examples=false
+      - -Dbuild-tests=false
+    cleanup:
+      - '/lib/cairomm-*'
     sources:
       - type: archive
         url: https://www.cairographics.org/releases/cairomm-1.19.0.tar.xz
@@ -47,8 +69,11 @@ modules:
   - name: pangomm
     buildsystem: meson
     config-opts:
+      - -Dmaintainer-mode=false
       - -Dbuild-documentation=false
-    sources: 
+    cleanup:
+      - '/lib/pangomm-*'
+    sources:
       - type: archive
         url: https://download.gnome.org/sources/pangomm/2.56/pangomm-2.56.1.tar.xz
         sha256: 539f5aa60e9bdc6b955bb448e2a62cc14562744df690258040fbb74bf885755d
@@ -56,7 +81,12 @@ modules:
   - name: gtkmm
     buildsystem: meson
     config-opts:
+      - -Dmaintainer-mode=false
       - -Dbuild-documentation=false
+      - -Dbuild-demos=false
+      - -Dbuild-tests=false
+    cleanup:
+      - '/lib/gtkmm-*'
     sources: 
     - type: archive
       url: https://download.gnome.org/sources/gtkmm/4.20/gtkmm-4.20.0.tar.xz
@@ -67,4 +97,4 @@ modules:
     sources:
       - type: git
         url: https://github.com/seja-arctic-fox/vidcom
-        commit: "11afdecdc2fd8a72c483201a8a9d64151b981cb1"
+        commit: 33037cc575c7f3d32e4bc67e08e9725ea40e647d

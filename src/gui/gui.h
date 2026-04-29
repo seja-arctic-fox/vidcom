@@ -4,11 +4,11 @@
 #include "glibmm/dispatcher.h"
 #include "glibmm/refptr.h"
 #include "glibmm/value.h"
+#include "glibmm/variant.h"
 #include "gtkmm/adjustment.h"
 #include "gtkmm/box.h"
 #include "gtkmm/button.h"
 #include "gtkmm/checkbutton.h"
-#include "gtkmm/dialog.h"
 #include "gtkmm/dragsource.h"
 #include "gtkmm/droptarget.h"
 #include "gtkmm/entry.h"
@@ -22,7 +22,6 @@
 #include "gtkmm/label.h"
 #include "gtkmm/listbox.h"
 #include "gtkmm/listboxrow.h"
-#include "gtkmm/paned.h"
 #include "gtkmm/popover.h"
 #include "gtkmm/progressbar.h"
 #include "gtkmm/scale.h"
@@ -41,6 +40,7 @@
 #include <vector>
 #include "../video/video.h"
 #include "sigc++/signal.h"
+#include "widgets.h"
 
 #ifndef GUI
 #define GUI
@@ -73,36 +73,6 @@ struct EncodingResult
     bool was_cancelled;
 };
 
-class RunnerPanel : public Gtk::Box
-{
-    public:
-        RunnerPanel();
-        ~RunnerPanel();
-
-        // Aktualizace informací o postupu
-        void update_encoding_progress(const EncodingProgress& progress);
-        void set_encoding_state(bool is_encoding);
-        void update_status(const std::string& status, const std::string& css_class = "");
-        void block_encoding_button(bool block);
-        void set_loading_state(bool is_loading);
-        void update_loading_progress(int video_index, int video_count);
-        
-        // Signály
-        sigc::signal<void()> signal_start_encoding;
-        sigc::signal<void()> signal_stop_encoding;
-
-    protected:
-        bool isEncoding;
-
-        Gtk::ProgressBar EncodingProgressBar;
-        Gtk::Button EncodingButton;
-        Gtk::Label WindowTitle;
-        Gtk::Image EncodingIconStatus;
-        Gtk::Label EncodingTextStatus;
-
-        void on_start_stop_clicked();
-};
-
 // Prvek ve frontě kódování
 class VideoElement : public Gtk::Frame
 {
@@ -112,20 +82,17 @@ class VideoElement : public Gtk::Frame
         void update_labels();
 
         Video video;
+        VideoInfo video_info;
 
         sigc::signal<void(VideoElement *)> signal_remove;
 
         protected:
-            VideoInfo video_info;
 
             // Popisky vlastností videa
-            Gtk::Image drag_handle_icon;
-            Gtk::Image video_thumbnail;
-            Gtk::Label video_name_text;
-            Gtk::Label resolution_text;
-            Gtk::Label framerate_text;
-            Gtk::Label duration_text;
-            Gtk::Label mode_text;
+            Gtk::Image drag_handle_icon, video_thumbnail;
+            Gtk::Frame video_thumbnail_frame;
+            Gtk::Label video_name_text, resolution_text, framerate_text, duration_text, mode_text, size_text;
+            RoundedImage css_rounded;
             
             // Tlačítko pro odstranění prvku z fronty
             Gtk::Button remove_element_button;
@@ -146,6 +113,44 @@ class VideoElement : public Gtk::Frame
             bool on_drop(const Glib::ValueBase& value, double, double);
 };
 
+class RunnerPanel : public Gtk::HeaderBar
+{
+    public:
+        RunnerPanel();
+        ~RunnerPanel();
+
+        // Aktualizace informací o postupu
+        void update_encoding_progress(const EncodingProgress& progress);
+        void set_encoding_state(bool is_encoding);
+        void update_status(const std::string& status, const std::string& css_class = "");
+        void block_encoding_button(bool block = true);
+        void set_loading_state(bool is_loading);
+        void request_encoding_button_unblock(){ request_button_unblock = true; };
+        void update_loading_progress(int video_index, int video_count);
+        void show_queue_button(bool show);
+        void set_title(VideoElement * video_element);
+        void set_title_multiple(std::vector<VideoElement*>);
+        void clear_title();
+        
+        // Signály
+        sigc::signal<void()> signal_start_encoding;
+        sigc::signal<void()> signal_stop_encoding;
+        sigc::signal<void()> signal_toggle_queue;
+
+    protected:
+        bool isEncoding = false;
+        bool request_button_unblock = false;
+
+        Gtk::Button queue_display_button;
+        Gtk::ProgressBar EncodingProgressBar;
+        Gtk::Button EncodingButton;
+        Gtk::Label WindowTitle;
+        Gtk::Image EncodingIconStatus;
+        Gtk::Label EncodingTextStatus;
+
+        void on_start_stop_clicked();
+};
+
 // Interaktivní fronta kódování, do které bude možné vkládat videa
 class QueueFrame : public Gtk::Box
 {
@@ -160,6 +165,8 @@ class QueueFrame : public Gtk::Box
         sigc::signal<void()> signal_nothing_selected;
         sigc::signal<void(bool)> signal_loading_videos;
         sigc::signal<void(int, int)> signal_loading_videos_count;
+        sigc::signal<void()> signal_queue_cleared;
+        sigc::signal<void()> signal_enable_encoding;
     
     protected:
         // Prostor pro prvky fronty a seznam prvků
@@ -193,11 +200,9 @@ class QueueFrame : public Gtk::Box
         // Metody
         void on_clear_clicked();
         void on_select_all_clicked();
-        void on_import_video_clicked();
         bool on_drop(const Glib::ValueBase& value, double, double);
-        void error_dialog_not_a_video();
+        void error_toast_not_a_video(string file);
         void on_row_selected(Gtk::ListBoxRow * row);
-        void file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& result, Glib::RefPtr<Gtk::FileDialog> file_picker);
 };
 
 // Stránka parametrů pro AV1
@@ -344,13 +349,10 @@ class VideoSettings_VBox : public Gtk::ScrolledWindow
         Gtk::Popover cut_desc;
         Gtk::Label cut_desc_text;
         Gtk::Switch cut_switch;
-        Gtk::Box cut_heading_hbox, cut_switch_box, cut_switch_text_vbox, cut_start_h_box, cut_start_m_box, cut_start_s_box, cut_stop_h_box, cut_stop_m_box, cut_stop_s_box;
-        Gtk::Box cut_start_box, cut_stop_box, cut_start_time_box, cut_stop_time_box;
-        Gtk::Label cut_start_text, cut_stop_text, cut_h_text, cut_h2_text, cut_m_text, cut_m2_text, cut_s_text, cut_s2_text, cut_switch_text, cut_switch_desc;
-        Gtk::SpinButton cut_start_h, cut_start_m, cut_start_s; 
-        Gtk::SpinButton cut_stop_h, cut_stop_m, cut_stop_s;
+        Gtk::Box cut_heading_hbox, cut_switch_box, cut_switch_text_vbox;
+        Gtk::Label cut_switch_text, cut_switch_desc;
         Gtk::ListBox cut_listbox;
-        Glib::RefPtr<Gtk::Adjustment> lim_start_h, lim_start_m, lim_start_s, lim_stop_h, lim_stop_m, lim_stop_s;
+        CutWidget cut_widget;
 
         // Fps a rozlišení
         Gtk::Box res_hbox, res_text_vbox, fps_hbox, fps_text_vbox;
@@ -383,26 +385,46 @@ class VideoSettings_VBox : public Gtk::ScrolledWindow
         void set_output_path();
         void on_folder_selected(Glib::RefPtr<Gio::AsyncResult> &result, Glib::RefPtr<Gtk::FileDialog> folder_picker);
         void switch_codec_page(Codec codec);
-        void calculate_cut_limits(float duration, Cut cut_info);
-        void set_cut_values(Cut cut_info);
     };
 
 
-class ResultsDialog : public Gtk::Dialog
+class ResultsPage : public Gtk::Box
 {
     public:
-        ResultsDialog(Gtk::Window& parent, const std::vector<EncodingResult>& encoding_results);
-        ~ResultsDialog();
+        ResultsPage();
+        ~ResultsPage();
     
+        void load_results(std::vector<EncodingResult> encoding_results);
+        sigc::signal<void()> signal_close_results;
+        
     protected:
-        std::vector<EncodingResult> encoding_results;
-
+        Gtk::Label result_label;
         Gtk::ScrolledWindow scrolled_window;
         Gtk::ListBox results_listbox;
-        Gtk::Box window_content;
         Gtk::Button ok_button;
+};
 
-        void load_results();
+class ResultRow : public Gtk::Box
+{
+    friend class ResultsPage;
+    
+    public:
+        ResultRow(fs::path video_path, int status);
+        ~ResultRow();
+        
+    protected:
+        fs::path video_path;
+        int status;
+    
+        Gtk::Label result_label, video_name, status_text;
+        Gtk::Image status_icon;
+        Gtk::Button output_folder_button;
+        Gtk::Box box_right;
+        
+        void open_video();
+        void on_video_folder_open();
+        void set_status();
+        void set_output_folder_button();
 };
 
 class MainWindow : public Gtk::Window
@@ -410,14 +432,41 @@ class MainWindow : public Gtk::Window
     public:
         MainWindow();
         ~MainWindow();
+        
+        void show_toast(char const * message);
+        void show_toast_grant_access(std::vector<std::string> file_paths);
 
     protected:
-        Gtk::HeaderBar header_bar;
         RunnerPanel runner_panel;
         QueueFrame video_queue;
         VideoSettings_VBox options_page;
-        Gtk::Paned paned;
-
+        Gtk::Stack main_page_stack;
+        AdwStatusPage * queue_empty_page;
+        AdwStatusPage * encoding_page;
+        Gtk::ProgressBar encoding_page_progress;
+        Gtk::Button add_videos_pill_button;
+        ResultsPage results_page;
+        
+        // Layout aplikace
+        Glib::RefPtr<Gio::Menu> main_menu;
+        Gtk::MenuButton menu_button;
+        Gtk::Button add_videos_button;
+        AdwHeaderBar * sidebar_header;
+        AdwToolbarView * sidebar_view;
+        AdwToolbarView * content_view;
+        AdwToastOverlay * toast_overlay;
+        AdwOverlaySplitView * split_view;
+        
+        void on_window_resize(int width, int height);
+        void on_import_video_clicked();
+        void display_about_dialog(const Glib::VariantBase&);
+        void file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& result, Glib::RefPtr<Gtk::FileDialog> file_picker);
+        void file_picker_grant_access(std::vector<std::string> file_paths);
+        
+        //Signály načítání - file picker
+        sigc::signal<void(bool)> signal_loading_videos;
+        sigc::signal<void(int, int)> signal_loading_videos_count;
+        
         // Vlákno pro kódování videí, synchronizace
         std::thread encoding_thread;
         std::atomic<bool> is_encoding;
@@ -429,6 +478,7 @@ class MainWindow : public Gtk::Window
 
         EncodingProgress current_progress;
         std::vector<EncodingResult> encoding_results;
+        bool queue_lock = false;
 
         // Kódování
         void start_encoding();
