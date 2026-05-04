@@ -460,10 +460,6 @@ class MainWindow : public Gtk::Window
         void on_import_video_clicked();
         void display_about_dialog(const Glib::VariantBase&);
         void file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& result, Glib::RefPtr<Gtk::FileDialog> file_picker);
-
-        //Signály načítání - file picker
-        sigc::signal<void(bool)> signal_loading_videos;
-        sigc::signal<void(int, int)> signal_loading_videos_count;
         
         // Vlákno pro kódování videí, synchronizace
         std::thread encoding_thread;
