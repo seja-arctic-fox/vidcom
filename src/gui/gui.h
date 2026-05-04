@@ -174,10 +174,7 @@ class QueueFrame : public Gtk::Box
         Gtk::ListBox video_listbox;
 
         // Prázdná fronta
-        Gtk::Box empty_queue_box;
-        Gtk::Image empty_queue_icon;
-        Gtk::Label empty_queue_label;
-        Gtk::Label empty_queue_caption;
+        AdwStatusPage * queue_empty_status;
 
         // Spodní lišta
         Gtk::Box footer_box;

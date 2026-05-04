@@ -1,3 +1,4 @@
+#include "adwaita.h"
 #include "gio/gio.h"
 #include "glib-object.h"
 #include "glibmm/convert.h"
@@ -18,7 +19,6 @@
 QueueFrame::QueueFrame()
 :   scrolled_window(),
     video_listbox(),
-    empty_queue_label(),
     import_video_button("Add video(s)"),
     header_box(),
     clear_queue_box(Gtk::Orientation::HORIZONTAL),
@@ -56,27 +56,16 @@ QueueFrame::QueueFrame()
     header_box.append(clear_queue_button);
 
     // Prázdná fronta
-    empty_queue_label.set_markup("<span size='large'><b>Drag your videos here</b></span>");
-    empty_queue_box.set_valign(Gtk::Align::CENTER);
-    empty_queue_box.set_halign(Gtk::Align::CENTER);
-    empty_queue_box.set_orientation(Gtk::Orientation::VERTICAL);
-    empty_queue_icon.set_from_icon_name("camera-video-symbolic");
-    empty_queue_icon.set_pixel_size(128);
-    empty_queue_icon.add_css_class("dimmed");
-    empty_queue_caption.set_text("...or click the button to import them. ");
-    empty_queue_caption.add_css_class("caption");
-    empty_queue_icon.set_margin(20);
-    empty_queue_label.set_margin(10);
-
-    empty_queue_box.append(empty_queue_icon);
-    empty_queue_box.append(empty_queue_label);
-    empty_queue_box.append(empty_queue_caption);
+    queue_empty_status = ADW_STATUS_PAGE(adw_status_page_new());
+    adw_status_page_set_title(queue_empty_status, "Drag your videos here");
+    adw_status_page_set_description(queue_empty_status, "...or click the button to import them. ");
+    adw_status_page_set_icon_name(queue_empty_status, "camera-video-symbolic");
 
     // Fronta videí
     video_listbox.set_selection_mode(Gtk::SelectionMode::SINGLE);
     video_listbox.add_css_class("boxed-list");
     video_listbox.set_margin(10);
-    video_listbox.set_placeholder(empty_queue_box);
+    video_listbox.set_placeholder(*Glib::wrap(GTK_WIDGET(queue_empty_status)));
     video_listbox.signal_row_selected().connect(sigc::mem_fun(*this, &QueueFrame::on_row_selected));
 
     // Přidat do okna s posuvníkem
