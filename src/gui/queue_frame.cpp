@@ -158,6 +158,17 @@ void QueueFrame::error_toast_not_a_video(string file)
 
 void QueueFrame::add_video(const std::string& input_path)
 {
+    if (input_path == "")
+    {
+        dynamic_cast<MainWindow *>(get_root()) -> show_toast("Nothing selected");
+        if (clear_queue_button.get_can_target())
+            signal_enable_encoding.emit();
+        else
+            signal_queue_cleared.emit();
+        
+        return;
+    }
+    
     VideoElement * new_video = Gtk::make_managed<VideoElement>(input_path);
     float duration = new_video->video.get_video_info().duration;
 

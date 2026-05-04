@@ -12,13 +12,13 @@ void Video::set_default_output_settings()
 {
     set_output_framerate(inputVideo.framerate);
     set_prefix("C");
+    enable_cut(false);
+    set_compress(false);
+    set_two_pass(false);
     set_bitrate_by_size(10);
     set_cut(0, inputVideo.duration);
     set_output_path(fs::path(getenv("HOME")) / fs::path(".var/app/io.github.seja_arctic_fox.vidcom/"));
     set_codec(AV1);
-    set_compress(false);
-    set_two_pass(false);
-    enable_cut(false);
     set_downscale_factor(1);
 }
 
@@ -37,10 +37,8 @@ void Video::set_output_path(string output_path)
 
 void Video::set_bitrate_by_size(float target_size)
 {
-    float video_duration;
-    
+    float video_duration = inputVideo.duration;
     if (EnableCut) { video_duration = cut.endTime - cut.startTime; }
-    else { video_duration = inputVideo.duration; }
     
     targetSize = target_size;
     maxBitrate = (target_size / video_duration) * 8;

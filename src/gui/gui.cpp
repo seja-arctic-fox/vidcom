@@ -520,11 +520,12 @@ void MainWindow::file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& re
     }
     catch (const Gtk::DialogError& error)
     {
-        if (error.code() != Gtk::DialogError::DISMISSED)
+        if (error.code() == Gtk::DialogError::DISMISSED)
         {
             cerr << YELLOW << "File picker cancelled by user. " << RESET << endl;
         }
         
+        video_queue.add_video("");
         signal_loading_videos.emit(false);
     }
     catch (const Glib::Error& error)
