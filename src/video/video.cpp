@@ -12,13 +12,23 @@
 
 // Konstruktor
 Video::Video(string input_path)
-:   cancelling_encoding(false)
+:   
+    prefix("C"),
+    eCodec(AV1),
+    downscaleFactor(1),
+    Compress(false),
+    TwoPass(false), 
+    EnableCut(false),
+    cancelling_encoding(false)
 {
     // Načtení informací o vstupním videu
     set_video_info(input_path);
 
     // Nastavení výchozích možností
-    set_default_output_settings();
+    set_output_framerate(inputVideo.framerate);
+    set_bitrate_by_size(10);
+    set_cut(0, inputVideo.duration);
+    set_output_path(inputVideo.path.parent_path());
 }
 
 // Destruktor
