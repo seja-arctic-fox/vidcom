@@ -20,6 +20,8 @@ MainWindow::MainWindow()
     set_title("VidCom");
     set_default_size(960, 540);
     gtk_window_set_titlebar(GTK_WINDOW(gobj()), gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
+    // Jen pro BETA verze: 
+    add_css_class("devel");
     
     // Stránka pro prázdnou frontu
     add_videos_pill_button.add_css_class("pill");
