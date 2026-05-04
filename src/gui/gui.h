@@ -174,10 +174,7 @@ class QueueFrame : public Gtk::Box
         Gtk::ListBox video_listbox;
 
         // Prázdná fronta
-        Gtk::Box empty_queue_box;
-        Gtk::Image empty_queue_icon;
-        Gtk::Label empty_queue_label;
-        Gtk::Label empty_queue_caption;
+        AdwStatusPage * queue_empty_status;
 
         // Spodní lišta
         Gtk::Box footer_box;
@@ -462,10 +459,6 @@ class MainWindow : public Gtk::Window
         void display_about_dialog(const Glib::VariantBase&);
         void file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& result, Glib::RefPtr<Gtk::FileDialog> file_picker);
         void file_picker_grant_access(std::vector<std::string> file_paths);
-        
-        //Signály načítání - file picker
-        sigc::signal<void(bool)> signal_loading_videos;
-        sigc::signal<void(int, int)> signal_loading_videos_count;
         
         // Vlákno pro kódování videí, synchronizace
         std::thread encoding_thread;

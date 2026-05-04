@@ -153,8 +153,6 @@ MainWindow::MainWindow()
     runner_panel.signal_stop_encoding.connect(sigc::mem_fun(*this, &MainWindow::stop_encoding));
     video_queue.signal_loading_videos.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_loading_state));
     video_queue.signal_loading_videos_count.connect(sigc::mem_fun(runner_panel, &RunnerPanel::update_loading_progress));
-    signal_loading_videos.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_loading_state));
-    signal_loading_videos_count.connect(sigc::mem_fun(runner_panel, &RunnerPanel::update_loading_progress));
     
     // Signál pro přepnutí zpět z výsledkové stránky
     results_page.signal_close_results.connect([this]()
@@ -456,7 +454,7 @@ void MainWindow::show_results_dialog()
 
 void MainWindow::on_import_video_clicked()
 {
-    signal_loading_videos.emit(true);
+    video_queue.signal_loading_videos.emit(true);
     auto file_picker = Gtk::FileDialog::create();
     file_picker -> set_title("Select video(s) to import");
     file_picker -> set_modal();
@@ -509,11 +507,11 @@ void MainWindow::file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& re
         
         if (state -> first.empty())
         {
-            signal_loading_videos.emit(false);
+            video_queue.signal_loading_videos.emit(false);
             return;
         }
         
-        signal_loading_videos_count.emit(0, (int) state -> first.size());
+        video_queue.signal_loading_videos_count.emit(0, (int) state -> first.size());
         
         Glib::signal_idle().connect([this, state]() -> bool
         {
@@ -522,13 +520,13 @@ void MainWindow::file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& re
             
             if (i < paths.size())
             {
-                signal_loading_videos_count.emit((int) i + 1, (int) paths.size());
+                video_queue.signal_loading_videos_count.emit((int) i + 1, (int) paths.size());
                 video_queue.add_video(paths[i]);
                 i++;
                 return true;
             }
             
-            signal_loading_videos.emit(false);
+            video_queue.signal_loading_videos.emit(false);
             return false;
         });
     }
@@ -540,12 +538,12 @@ void MainWindow::file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& re
         }
         
         video_queue.add_video("");
-        signal_loading_videos.emit(false);
+        video_queue.signal_loading_videos.emit(false);
     }
     catch (const Glib::Error& error)
     {
         cerr << RED << "Error opening files with file picker! " << error.what() << RESET << endl;
         show_toast("Error opening files with file picker!");
-        signal_loading_videos.emit(false);
+        video_queue.signal_loading_videos.emit(false);
     }
 }
