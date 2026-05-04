@@ -282,16 +282,15 @@ void MainWindow::file_picker_grant_access(std::vector<std::string> file_paths)
             }
             
             video_queue.add_video("");
-            signal_loading_videos.emit(false);
+            video_queue.signal_loading_videos.emit(false);
         }
         
         catch (const Glib::Error& error)
         {
             cerr << RED << "Error opening files with file picker! " << error.what() << RESET << endl;
             show_toast("Error opening files with file picker!");
-            signal_loading_videos.emit(false);
+            video_queue.signal_loading_videos.emit(false);
         }
-        video_queue.signal_loading_videos.emit(false);
     });
 }
 
