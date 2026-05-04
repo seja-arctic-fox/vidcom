@@ -220,7 +220,9 @@ void QueueFrame::add_video(const std::string& input_path)
 
 void QueueFrame::on_clear_clicked()
 {
-    video_listbox.remove_all();
+    while (auto * row = video_listbox.get_row_at_index(0))
+        video_listbox.remove(*row);
+    
     select_all_button.set_active(false);
     select_all_button.set_can_target(false);
     clear_queue_button.set_can_target(false);
@@ -230,9 +232,6 @@ void QueueFrame::on_clear_clicked()
 
     signal_nothing_selected.emit();
     signal_queue_cleared.emit();
-
-    // Nastavit zpět placeholder
-    video_listbox.set_placeholder(empty_queue_box);
 }
 
 void QueueFrame::on_select_all_clicked()
