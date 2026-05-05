@@ -30,7 +30,8 @@ gui = [
   './src/gui/results_page.cpp',
   './src/gui/result_row.cpp',
   './src/gui/time_setter.cpp',
-  './src/gui/cut_widget.cpp'
+  './src/gui/cut_widget.cpp',
+  './src/gui/option_row.cpp'
 ]
 
 video = [

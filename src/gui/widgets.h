@@ -2,6 +2,7 @@
 #include "gtkmm/box.h"
 #include "gtkmm/cssprovider.h"
 #include "gtkmm/flowbox.h"
+#include "gtkmm/listboxrow.h"
 #include "gtkmm/spinbutton.h"
 #include "gtkmm/label.h"
 #include "gtkmm/adjustment.h"
@@ -108,4 +109,20 @@ class CutWidget : public Gtk::FlowBox
         bool updating = false;
         
         void update_limits(TimeSetter * setter = nullptr);
+};
+
+class OptionRow : public Gtk::ListBoxRow
+{
+    public:
+        OptionRow(const Glib::ustring& option_title = "", const Glib::ustring option_caption = "" );
+        virtual ~OptionRow() = default;
+        
+        void set_title(const Glib::ustring& option_title);
+        void set_caption(const Glib::ustring& option_caption);
+        
+    protected:
+        void set_widget(Gtk::Widget& widget);
+        
+        Gtk::Box row_box, text_box;
+        Gtk::Label title, caption;
 };
