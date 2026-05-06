@@ -1,5 +1,6 @@
 #include "../headers/widgets.h"
 #include "gtkmm/enums.h"
+#include "pangomm/layout.h"
 
 OptionHeading::OptionHeading(const Glib::ustring& heading_text)
 :
@@ -18,7 +19,10 @@ OptionHeading::OptionHeading(const Glib::ustring& heading_text)
 }
 
 OptionHeading::~OptionHeading()
-{}
+{
+    if (description_popover.get_parent())
+        description_popover.unparent();
+}
 
 void OptionHeading::set_popover_contents(const Glib::ustring& text)
 {
@@ -27,3 +31,6 @@ void OptionHeading::set_popover_contents(const Glib::ustring& text)
     description_popover.set_parent(description_trigger);
     description_trigger.signal_clicked().connect([this](){description_popover.popup();});
 }
+
+void OptionHeading::set_heading(const Glib::ustring& heading_text)
+{ heading.set_text(heading_text); }

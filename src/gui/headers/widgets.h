@@ -122,6 +122,7 @@ class OptionHeading : public Gtk::Box
         ~OptionHeading();
         
         void set_popover_contents(const Glib::ustring& text);
+        void set_heading(const Glib::ustring& heading_text);
         
     protected:
         Gtk::Label heading, description;
