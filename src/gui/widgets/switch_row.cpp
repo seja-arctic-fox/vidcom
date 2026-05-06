@@ -17,5 +17,5 @@ bool SwitchRow::get_state()
 void SwitchRow::on_row_activated()
 {
     set_state(!get_state());
-    signal_toggled.emit(get_state());
+    signal_toggled.emit();
 }

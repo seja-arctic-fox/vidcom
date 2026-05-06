@@ -2,6 +2,7 @@
 #include "gtkmm/box.h"
 #include "gtkmm/cssprovider.h"
 #include "gtkmm/flowbox.h"
+#include "gtkmm/listbox.h"
 #include "gtkmm/listboxrow.h"
 #include "gtkmm/spinbutton.h"
 #include "gtkmm/label.h"
@@ -112,6 +113,15 @@ class CutWidget : public Gtk::FlowBox
         void update_limits(TimeSetter * setter = nullptr);
 };
 
+class OptionListBox : public Gtk::ListBox
+{
+    public:
+        OptionListBox();
+        ~OptionListBox();
+        
+        void set_row_active(int row_index, bool active = false);
+};
+
 class OptionRow : public Gtk::ListBoxRow
 {
     public:
@@ -137,7 +147,7 @@ class SwitchRow : public OptionRow
         bool get_state();
         void on_row_activated();
         
-        sigc::signal<void(bool)> signal_toggled;
+        sigc::signal<void()> signal_toggled;
     
     protected:
         Gtk::Switch switch_widget;
