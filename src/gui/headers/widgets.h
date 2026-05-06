@@ -1,9 +1,11 @@
 #include "glibmm/refptr.h"
 #include "gtkmm/box.h"
+#include "gtkmm/button.h"
 #include "gtkmm/cssprovider.h"
 #include "gtkmm/flowbox.h"
 #include "gtkmm/listbox.h"
 #include "gtkmm/listboxrow.h"
+#include "gtkmm/popover.h"
 #include "gtkmm/spinbutton.h"
 #include "gtkmm/label.h"
 #include "gtkmm/adjustment.h"
@@ -111,6 +113,20 @@ class CutWidget : public Gtk::FlowBox
         bool updating = false;
         
         void update_limits(TimeSetter * setter = nullptr);
+};
+
+class OptionHeading : public Gtk::Box
+{
+    public:
+        OptionHeading(const Glib::ustring& heading_text);
+        ~OptionHeading();
+        
+        void set_popover_contents(const Glib::ustring& text);
+        
+    protected:
+        Gtk::Label heading, description;
+        Gtk::Button description_trigger;
+        Gtk::Popover description_popover;
 };
 
 class OptionListBox : public Gtk::ListBox

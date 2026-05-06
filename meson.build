@@ -33,7 +33,8 @@ gui = [
   './src/gui/widgets/cut_widget.cpp',
   './src/gui/widgets/option_row.cpp',
   './src/gui/widgets/switch_row.cpp',
-  './src/gui/widgets/option_list_box.cpp'
+  './src/gui/widgets/option_list_box.cpp',
+  './src/gui/widgets/option_heading.cpp'
 ]
 
 video = [
