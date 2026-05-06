@@ -1,4 +1,4 @@
-#include "gui.h"
+#include "headers/gui.h"
 #include "adwaita.h"
 #include "giomm/simpleaction.h"
 #include "gtk/gtk.h"

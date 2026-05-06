@@ -2,7 +2,7 @@
 #include "gtkmm/adjustment.h"
 #include "gtkmm/enums.h"
 #include "gtkmm/scale.h"
-#include "gui.h"
+#include "../headers/gui.h"
 #include "sigc++/functors/mem_fun.h"
 
 VP9_Parameters::VP9_Parameters(VideoElement * video_element)

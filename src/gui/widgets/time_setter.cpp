@@ -1,6 +1,6 @@
 #include "gtkmm/enums.h"
 #include "gtkmm/spinbutton.h"
-#include "widgets.h"
+#include "../headers/widgets.h"
 #include <climits>
 #include <vector>
 

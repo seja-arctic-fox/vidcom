@@ -1,6 +1,6 @@
 #include "gtkmm/enums.h"
 #include "pangomm/layout.h"
-#include "widgets.h"
+#include "../headers/widgets.h"
 
 OptionRow::OptionRow(const Glib::ustring& option_title, const Glib::ustring option_caption)
 :

@@ -1,5 +1,5 @@
 #include "gtkmm/enums.h"
-#include "gui.h"
+#include "../headers/gui.h"
 #include "pangomm/layout.h"
 #include "sigc++/functors/mem_fun.h"
 #include <string>

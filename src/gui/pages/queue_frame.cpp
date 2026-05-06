@@ -10,7 +10,7 @@
 #include "gtkmm/enums.h"
 #include "gtkmm/object.h"
 #include "gtkmm/scrolledwindow.h"
-#include "gui.h"
+#include "../headers/gui.h"
 #include "sigc++/functors/mem_fun.h"
 #include <string>
 #include <gdk/gdk.h>

@@ -2,7 +2,7 @@
 #include "gtkmm/enums.h"
 #include "gtkmm/object.h"
 #include "gtkmm/scrolledwindow.h"
-#include "gui.h"
+#include "../headers/gui.h"
 
 ResultsPage::ResultsPage()
 :   

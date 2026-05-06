@@ -1,5 +1,5 @@
 #include "gtkmm/spinbutton.h"
-#include "gui.h"
+#include "../headers/gui.h"
 #include "sigc++/functors/mem_fun.h"
 #include "src/video/video.h"
 #include <vector>

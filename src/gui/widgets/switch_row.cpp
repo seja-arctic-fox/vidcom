@@ -1,4 +1,4 @@
-#include "widgets.h"
+#include "../headers/widgets.h"
 
 SwitchRow::SwitchRow(const Glib::ustring& option_title, const Glib::ustring option_caption)
 :

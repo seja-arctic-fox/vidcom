@@ -10,7 +10,7 @@
 #include "gtkmm/object.h"
 #include "gtkmm/widget.h"
 #include "gtkmm/window.h"
-#include "gui.h"
+#include "../headers/gui.h"
 #include "pangomm/layout.h"
 #include "sigc++/adaptors/bind.h"
 #include "sigc++/functors/mem_fun.h"

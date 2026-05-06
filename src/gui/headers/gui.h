@@ -38,7 +38,7 @@
 #include <atomic>
 #include <mutex>
 #include <vector>
-#include "../video/video.h"
+#include "../../video/video.h"
 #include "sigc++/signal.h"
 #include "widgets.h"
 

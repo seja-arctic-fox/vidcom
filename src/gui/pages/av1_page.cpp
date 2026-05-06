@@ -2,7 +2,7 @@
 #include "gtkmm/adjustment.h"
 #include "gtkmm/enums.h"
 #include "gtkmm/listboxrow.h"
-#include "gui.h"
+#include "../headers/gui.h"
 #include "sigc++/functors/mem_fun.h"
 #include "src/video/video.h"
 #include <vector>
