@@ -31,7 +31,8 @@ gui = [
   './src/gui/result_row.cpp',
   './src/gui/time_setter.cpp',
   './src/gui/cut_widget.cpp',
-  './src/gui/option_row.cpp'
+  './src/gui/option_row.cpp',
+  './src/gui/switch_row.cpp'
 ]
 
 video = [

@@ -6,6 +6,7 @@
 #include "gtkmm/spinbutton.h"
 #include "gtkmm/label.h"
 #include "gtkmm/adjustment.h"
+#include "gtkmm/switch.h"
 #include "sigc++/signal.h"
 #include "src/video/video.h"
 #include <array>
@@ -119,10 +120,25 @@ class OptionRow : public Gtk::ListBoxRow
         
         void set_title(const Glib::ustring& option_title);
         void set_caption(const Glib::ustring& option_caption);
+        virtual void on_row_activated() {};
         
     protected:
         void set_widget(Gtk::Widget& widget);
         
         Gtk::Box row_box, text_box;
         Gtk::Label title, caption;
+};
+
+class SwitchRow : public OptionRow
+{
+    public:
+        SwitchRow(const Glib::ustring& option_title = "", const Glib::ustring option_caption = "" );
+        void set_state(bool state);
+        bool get_state();
+        void on_row_activated();
+        
+        sigc::signal<void(bool)> signal_toggled;
+    
+    protected:
+        Gtk::Switch switch_widget;
 };
