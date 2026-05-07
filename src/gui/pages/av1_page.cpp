@@ -270,6 +270,14 @@ void AV1_Parameters::update()
     if (on_updated) on_updated();
 }
 
+/* 
+ Tohle je špatně!
+ Udělej to tak, jako je to v SettingsPage, tj. 
+ tato metoda bude načítat údaje o videu a update bude volat metody stránky
+ v parametru. Pro více videí tu musí být override pro vektor videí
+ Stejně v jiných stránkách. Možná ještě vytvoř virtuální třídu pro 
+ kodekové stránky
+*/ 
 void AV1_Parameters::load()
 {
     SafeReset safe_reset(is_loading);

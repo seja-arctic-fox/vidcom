@@ -315,7 +315,7 @@ class SettingsPage : public Gtk::ScrolledWindow
 
         // Výstupní složka a prefix
         OptionHeading output_heading;
-        ButtonRow output_button;
+        ButtonRow output_row;
         FieldRow prefix_row;
         OptionListBox output_listbox;
 
@@ -329,10 +329,20 @@ class SettingsPage : public Gtk::ScrolledWindow
         // Nastavení parametrů kodeků
         OptionHeading parameter_heading;
 
+        // Ukládací funkce
+        void save_all_options(VideoElement * element);
+        void save_archive_mode(VideoElement * element);
+        void save_compress_mode(VideoElement * element);
+        void save_target_size(VideoElement * element);
+        void save_target_res(VideoElement * element);
+        void save_target_fps(VideoElement * element);
+        void save_cut(VideoElement * element);
+        void save_prefix(VideoElement * element);
+        void save_output_path(VideoElement * element);
+        void save_codec(VideoElement * element);
+        
         void load_options_into_GUI(Video * video);
         void update(void (SettingsPage::*func)(VideoElement *));
-        void save_all_options(VideoElement * element);
-        void save_cut(VideoElement * element);
         void on_select_flowbox(Gtk::FlowBoxChild * child);
         void set_output_path();
         void on_folder_selected(Glib::RefPtr<Gio::AsyncResult> &result, 

@@ -28,24 +28,24 @@ SettingsPage::SettingsPage()
     
 
     // Kodek
-    codec_heading("Video Codec"),
-    codec_av1_toggle("AV1"),
-    codec_hevc_toggle("HEVC"),
-
-    codec_vp9_toggle("VP9"),
-
     target_size_row("Target size: ", "Sets the size the video will be compressed to in MB"),
-
-    // Střih
-    cut_heading("Cut Feature"),
-    cut_switch("Enable Cut", "Enables a feature that trims the video from start time to end time. "),
-    // Rozlišení a fps
     res_row("Downscale Factor", "Defines how many times smaller is the output resolution. "),
     fps_row("Framerate", "Sets the output framerate. "),
-    // Výstup
+
+    cut_heading("Cut Feature"),
+
+    cut_switch("Enable Cut", "Enables a feature that trims the video from start time to end time. "),
+
+    // Střih
     output_heading("Saving"),
-    output_button("Saving Destination", "Video(s) will be saved to: \n"),
+    output_row("Saving Destination", "Video(s) will be saved to: \n"),
+    // Rozlišení a fps
     prefix_row("File Prefix", "Prepends a text before video name(s). "),
+    codec_heading("Video Codec"),
+    // Výstup
+    codec_av1_toggle("AV1"),
+    codec_hevc_toggle("HEVC"),
+    codec_vp9_toggle("VP9"),
     // Parametry
     parameter_heading("Advanced Codec Options")
 {
@@ -137,12 +137,12 @@ SettingsPage::SettingsPage()
         "<b>Prefix</b> field lets you set a string that will be prepended before the original filename(s). ";
 
     output_heading.set_popover_contents(output_help);
-    output_button.set_button_text("Set output folder");
+    output_row.set_button_text("Set output folder");
     
     prefix_row.set_field_placeholder_text("Enter file prefix");
 
     output_listbox.append(prefix_row);
-    output_listbox.append(output_button);
+    output_listbox.append(output_row);
     output_listbox.set_row_active(0, false);
 
     // Parametry
@@ -179,7 +179,7 @@ SettingsPage::SettingsPage()
     // cut_listbox.signal_row_activated().connect(sigc::mem_fun(*this, &SettingsPage::on_select_row));
     cut_widget.signal_cut_change.connect([this](){ update(&SettingsPage::save_all_options); });
     prefix_row.signal_changed.connect([this](){ update(&SettingsPage::save_all_options); });
-    output_button.signal_clicked.connect(sigc::mem_fun(*this, &SettingsPage::set_output_path));
+    output_row.signal_clicked.connect(sigc::mem_fun(*this, &SettingsPage::set_output_path));
     fps_row.signal_value_changed.connect([this](){ update(&SettingsPage::save_all_options); });
     res_row.signal_value_changed.connect([this](){ update(&SettingsPage::save_all_options); });
 }
@@ -187,6 +187,10 @@ SettingsPage::SettingsPage()
 SettingsPage::~SettingsPage()
 {}
 
+/* 
+Bude nahrazeno AdwPageView se zásobníkem, takže tohle retardované
+přepínání a dosazování aktualizací nebude absolutně třeba. VYMAZAT!!!
+*/
 void SettingsPage::switch_codec_page(Codec codec)
 {
     window_content.remove(*window_content.get_last_child());
@@ -292,13 +296,70 @@ void SettingsPage::on_select_flowbox(Gtk::FlowBoxChild * child)
     update(&SettingsPage::save_all_options);
 }
 
+// Ukládací funkce
+void SettingsPage::save_archive_mode(VideoElement * element)
+{
+    element -> video.set_compress(false);
+    target_size_row.set_sensitive(false);
+    fps_row.set_sensitive(false);
+    res_row.set_sensitive(false);
+}
+
+void SettingsPage::save_compress_mode(VideoElement * element)
+{
+    element -> video.set_compress(true);
+    target_size_row.set_sensitive();
+    fps_row.set_sensitive();
+    res_row.set_sensitive();
+}
+
+void SettingsPage::save_target_size(VideoElement * element)
+{
+    float target_size = target_size_row.get_value();
+    element -> video.set_bitrate_by_size(target_size);
+}
+
+void SettingsPage::save_target_res(VideoElement * element)
+{
+    float downscale_factor = res_row.get_value();
+    element -> video.set_downscale_factor(downscale_factor);
+}
+
+void SettingsPage::save_target_fps(VideoElement * element)
+{
+    int fps = fps_row.get_value();
+    element -> video.set_downscale_factor(fps);
+}
+
 void SettingsPage::save_cut(VideoElement * element)
 {
     bool state = cut_switch.get_state();
     element -> video.enable_cut(state);
     cut_widget.set_sensitive(state);
+    
+    if (state)
+    {
+        element -> video.set_cut(
+            cut_widget.get_start(), 
+            cut_widget.get_end()
+        );
+    }
 }
 
+void SettingsPage::save_prefix(VideoElement * element)
+{
+    string prefix = prefix_row.get_field_text();
+    element -> video.set_prefix(prefix);
+}
+
+void SettingsPage::save_output_path(VideoElement * element)
+{
+    element -> video.set_output_path(output_path);
+}
+
+// Bude se volat POUZE před začátkem kódování
+// Bude využívat ty ostatní podmetody
+// Ideálně to bude aktualizovat i kodekové stránky
 void SettingsPage::save_all_options(VideoElement * element)
 {
     Video * video = &(element -> video);
@@ -343,7 +404,7 @@ void SettingsPage::save_all_options(VideoElement * element)
     // Výstup a prefix
     video -> set_output_path(output_path);
     video -> set_prefix(prefix_row.get_field_text());
-    output_button.set_caption("Video(s) will be saved to: \n" + video -> get_output_path());
+    output_row.set_caption("Video(s) will be saved to: \n" + video -> get_output_path());
     
     // Parametry kodeku
     if (batch_settings)
@@ -438,7 +499,7 @@ void SettingsPage::load_options_into_GUI(Video * video)
 
     // Výstup a prefix
     prefix_row.set_field_text(video -> get_prefix());
-    output_button.set_caption("Video(s) will be saved to: \n" + video -> get_output_path());
+    output_row.set_caption("Video(s) will be saved to: \n" + video -> get_output_path());
 
     set_sensitive();
 }
