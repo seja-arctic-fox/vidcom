@@ -1,4 +1,5 @@
 #include "../headers/widgets.h"
+#include "gtkmm/enums.h"
 #include "gtkmm/listboxrow.h"
 
 OptionListBox::OptionListBox()
@@ -6,6 +7,8 @@ OptionListBox::OptionListBox()
     add_css_class("navigation-sidebar");
     add_css_class("card");
     set_margin_bottom(20);
+    set_selection_mode(Gtk::SelectionMode::NONE);
+    set_focusable(false);
     
     signal_row_activated().connect([](Gtk::ListBoxRow * row) 
         { static_cast<OptionRow *>(row) -> on_row_activated(); });

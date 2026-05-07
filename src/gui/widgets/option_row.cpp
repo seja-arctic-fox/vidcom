@@ -37,5 +37,6 @@ void OptionRow::set_widget(Gtk::Widget& widget)
 {
     widget.set_margin(10);
     widget.set_valign(Gtk::Align::CENTER);
+    widget.set_focusable(false);
     row_box.prepend(widget);
 }

@@ -1,6 +1,7 @@
 #include "glibmm/refptr.h"
 #include "gtkmm/box.h"
 #include "gtkmm/button.h"
+#include "gtkmm/checkbutton.h"
 #include "gtkmm/cssprovider.h"
 #include "gtkmm/flowbox.h"
 #include "gtkmm/listbox.h"
@@ -142,7 +143,7 @@ class OptionListBox : public Gtk::ListBox
 class OptionRow : public Gtk::ListBoxRow
 {
     public:
-        OptionRow(const Glib::ustring& option_title = "", const Glib::ustring& option_caption = "" );
+        OptionRow(const Glib::ustring& option_title = "", const Glib::ustring& option_caption = "");
         virtual ~OptionRow() = default;
         
         void set_title(const Glib::ustring& option_title);
@@ -159,7 +160,7 @@ class OptionRow : public Gtk::ListBoxRow
 class SwitchRow : public OptionRow
 {
     public:
-        SwitchRow(const Glib::ustring& option_title = "", const Glib::ustring& option_caption = "" );
+        SwitchRow(const Glib::ustring& option_title = "", const Glib::ustring& option_caption = "");
         void set_state(bool state);
         bool get_state();
         void on_row_activated();
@@ -173,11 +174,26 @@ class SwitchRow : public OptionRow
 class ButtonRow : public OptionRow
 {
     public:
-        ButtonRow(const Glib::ustring& option_title = "", const Glib::ustring& option_caption = "" );
+        ButtonRow(const Glib::ustring& option_title = "", const Glib::ustring& option_caption = "");
         void set_button_text(const Glib::ustring& text);
         
         sigc::signal<void()> signal_clicked;
     
     protected:
         Gtk::Button button_widget;
+};
+
+class RadioButtonRow : public OptionRow
+{
+    public:
+        RadioButtonRow(const Glib::ustring& option_title = "", const Glib::ustring& option_caption = "");
+        void set_group(RadioButtonRow& row);
+        void on_row_activated();
+        void set_state(bool state);
+        bool get_state();
+        
+        sigc::signal<void()> signal_toggled;
+    
+    protected:
+        Gtk::CheckButton radio_widget;
 };
