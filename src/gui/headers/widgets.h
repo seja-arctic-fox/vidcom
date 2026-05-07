@@ -3,6 +3,7 @@
 #include "gtkmm/button.h"
 #include "gtkmm/checkbutton.h"
 #include "gtkmm/cssprovider.h"
+#include "gtkmm/entry.h"
 #include "gtkmm/flowbox.h"
 #include "gtkmm/listbox.h"
 #include "gtkmm/listboxrow.h"
@@ -214,4 +215,19 @@ class SpinButtonRow : public OptionRow
     protected:
         Gtk::SpinButton spin_widget;
         Glib::RefPtr<Gtk::Adjustment> adjustment;
+};
+
+class FieldRow : public OptionRow
+{
+    public:
+        FieldRow(const Glib::ustring& option_title = "", const Glib::ustring& option_caption = "");
+        void set_field_width(int width);
+        void set_field_text(const Glib::ustring& text);
+        void set_field_placeholder_text(const Glib::ustring& text);
+        Glib::ustring get_field_text();
+        
+        sigc::signal<void()> signal_changed;
+        
+    protected:
+        Gtk::Entry entry_widget;
 };
