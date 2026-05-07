@@ -144,7 +144,8 @@ class OptionListBox : public Gtk::ListBox
 class OptionRow : public Gtk::ListBoxRow
 {
     public:
-        OptionRow(const Glib::ustring& option_title = "", const Glib::ustring& option_caption = "");
+        OptionRow(  const Glib::ustring& option_title = "", 
+                    const Glib::ustring& option_caption = "");
         virtual ~OptionRow() = default;
         
         void set_title(const Glib::ustring& option_title);
@@ -161,7 +162,8 @@ class OptionRow : public Gtk::ListBoxRow
 class SwitchRow : public OptionRow
 {
     public:
-        SwitchRow(const Glib::ustring& option_title = "", const Glib::ustring& option_caption = "");
+        SwitchRow(  const Glib::ustring& option_title = "", 
+                    const Glib::ustring& option_caption = "");
         void set_state(bool state);
         bool get_state();
         void on_row_activated();
@@ -175,7 +177,8 @@ class SwitchRow : public OptionRow
 class ButtonRow : public OptionRow
 {
     public:
-        ButtonRow(const Glib::ustring& option_title = "", const Glib::ustring& option_caption = "");
+        ButtonRow(  const Glib::ustring& option_title = "", 
+                    const Glib::ustring& option_caption = "");
         void set_button_text(const Glib::ustring& text);
         
         sigc::signal<void()> signal_clicked;
@@ -187,7 +190,8 @@ class ButtonRow : public OptionRow
 class RadioButtonRow : public OptionRow
 {
     public:
-        RadioButtonRow(const Glib::ustring& option_title = "", const Glib::ustring& option_caption = "");
+        RadioButtonRow( const Glib::ustring& option_title = "", 
+                        const Glib::ustring& option_caption = "");
         void set_group(RadioButtonRow& row);
         void on_row_activated();
         void set_state(bool state);
@@ -202,8 +206,10 @@ class RadioButtonRow : public OptionRow
 class SpinButtonRow : public OptionRow
 {
     public:
-        SpinButtonRow(const Glib::ustring& option_title = "", const Glib::ustring& option_caption = "");
-        void set_adjustment(double value, double lower, double upper, double step);
+        SpinButtonRow(  const Glib::ustring& option_title = "", 
+                        const Glib::ustring& option_caption = "");
+        void set_adjustment(double value, double lower, 
+                            double upper, double step);
         void set_value(double value);
         void set_range(double lower, double upper);
         void set_digits(int num_digits);
@@ -220,7 +226,8 @@ class SpinButtonRow : public OptionRow
 class FieldRow : public OptionRow
 {
     public:
-        FieldRow(const Glib::ustring& option_title = "", const Glib::ustring& option_caption = "");
+        FieldRow(   const Glib::ustring& option_title = "", 
+                    const Glib::ustring& option_caption = "");
         void set_field_width(int width);
         void set_field_text(const Glib::ustring& text);
         void set_field_placeholder_text(const Glib::ustring& text);

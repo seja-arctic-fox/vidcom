@@ -1,17 +1,13 @@
 #include "giomm/file.h"
 #include "glibmm/refptr.h"
-#include "gtkmm/adjustment.h"
 #include "gtkmm/box.h"
 #include "gtkmm/enums.h"
 #include "gtkmm/error.h"
 #include "gtkmm/filedialog.h"
-#include "gtkmm/label.h"
-#include "gtkmm/listboxrow.h"
 #include "gtkmm/object.h"
 #include "gtkmm/widget.h"
 #include "gtkmm/window.h"
 #include "../headers/gui.h"
-#include "pangomm/layout.h"
 #include "sigc++/adaptors/bind.h"
 #include "sigc++/functors/mem_fun.h"
 #include "src/video/video.h"
@@ -19,70 +15,39 @@
 #include <iostream>
 #include <vector>
 
-VideoSettings_VBox::VideoSettings_VBox()
+SettingsPage::SettingsPage()
 :   video_element(nullptr),
     video_queue(),
     batch_settings(false),
     is_loading(false),
     output_path(""),
     // Režim
-    compress_label("Compress", Gtk::Align::START), 
-    archive_label("Archive", Gtk::Align::START),
-    compress_caption("Compresses the video to a target size. ", Gtk::Align::START), 
-    archive_caption("Makes the video a small as possible without loosing quality. ", Gtk::Align::START),
-    mode_heading("Encoding Mode"),
+    mode_heading("Encoding Mode"), 
+    compress_row("Compress", "Compresses the video to a target size. "),
+    archive_row("Archive", "Makes the video a small as possible without loosing quality. "), 
     
-    archive_mode_text_vbox(Gtk::Orientation::VERTICAL),
-    archive_mode_hbox(Gtk::Orientation::HORIZONTAL),
-    compress_mode_text_vbox(Gtk::Orientation::VERTICAL),
-    compress_mode_hbox(Gtk::Orientation::HORIZONTAL),
-    mode_heading_hbox(Gtk::Orientation::HORIZONTAL),
+
     // Kodek
+    codec_heading("Video Codec"),
     codec_av1_toggle("AV1"),
     codec_hevc_toggle("HEVC"),
+
     codec_vp9_toggle("VP9"),
 
-    codec_heading_hbox(Gtk::Orientation::HORIZONTAL),
-    codec_heading("Video Codec"),
+    target_size_row("Target size: ", "Sets the size the video will be compressed to in MB"),
 
-    target_size_hbox(Gtk::Orientation::HORIZONTAL),
-    target_size_label("Target size: ", Gtk::Align::START),
-    target_size_unit(" MB"),
-    target_size_values(Gtk::Adjustment::create(10.0, 0.0, 16343)),
-    target_size_field(target_size_values), 
     // Střih
     cut_heading("Cut Feature"),
-    cut_heading_hbox(Gtk::Orientation::HORIZONTAL),
-    cut_switch_box(Gtk::Orientation::HORIZONTAL),
-    cut_switch_text_vbox(Gtk::Orientation::VERTICAL),
-    cut_switch_text("Enable Cut"),
-    cut_switch_desc("Enables a feature that trims the video from start time to end time. "),
+    cut_switch("Enable Cut", "Enables a feature that trims the video from start time to end time. "),
     // Rozlišení a fps
-    res_hbox(Gtk::Orientation::HORIZONTAL),
-    res_text_vbox(Gtk::Orientation::VERTICAL),
-    fps_hbox(Gtk::Orientation::HORIZONTAL),
-    fps_text_vbox(Gtk::Orientation::VERTICAL),
-    res_text("Downscale Factor"),
-    fps_text("Framerate"),
-    res_caption("Defines how many times smaller is the output resolution. "),
-    fps_caption("Sets the output framerate. "),
-    res_field(Glib::RefPtr<Gtk::Adjustment>(Gtk::Adjustment::create(1, 1, 20, 0.1))),
-    fps_field(Glib::RefPtr<Gtk::Adjustment>(Gtk::Adjustment::create(60, 0, 60))),
+    res_row("Downscale Factor", "Defines how many times smaller is the output resolution. "),
+    fps_row("Framerate", "Sets the output framerate. "),
     // Výstup
     output_heading("Saving"),
-    output_heading_hbox(Gtk::Orientation::HORIZONTAL),
-    output_hbox(Gtk::Orientation::HORIZONTAL),
-    output_text_vbox(Gtk::Orientation::VERTICAL),
-    prefix_hbox(Gtk::Orientation::HORIZONTAL),
-    prefix_text_vbox(Gtk::Orientation::VERTICAL),
-    output_text("Saving Destination"),
-    output_caption("Video(s) will be saved to: \n"),
-    prefix_text("File Prefix"),
-    prefix_caption("Prepends a text before video name(s). "),
-    set_output_folder_button("Set output folder"), 
+    output_button("Saving Destination", "Video(s) will be saved to: \n"),
+    prefix_row("File Prefix", "Prepends a text before video name(s). "),
     // Parametry
-    parameters_heading("Advanced Codec Options"),
-    parameters_heading_hbox(Gtk::Orientation::HORIZONTAL)
+    parameter_heading("Advanced Codec Options")
 {
     window_content.set_expand();
     window_content.set_margin(50);
@@ -108,67 +73,14 @@ VideoSettings_VBox::VideoSettings_VBox()
         "This happens because the target file size is reached before the encoding is finished. \n"
         "If this happens to you, consider lowering the resolution and framerate. ";
 
-    mode_desc_text.set_markup(mode_help);
-    mode_desc.set_child(mode_desc_text);
-    mode_desc.set_parent(mode_desc_trigger);
-    mode_desc_trigger.signal_clicked().connect([this](){mode_desc.popup();});
+    mode_heading.set_popover_contents(mode_help);
+    archive_row.set_group(compress_row);
+    target_size_row.set_digits(1);
+    target_size_row.set_adjustment(10, 0, 16343, 0.1);
     
-    mode_desc.set_margin(10);
-    mode_heading.add_css_class("title-4");
-    mode_desc_trigger.set_icon_name("help-about-symbolic");
-    mode_desc_trigger.add_css_class("flat");
-
-    mode_heading_hbox.set_margin(10);
-    mode_heading_hbox.set_halign(Gtk::Align::CENTER);
-    mode_heading_hbox.append(mode_heading);
-    mode_heading_hbox.append(mode_desc_trigger);
-
-    archive_mode_radio_button.set_group(compress_mode_radio_button);
-    archive_mode_radio_button.set_can_target(false);
-    compress_mode_radio_button.set_can_target(false);
-
-    archive_mode_hbox.set_margin(5);
-    archive_mode_text_vbox.set_margin(5);
-    archive_label.set_margin(2);
-    archive_caption.set_margin(2);
-    archive_caption.set_ellipsize(Pango::EllipsizeMode::END);
-    archive_label.add_css_class("heading");
-    archive_caption.add_css_class("caption");
-    archive_mode_text_vbox.append(archive_label);
-    archive_mode_text_vbox.append(archive_caption);
-    archive_mode_hbox.append(archive_mode_radio_button);
-    archive_mode_hbox.append(archive_mode_text_vbox);
-
-    compress_mode_hbox.set_margin(5);
-    compress_mode_text_vbox.set_margin(5);
-    compress_label.set_margin(2);
-    compress_caption.set_margin(2);
-    compress_caption.set_ellipsize(Pango::EllipsizeMode::END);
-    compress_label.add_css_class("heading");
-    compress_caption.add_css_class("caption");
-    compress_mode_text_vbox.append(compress_label);
-    compress_mode_text_vbox.append(compress_caption);
-    compress_mode_hbox.append(compress_mode_radio_button);
-    compress_mode_hbox.append(compress_mode_text_vbox);
-
-    target_size_field.set_numeric();
-    target_size_field.set_digits(1);
-    target_size_field.set_expand();
-    target_size_hbox.set_margin(5);
-    target_size_hbox.set_sensitive(false);
-    target_size_label.add_css_class("heading");
-    target_size_hbox.append(target_size_label);
-    target_size_hbox.append(target_size_field);
-    target_size_hbox.append(target_size_unit);
-
-    mode_listbox.add_css_class("navigation-sidebar");
-    mode_listbox.add_css_class("card");
-    mode_listbox.set_margin_bottom(20);
-    mode_listbox.append(archive_mode_hbox);
-    mode_listbox.append(compress_mode_hbox);
-    mode_listbox.append(target_size_hbox);
-    mode_listbox.get_row_at_index(2 )-> set_activatable(false);
-    mode_listbox.get_row_at_index(2 )-> set_selectable(false);
+    mode_listbox.append(archive_row);
+    mode_listbox.append(compress_row);
+    mode_listbox.append(target_size_row);
 
     // Kodek
     string codec_help = 
@@ -178,11 +90,7 @@ VideoSettings_VBox::VideoSettings_VBox()
         "- <b>HEVC</b> - Industry standart with great compression. \n"
         "- <b>VP9</b> - Open source codec from Google, used mainly for videos on the web. ";
 
-    codec_desc_text.set_markup(codec_help);
-    codec_desc.set_child(codec_desc_text);
-    codec_desc.set_parent(codec_desc_trigger);
-    codec_desc_trigger.signal_clicked().connect([this](){codec_desc.popup();});
-
+    codec_heading.set_popover_contents(codec_help);
 
     codec_hevc_toggle.set_group(codec_av1_toggle);
     codec_vp9_toggle.set_group(codec_av1_toggle);
@@ -200,102 +108,26 @@ VideoSettings_VBox::VideoSettings_VBox()
     codec_flowbox.append(codec_hevc_toggle);
     codec_flowbox.append(codec_vp9_toggle);
 
-    codec_heading.add_css_class("title-4");
-    codec_desc_trigger.set_icon_name("help-about-symbolic");
-    codec_desc_trigger.add_css_class("flat");
-    codec_heading_hbox.set_margin(10);
-    codec_heading_hbox.set_halign(Gtk::Align::CENTER);
-    codec_heading_hbox.append(codec_heading);
-    codec_heading_hbox.append(codec_desc_trigger);
-
     // Střih
     string cut_help = 
         "<big>Cut Feature</big>\n"
         "Trims the video from start time to end time. \n"
         "This feature cannot be used with all videos selected. ";
 
-    cut_desc_text.set_markup(cut_help);
-    cut_desc.set_child(cut_desc_text);
-    cut_desc.set_parent(cut_desc_trigger);
-    cut_desc_trigger.signal_clicked().connect([this](){cut_desc.popup();});
+    cut_heading.set_popover_contents(cut_help);
 
-    cut_heading.add_css_class("title-4");
-    cut_heading.set_ellipsize(Pango::EllipsizeMode::MIDDLE);
-    cut_desc_trigger.set_icon_name("help-about-symbolic");
-    cut_desc_trigger.add_css_class("flat");
-    cut_heading_hbox.set_margin(10);
-    cut_heading_hbox.set_halign(Gtk::Align::CENTER);
-    cut_heading_hbox.append(cut_heading);
-    cut_heading_hbox.append(cut_desc_trigger);
-
-    cut_switch_box.set_margin(5);
-    cut_switch_text_vbox.set_margin(5);
-    cut_switch_text.set_margin(2);
-    cut_switch_desc.set_margin(2);
-    cut_switch_desc.set_ellipsize(Pango::EllipsizeMode::END);
-    cut_switch_text.add_css_class("heading");
-    cut_switch_text.set_halign(Gtk::Align::START);
-    cut_switch_desc.add_css_class("caption");
-    cut_switch_desc.set_halign(Gtk::Align::START);
-    cut_switch_text_vbox.append(cut_switch_text);
-    cut_switch_text_vbox.append(cut_switch_desc);
-    cut_switch.set_can_target(false);
-    cut_switch.set_halign(Gtk::Align::CENTER);
-    cut_switch.set_valign(Gtk::Align::CENTER);
-    cut_switch_box.append(cut_switch);
-    cut_switch_box.append(cut_switch_text_vbox);
-
-    cut_listbox.add_css_class("navigation-sidebar");
-    cut_listbox.add_css_class("card");
-    cut_listbox.set_margin_bottom(20);
-    cut_listbox.append(cut_switch_box);
+    cut_listbox.append(cut_switch);
     cut_listbox.append(cut_widget);
-    cut_listbox.get_row_at_index(1) -> set_activatable(false);
-    cut_listbox.get_row_at_index(1) -> set_selectable(false);
-    
+    cut_listbox.set_row_active(1, false);
+
     // Rozlišení a fps
-    res_text.set_halign(Gtk::Align::START);
-    fps_text.set_halign(Gtk::Align::START);
-    res_caption.set_halign(Gtk::Align::START);
-    fps_caption.set_halign(Gtk::Align::START);
-    res_field.set_numeric();
-    fps_field.set_numeric();
-    res_field.set_digits(1);
+    res_row.set_digits(1);
+    fps_row.set_digits(0);
+    res_row.set_adjustment(1, 1, 10, 0.1);
+    fps_row.set_step(1);
 
-    res_hbox.set_margin(5);
-    res_text_vbox.set_margin(5);
-    res_text.set_margin(2);
-    res_caption.set_margin(2);
-    res_caption.set_ellipsize(Pango::EllipsizeMode::END);
-    res_text.add_css_class("heading");
-    res_caption.add_css_class("caption");
-    res_text_vbox.append(res_text);
-    res_text_vbox.append(res_caption);
-    res_field.set_margin(10);
-    res_hbox.append(res_field);
-    res_hbox.append(res_text_vbox);
-
-    fps_hbox.set_margin(5);
-    fps_text_vbox.set_margin(5);
-    fps_text.set_margin(2);
-    fps_caption.set_margin(2);
-    fps_caption.set_ellipsize(Pango::EllipsizeMode::END);
-    fps_text.add_css_class("heading");
-    fps_caption.add_css_class("caption");
-    fps_text_vbox.append(fps_text);
-    fps_text_vbox.append(fps_caption);
-    fps_field.set_margin(10);
-    fps_hbox.append(fps_field);
-    fps_hbox.append(fps_text_vbox);
-
-    mode_listbox.append(res_hbox);
-    mode_listbox.append(fps_hbox);
-    mode_listbox.get_row_at_index(3 )-> set_activatable(false);
-    mode_listbox.get_row_at_index(3 )-> set_selectable(false);
-    mode_listbox.get_row_at_index(4 )-> set_activatable(false);
-    mode_listbox.get_row_at_index(4 )-> set_selectable(false);
-    res_hbox.set_sensitive(false);
-    fps_hbox.set_sensitive(false);
+    mode_listbox.append(res_row);
+    mode_listbox.append(fps_row);
 
     // Výstup a prefix
     string output_help = 
@@ -304,61 +136,14 @@ VideoSettings_VBox::VideoSettings_VBox()
         "The program will create a subfolder called 'encoded_videos' in the output folder and save the result there. \n"
         "<b>Prefix</b> field lets you set a string that will be prepended before the original filename(s). ";
 
-    output_desc_text.set_markup(output_help);
-    output_desc.set_child(output_desc_text);
-    output_desc.set_parent(output_desc_trigger);
-    output_desc_trigger.signal_clicked().connect([this](){output_desc.popup();});
+    output_heading.set_popover_contents(output_help);
+    output_button.set_button_text("Set output folder");
+    
+    prefix_row.set_field_placeholder_text("Enter file prefix");
 
-    output_heading.add_css_class("title-4");
-    output_desc_trigger.set_icon_name("help-about-symbolic");
-    output_desc_trigger.add_css_class("flat");
-    output_heading_hbox.set_margin(10);
-    output_heading_hbox.set_halign(Gtk::Align::CENTER);
-    output_heading_hbox.append(output_heading);
-    output_heading_hbox.append(output_desc_trigger);
-
-    output_text.set_halign(Gtk::Align::START);
-    output_caption.set_halign(Gtk::Align::START);
-    prefix_text.set_halign(Gtk::Align::START);
-    prefix_caption.set_halign(Gtk::Align::START);
-
-    output_hbox.set_margin(5);
-    output_text_vbox.set_margin(5);
-    output_text.set_margin(2);
-    output_caption.set_margin(2);
-    output_caption.set_ellipsize(Pango::EllipsizeMode::MIDDLE);
-    output_text.add_css_class("heading");
-    output_caption.add_css_class("caption");
-    output_text_vbox.append(output_text);
-    output_text_vbox.append(output_caption);
-    set_output_folder_button.set_margin(10);
-    set_output_folder_button.add_css_class("suggested-action");
-    output_hbox.append(set_output_folder_button);
-    output_hbox.append(output_text_vbox);
-
-    prefix_hbox.set_margin(5);
-    prefix_text_vbox.set_margin(5);
-    prefix_text.set_margin(2);
-    prefix_caption.set_margin(2);
-    prefix_caption.set_ellipsize(Pango::EllipsizeMode::MIDDLE);
-    prefix_text.add_css_class("heading");
-    prefix_caption.add_css_class("caption");
-    prefix_text_vbox.append(prefix_text);
-    prefix_text_vbox.append(prefix_caption);
-    set_prefix_field.set_margin(10);
-    set_prefix_field.set_placeholder_text("Enter file prefix");
-    prefix_hbox.append(set_prefix_field);
-    prefix_hbox.append(prefix_text_vbox);
-
-    output_listbox.add_css_class("navigation-sidebar");
-    output_listbox.add_css_class("card");
-    output_listbox.set_margin_bottom(20);
-    output_listbox.append(prefix_hbox);
-    output_listbox.append(output_hbox);
-    output_listbox.get_row_at_index(0 )-> set_activatable(false);
-    output_listbox.get_row_at_index(0 )-> set_selectable(false);
-    output_listbox.get_row_at_index(1 )-> set_activatable(false);
-    output_listbox.get_row_at_index(1 )-> set_selectable(false);
+    output_listbox.append(prefix_row);
+    output_listbox.append(output_button);
+    output_listbox.set_row_active(0, false);
 
     // Parametry
     string parameters_help = 
@@ -370,54 +155,39 @@ VideoSettings_VBox::VideoSettings_VBox()
         "- <b>Film grain synthesis</b> in <b>AV1</b> can be very useful when you have a lot of film grain/noise in your video(s). \n"
         "- <b>Psychovisual tuning</b> can achieve a better look. It puts more data in places where we are more likely to look, exploiting our way of seeing the world. \n";
 
-    parameters_desc_text.set_markup(parameters_help);
-    parameters_desc.set_child(parameters_desc_text);
-    parameters_desc.set_parent(parameters_desc_trigger);
-    parameters_desc_trigger.signal_clicked().connect([this](){parameters_desc.popup();});
-
-
-    parameters_heading.add_css_class("title-4");
-    parameters_desc_trigger.set_icon_name("help-about-symbolic");
-    parameters_desc_trigger.add_css_class("flat");
-    parameters_heading_hbox.set_margin(10);
-    parameters_heading_hbox.set_halign(Gtk::Align::CENTER);
-    parameters_heading_hbox.append(parameters_heading);
-    parameters_heading_hbox.append(parameters_desc_trigger);
+    parameter_heading.set_popover_contents(parameters_help);
 
     // Složení obsahu okna
-    window_content.append(mode_heading_hbox);
+    window_content.append(mode_heading);
     window_content.append(mode_listbox);
-    window_content.append(codec_heading_hbox);
-    window_content.append(codec_flowbox);
-    window_content.append(cut_heading_hbox);
+    window_content.append(cut_heading);
     window_content.append(cut_listbox);
-    window_content.append(output_heading_hbox);
+    window_content.append(output_heading);
     window_content.append(output_listbox);
-    window_content.append(parameters_heading_hbox);
+    window_content.append(codec_heading);
+    window_content.append(codec_flowbox);
+    window_content.append(parameter_heading);
     window_content.append(*Gtk::make_managed<AV1_Parameters>(video_element));
 
     // Signál při změně jakéhokoliv prvku
-    mode_listbox.signal_row_selected().connect(sigc::mem_fun(*this, &VideoSettings_VBox::on_select_row));
-    target_size_field.signal_value_changed().connect(sigc::mem_fun(*this, &VideoSettings_VBox::update));
-    codec_flowbox.signal_child_activated().connect(sigc::mem_fun(*this, &VideoSettings_VBox::on_select_flowbox));
-    cut_listbox.signal_row_activated().connect(sigc::mem_fun(*this, &VideoSettings_VBox::on_select_row));
-    cut_widget.signal_cut_change.connect(sigc::mem_fun(*this, &VideoSettings_VBox::update));
-    set_prefix_field.signal_changed().connect(sigc::mem_fun(*this, &VideoSettings_VBox::update));
-    set_output_folder_button.signal_clicked().connect(sigc::mem_fun(*this, &VideoSettings_VBox::set_output_path));
-    fps_field.signal_value_changed().connect(sigc::mem_fun(*this, &VideoSettings_VBox::update));
-    res_field.signal_value_changed().connect(sigc::mem_fun(*this, &VideoSettings_VBox::update));
+    archive_row.signal_toggled.connect([this](){ update(&SettingsPage::save_all_options); });
+    compress_row.signal_toggled.connect([this](){ update(&SettingsPage::save_all_options); });
+    // mode_listbox.signal_row_selected().connect([this](){ update(&SettingsPage::save_all_options); });
+    target_size_row.signal_value_changed.connect([this](){ update(&SettingsPage::save_all_options); });
+    codec_flowbox.signal_child_activated().connect(sigc::mem_fun(*this, &SettingsPage::on_select_flowbox));
+    cut_switch.signal_toggled.connect([this](){ update(&SettingsPage::save_cut); });
+    // cut_listbox.signal_row_activated().connect(sigc::mem_fun(*this, &SettingsPage::on_select_row));
+    cut_widget.signal_cut_change.connect([this](){ update(&SettingsPage::save_all_options); });
+    prefix_row.signal_changed.connect([this](){ update(&SettingsPage::save_all_options); });
+    output_button.signal_clicked.connect(sigc::mem_fun(*this, &SettingsPage::set_output_path));
+    fps_row.signal_value_changed.connect([this](){ update(&SettingsPage::save_all_options); });
+    res_row.signal_value_changed.connect([this](){ update(&SettingsPage::save_all_options); });
 }
 
-VideoSettings_VBox::~VideoSettings_VBox()
-{
-    mode_desc.unparent();
-    codec_desc.unparent();
-    cut_desc.unparent();
-    output_desc.unparent();
-    parameters_desc.unparent();
-}
+SettingsPage::~SettingsPage()
+{}
 
-void VideoSettings_VBox::switch_codec_page(Codec codec)
+void SettingsPage::switch_codec_page(Codec codec)
 {
     window_content.remove(*window_content.get_last_child());
 
@@ -432,7 +202,7 @@ void VideoSettings_VBox::switch_codec_page(Codec codec)
         {
             window_content.append(*Gtk::make_managed<AV1_Parameters>(video_element));
             auto page = dynamic_cast<AV1_Parameters *>(window_content.get_last_child());
-            page -> on_updated = [this]() { update(); };
+            page -> on_updated = [this]() { update(&SettingsPage::save_all_options); };
             page -> load();
             break;
         }
@@ -441,7 +211,7 @@ void VideoSettings_VBox::switch_codec_page(Codec codec)
         {
             window_content.append(*Gtk::make_managed<HEVC_Parameters>(video_element));
             auto page = dynamic_cast<HEVC_Parameters *>(window_content.get_last_child());
-            page -> on_updated = [this]() { update(); };
+            page -> on_updated = [this]() { update(&SettingsPage::save_all_options); };
             page -> load();
             break;
         }
@@ -450,7 +220,7 @@ void VideoSettings_VBox::switch_codec_page(Codec codec)
         {
             window_content.append(*Gtk::make_managed<VP9_Parameters>(video_element));
             auto page = dynamic_cast<VP9_Parameters *>(window_content.get_last_child());
-            page -> on_updated = [this]() { update(); };
+            page -> on_updated = [this]() { update(&SettingsPage::save_all_options); };
             page -> load();
             break;
         }
@@ -458,7 +228,7 @@ void VideoSettings_VBox::switch_codec_page(Codec codec)
 
 }
 
-void VideoSettings_VBox::set_output_path()
+void SettingsPage::set_output_path()
 {
     auto folder_picker = Gtk::FileDialog::create();
     folder_picker -> set_title("Select Output Folder");
@@ -467,10 +237,10 @@ void VideoSettings_VBox::set_output_path()
     auto current_folder = Gio::File::create_for_path(output_path);
     folder_picker -> set_initial_folder(current_folder);
 
-    folder_picker -> select_folder(* dynamic_cast<Gtk::Window *>(get_root()), sigc::bind(sigc::mem_fun(*this, &VideoSettings_VBox::on_folder_selected), folder_picker));
+    folder_picker -> select_folder(* dynamic_cast<Gtk::Window *>(get_root()), sigc::bind(sigc::mem_fun(*this, &SettingsPage::on_folder_selected), folder_picker));
 }
 
-void VideoSettings_VBox::on_folder_selected(Glib::RefPtr<Gio::AsyncResult> &result, Glib::RefPtr<Gtk::FileDialog> folder_picker)
+void SettingsPage::on_folder_selected(Glib::RefPtr<Gio::AsyncResult> &result, Glib::RefPtr<Gtk::FileDialog> folder_picker)
 {
     try
     {
@@ -479,7 +249,7 @@ void VideoSettings_VBox::on_folder_selected(Glib::RefPtr<Gio::AsyncResult> &resu
         if (folder)
         {
             output_path = folder -> get_path();
-            update();
+            update(&SettingsPage::save_all_options);
         }
     }
     catch (const Gtk::DialogError& error)
@@ -496,7 +266,7 @@ void VideoSettings_VBox::on_folder_selected(Glib::RefPtr<Gio::AsyncResult> &resu
     }
 }
 
-void VideoSettings_VBox::on_select_flowbox(Gtk::FlowBoxChild * child)
+void SettingsPage::on_select_flowbox(Gtk::FlowBoxChild * child)
 {
     // Kodek
     if (child -> is_ancestor(codec_flowbox))
@@ -519,67 +289,29 @@ void VideoSettings_VBox::on_select_flowbox(Gtk::FlowBoxChild * child)
         }
     }
 
-    update();
+    update(&SettingsPage::save_all_options);
 }
 
-void VideoSettings_VBox::on_select_row(Gtk::ListBoxRow * selected_row)
+void SettingsPage::save_cut(VideoElement * element)
 {
-    // Režim
-    if (selected_row -> is_ancestor(mode_listbox))
-    {
-        auto row0 = mode_listbox.get_row_at_index(0);
-    
-        if (selected_row == row0)
-        {
-            archive_mode_radio_button.set_active();
-            target_size_hbox.set_sensitive(false);
-            res_hbox.set_sensitive(false);
-            fps_hbox.set_sensitive(false);
-        }
-        else
-        {
-            compress_mode_radio_button.set_active();
-            target_size_hbox.set_sensitive();
-            res_hbox.set_sensitive();
-            fps_hbox.set_sensitive();
-        }
-    }
-
-    if (selected_row -> is_ancestor(cut_listbox))
-    {
-        if (selected_row == cut_listbox.get_row_at_index(0))
-        {
-            if (cut_switch.get_active())
-            {
-                cut_switch.set_active(false);
-                cut_widget.set_sensitive(false);
-            }
-            else
-            {
-                cut_switch.set_active();
-                cut_widget.set_sensitive();
-            }
-
-            cut_listbox.unselect_all();
-        }
-    }
-
-    update();
+    bool state = cut_switch.get_state();
+    element -> video.enable_cut(state);
+    cut_widget.set_sensitive(state);
 }
 
-void VideoSettings_VBox::save_options(VideoElement * element)
+void SettingsPage::save_all_options(VideoElement * element)
 {
     Video * video = &(element -> video);
 
     // Režim
-    if (compress_mode_radio_button.get_active())
+    if (compress_row.get_state())
         {
             video -> set_compress(true);
-            video -> set_bitrate_by_size(target_size_field.get_value());
+            video -> set_bitrate_by_size(target_size_row.get_value());
 
             // Rozlišení a fps
-            video -> set_downscale_factor(res_field.get_value());
-            video -> set_output_framerate(fps_field.get_value());
+            video -> set_downscale_factor(res_row.get_value());
+            video -> set_output_framerate(fps_row.get_value());
         }
     else
         {
@@ -601,7 +333,7 @@ void VideoSettings_VBox::save_options(VideoElement * element)
     }
     
     // Střih
-    if (cut_switch.get_active())
+    if (cut_switch.get_state())
     {
         video -> enable_cut(true);
         video -> set_cut(cut_widget.get_start(), cut_widget.get_end());
@@ -610,8 +342,8 @@ void VideoSettings_VBox::save_options(VideoElement * element)
     
     // Výstup a prefix
     video -> set_output_path(output_path);
-    video -> set_prefix(set_prefix_field.get_text());
-    output_caption.set_text("Video(s) will be saved to: \n" + video -> get_output_path());
+    video -> set_prefix(prefix_row.get_field_text());
+    output_button.set_caption("Video(s) will be saved to: \n" + video -> get_output_path());
     
     // Parametry kodeku
     if (batch_settings)
@@ -627,33 +359,30 @@ void VideoSettings_VBox::save_options(VideoElement * element)
             else video -> VP9_options = displayed_video -> VP9_options;
         }
     }
-
-    // Zobrazení některých informací v položkách fronty - dobré pro kontrolu, zda se nastavení uložilo
-    element -> update_labels();
 }
 
-void VideoSettings_VBox::update()
+
+
+void SettingsPage::update(void (SettingsPage::*func)(VideoElement *))
 {
     // Nesmí se ukládat, když se načítá
     if (is_loading)
-    {
         return;
-    }
 
     if (batch_settings)
-    {
         for (VideoElement * element : video_queue)
         {
-            save_options(element);
+            (this ->* func)(element);
+            element -> update_labels();
         }
-    }
     else
     {
-        save_options(video_element);
+        (this ->* func)(video_element);
+        video_element -> update_labels();
     }
 }
 
-void VideoSettings_VBox::load_options_into_GUI(Video * video)
+void SettingsPage::load_options_into_GUI(Video * video)
 {
     SafeReset safe_reset(is_loading);
     Codec codec = video -> get_codec();
@@ -661,20 +390,20 @@ void VideoSettings_VBox::load_options_into_GUI(Video * video)
     // Režim
     if (video -> is_compress_enabled())
         {
-            compress_mode_radio_button.set_active();
+            compress_row.set_state(true);
             mode_listbox.select_row(*mode_listbox.get_row_at_index(1));
-            target_size_field.set_value(video -> get_target_size());
-            target_size_hbox.set_sensitive();
-            res_hbox.set_sensitive();
-            fps_hbox.set_sensitive();
+            target_size_row.set_value(video -> get_target_size());
+            target_size_row.set_sensitive();
+            res_row.set_sensitive();
+            fps_row.set_sensitive();
         }
     else 
         {
-            archive_mode_radio_button.set_active();
+            archive_row.set_state(true);
             mode_listbox.select_row(*mode_listbox.get_row_at_index(0));
-            target_size_hbox.set_sensitive(false);
-            res_hbox.set_sensitive(false);
-            fps_hbox.set_sensitive(false);
+            // target_size_row.set_sensitive(false);
+            // res_hbox.set_sensitive(false);
+            // fps_hbox.set_sensitive(false);
         }
 
     // Kodek
@@ -698,28 +427,28 @@ void VideoSettings_VBox::load_options_into_GUI(Video * video)
     }
 
     // Střih
-    cut_switch.set_active(video -> is_cutting_enabled());
+    cut_switch.set_state(video -> is_cutting_enabled());
     cut_widget.set_sensitive(video -> is_cutting_enabled());
     cut_widget.set_cut(video -> get_video_info().duration, video -> get_cut_info());
     
     // Rozlišení a fps
-    res_field.set_value(video -> get_downscale_factor());
-    fps_field.set_range(0, video -> get_video_info().framerate);
-    fps_field.set_value(video -> get_output_framerate());
+    res_row.set_value(video -> get_downscale_factor());
+    fps_row.set_range(0, video -> get_video_info().framerate);
+    fps_row.set_value(video -> get_output_framerate());
 
     // Výstup a prefix
-    set_prefix_field.set_text(video -> get_prefix());
-    output_caption.set_text("Video(s) will be saved to: \n" + video -> get_output_path());
+    prefix_row.set_field_text(video -> get_prefix());
+    output_button.set_caption("Video(s) will be saved to: \n" + video -> get_output_path());
 
     set_sensitive();
 }
 
-void VideoSettings_VBox::read_video_vector_options(std::vector<VideoElement *> video_vector)
+void SettingsPage::read_video_vector_options(std::vector<VideoElement *> video_vector)
 {
     this -> video_queue = video_vector ;
     batch_settings = true;
     cut_heading.add_css_class("warning");
-    cut_heading.set_text("Cut Feature (set according to the shortest video)");
+    cut_heading.set_heading("Cut Feature (set according to the shortest video)");
 
     if (video_queue.size() > 0)
     {
@@ -745,7 +474,7 @@ void VideoSettings_VBox::read_video_vector_options(std::vector<VideoElement *> v
     }
 }
 
-void VideoSettings_VBox::read_video_options(VideoElement * video_element)
+void SettingsPage::read_video_options(VideoElement * video_element)
 {
     this -> video_element = video_element;
     Video * video = &(video_element -> video);
@@ -754,12 +483,12 @@ void VideoSettings_VBox::read_video_options(VideoElement * video_element)
     batch_settings = false;
 
     cut_heading.remove_css_class("warning");
-    cut_heading.set_text("Cut Feature");
+    cut_heading.set_heading("Cut Feature");
 
     load_options_into_GUI(video);
 }
 
-void VideoSettings_VBox::no_video_selected()
+void SettingsPage::no_video_selected()
 {
     set_sensitive(false);
 }

@@ -5,13 +5,10 @@
 #include "glibmm/refptr.h"
 #include "glibmm/value.h"
 #include "glibmm/variant.h"
-#include "gtkmm/adjustment.h"
 #include "gtkmm/box.h"
 #include "gtkmm/button.h"
-#include "gtkmm/checkbutton.h"
 #include "gtkmm/dragsource.h"
 #include "gtkmm/droptarget.h"
-#include "gtkmm/entry.h"
 #include "gtkmm/enums.h"
 #include "gtkmm/filedialog.h"
 #include "gtkmm/flowbox.h"
@@ -22,7 +19,6 @@
 #include "gtkmm/label.h"
 #include "gtkmm/listbox.h"
 #include "gtkmm/listboxrow.h"
-#include "gtkmm/popover.h"
 #include "gtkmm/progressbar.h"
 #include "gtkmm/scale.h"
 #include "gtkmm/scrolledwindow.h"
@@ -205,7 +201,7 @@ class QueueFrame : public Gtk::Box
 // Stránka parametrů pro AV1
 class AV1_Parameters : public Gtk::ListBox
 {
-    friend class VideoSettings_VBox;
+    friend class SettingsPage;
 
     public: 
         AV1_Parameters(VideoElement * video_element);
@@ -231,7 +227,7 @@ class AV1_Parameters : public Gtk::ListBox
 // Stránka parametrů pro HEVC
 class HEVC_Parameters : public Gtk::ListBox
 {
-    friend class VideoSettings_VBox;
+    friend class SettingsPage;
 
     public: 
         HEVC_Parameters(VideoElement * video_element);
@@ -257,7 +253,7 @@ class HEVC_Parameters : public Gtk::ListBox
 // Stránka parametrů pro VP9
 class VP9_Parameters : public Gtk::ListBox
 {
-    friend class VideoSettings_VBox;
+    friend class SettingsPage;
 
     public: 
         VP9_Parameters(VideoElement * video_element);
@@ -281,11 +277,11 @@ class VP9_Parameters : public Gtk::ListBox
 };
 
 // Stránka pro označené video ve frontě. Obsahuje základní nastavení pro každé video individuálně
-class VideoSettings_VBox : public Gtk::ScrolledWindow
+class SettingsPage : public Gtk::ScrolledWindow
 {
     public:
-        VideoSettings_VBox();
-        ~VideoSettings_VBox();
+        SettingsPage();
+        ~SettingsPage();
 
         // Aktualizace nastavení videa
         void read_video_options(VideoElement * video);
@@ -293,94 +289,54 @@ class VideoSettings_VBox : public Gtk::ScrolledWindow
         void no_video_selected();
 
     protected:
-        // Buď se bude dělat operace na jednom označeném videu, nebo na všech najednou
+        // Nastavení lze provádět pro jedno nebo více označených videí
         VideoElement * video_element;
         std::vector<VideoElement *> video_queue;
         bool batch_settings;
         bool is_loading;
         string output_path;
-
         Gtk::Box window_content;
 
         // Režim kódování
-        Gtk::CheckButton compress_mode_radio_button;
-        Gtk::CheckButton archive_mode_radio_button;
-        Gtk::Label compress_label;
-        Gtk::Label archive_label;
-        Gtk::Label compress_caption;
-        Gtk::Label archive_caption;
-        Gtk::Label mode_heading;
-        Gtk::Box archive_mode_text_vbox;
-        Gtk::Box archive_mode_hbox;
-        Gtk::Box compress_mode_text_vbox;
-        Gtk::Box compress_mode_hbox;
-        Gtk::Box mode_heading_hbox;
-        Gtk::ListBox mode_listbox;
-        Gtk::Button mode_desc_trigger;
-        Gtk::Popover mode_desc;
-        Gtk::Label mode_desc_text;
+        OptionHeading mode_heading;
+        OptionListBox mode_listbox;
+        RadioButtonRow compress_row;
+        RadioButtonRow archive_row;
+        
+        // Pro kompresi: 
+        SpinButtonRow target_size_row;
+        SpinButtonRow res_row, fps_row;
+        
+        // Střih
+        OptionHeading cut_heading;
+        OptionListBox cut_listbox;
+        SwitchRow cut_switch;
+        CutWidget cut_widget;
 
-        // Kodek
+        // Výstupní složka a prefix
+        OptionHeading output_heading;
+        ButtonRow output_button;
+        FieldRow prefix_row;
+        OptionListBox output_listbox;
+
+        // !WIP! kodeky
+        OptionHeading codec_heading;
         Gtk::ToggleButton codec_av1_toggle;
         Gtk::ToggleButton codec_hevc_toggle;
         Gtk::ToggleButton codec_vp9_toggle;
         Gtk::FlowBox codec_flowbox;
-        Gtk::Box codec_heading_hbox;
-        Gtk::Label codec_heading;
-        Gtk::Button codec_desc_trigger;
-        Gtk::Popover codec_desc;
-        Gtk::Label codec_desc_text;
-        Gtk::Switch two_pass_check;
-        Gtk::Label two_pass_label;
-
-        // Cílová velikost
-        Gtk::Box target_size_hbox;
-        Gtk::Label target_size_label;
-        Gtk::Label target_size_unit;
-        Glib::RefPtr<Gtk::Adjustment> target_size_values;
-        Gtk::SpinButton target_size_field;
-
-        // Střih
-        Gtk::Label cut_heading;
-        Gtk::Button cut_desc_trigger;
-        Gtk::Popover cut_desc;
-        Gtk::Label cut_desc_text;
-        Gtk::Switch cut_switch;
-        Gtk::Box cut_heading_hbox, cut_switch_box, cut_switch_text_vbox;
-        Gtk::Label cut_switch_text, cut_switch_desc;
-        Gtk::ListBox cut_listbox;
-        CutWidget cut_widget;
-
-        // Fps a rozlišení
-        Gtk::Box res_hbox, res_text_vbox, fps_hbox, fps_text_vbox;
-        Gtk::Label res_text, fps_text, res_caption, fps_caption;
-        Gtk::SpinButton res_field, fps_field;
-
-        // Výstupní složka a prefix
-        Gtk::Label output_heading;
-        Gtk::Button output_desc_trigger;
-        Gtk::Popover output_desc;
-        Gtk::Label output_desc_text;
-        Gtk::Box output_heading_hbox, output_hbox, output_text_vbox, prefix_hbox, prefix_text_vbox;
-        Gtk::Label output_text, output_caption, prefix_text, prefix_caption;
-        Gtk::Button set_output_folder_button;
-        Gtk::Entry set_prefix_field;
-        Gtk::ListBox output_listbox;
-
+        
         // Nastavení parametrů kodeků
-        Gtk::Label parameters_heading;
-        Gtk::Label parameters_desc_text;
-        Gtk::Button parameters_desc_trigger;
-        Gtk::Box parameters_heading_hbox;
-        Gtk::Popover parameters_desc;
+        OptionHeading parameter_heading;
 
         void load_options_into_GUI(Video * video);
-        void update();
-        void save_options(VideoElement * element);
-        void on_select_row(Gtk::ListBoxRow * selected_row);
+        void update(void (SettingsPage::*func)(VideoElement *));
+        void save_all_options(VideoElement * element);
+        void save_cut(VideoElement * element);
         void on_select_flowbox(Gtk::FlowBoxChild * child);
         void set_output_path();
-        void on_folder_selected(Glib::RefPtr<Gio::AsyncResult> &result, Glib::RefPtr<Gtk::FileDialog> folder_picker);
+        void on_folder_selected(Glib::RefPtr<Gio::AsyncResult> &result, 
+                                Glib::RefPtr<Gtk::FileDialog> folder_picker);
         void switch_codec_page(Codec codec);
     };
 
@@ -435,7 +391,7 @@ class MainWindow : public Gtk::Window
     protected:
         RunnerPanel runner_panel;
         QueueFrame video_queue;
-        VideoSettings_VBox options_page;
+        SettingsPage options_page;
         Gtk::Stack main_page_stack;
         AdwStatusPage * queue_empty_page;
         AdwStatusPage * encoding_page;
