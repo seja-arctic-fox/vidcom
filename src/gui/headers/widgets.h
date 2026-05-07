@@ -169,3 +169,15 @@ class SwitchRow : public OptionRow
     protected:
         Gtk::Switch switch_widget;
 };
+
+class ButtonRow : public OptionRow
+{
+    public:
+        ButtonRow(const Glib::ustring& option_title = "", const Glib::ustring& option_caption = "" );
+        void set_button_text(const Glib::ustring& text);
+        
+        sigc::signal<void()> signal_clicked;
+    
+    protected:
+        Gtk::Button button_widget;
+};
