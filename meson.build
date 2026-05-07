@@ -36,7 +36,8 @@ gui = [
   './src/gui/widgets/option_list_box.cpp',
   './src/gui/widgets/option_heading.cpp',
   './src/gui/widgets/button_row.cpp',
-  './src/gui/widgets/radio_button_row.cpp'
+  './src/gui/widgets/radio_button_row.cpp',
+  './src/gui/widgets/spin_button_row.cpp'
 ]
 
 video = [

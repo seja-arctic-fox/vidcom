@@ -197,3 +197,21 @@ class RadioButtonRow : public OptionRow
     protected:
         Gtk::CheckButton radio_widget;
 };
+
+class SpinButtonRow : public OptionRow
+{
+    public:
+        SpinButtonRow(const Glib::ustring& option_title = "", const Glib::ustring& option_caption = "");
+        void set_adjustment(double value, double lower, double upper, double step);
+        void set_value(double value);
+        void set_range(double lower, double upper);
+        void set_digits(int num_digits);
+        void set_step(double step);
+        double get_value();
+        
+        sigc::signal<void()> signal_value_changed;
+        
+    protected:
+        Gtk::SpinButton spin_widget;
+        Glib::RefPtr<Gtk::Adjustment> adjustment;
+};
