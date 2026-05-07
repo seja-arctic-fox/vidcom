@@ -2,7 +2,7 @@
 #include "pangomm/layout.h"
 #include "../headers/widgets.h"
 
-OptionRow::OptionRow(const Glib::ustring& option_title, const Glib::ustring option_caption)
+OptionRow::OptionRow(const Glib::ustring& option_title, const Glib::ustring& option_caption)
 :
     row_box(Gtk::Orientation::HORIZONTAL),
     text_box(Gtk::Orientation::VERTICAL),

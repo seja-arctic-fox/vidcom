@@ -136,13 +136,13 @@ class OptionListBox : public Gtk::ListBox
         OptionListBox();
         ~OptionListBox();
         
-        void set_row_active(int row_index, bool active = false);
+        void set_row_active(int row_index, bool active);
 };
 
 class OptionRow : public Gtk::ListBoxRow
 {
     public:
-        OptionRow(const Glib::ustring& option_title = "", const Glib::ustring option_caption = "" );
+        OptionRow(const Glib::ustring& option_title = "", const Glib::ustring& option_caption = "" );
         virtual ~OptionRow() = default;
         
         void set_title(const Glib::ustring& option_title);
@@ -159,7 +159,7 @@ class OptionRow : public Gtk::ListBoxRow
 class SwitchRow : public OptionRow
 {
     public:
-        SwitchRow(const Glib::ustring& option_title = "", const Glib::ustring option_caption = "" );
+        SwitchRow(const Glib::ustring& option_title = "", const Glib::ustring& option_caption = "" );
         void set_state(bool state);
         bool get_state();
         void on_row_activated();
