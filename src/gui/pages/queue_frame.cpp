@@ -50,8 +50,9 @@ QueueFrame::QueueFrame()
     select_all_button.signal_toggled().connect(sigc::mem_fun(*this, &QueueFrame::on_select_all_clicked));
 
     header_box.set_margin(10);
-    header_box.set_spacing(5);
+    header_box.set_spacing(0);
     header_box.set_halign(Gtk::Align::CENTER);
+    header_box.add_css_class("linked");
     header_box.append(select_all_button);
     header_box.append(clear_queue_button);
 
