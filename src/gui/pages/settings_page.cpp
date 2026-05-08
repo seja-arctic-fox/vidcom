@@ -170,18 +170,16 @@ SettingsPage::SettingsPage()
     window_content.append(*Gtk::make_managed<AV1_Parameters>(video_element));
 
     // Signál při změně jakéhokoliv prvku
-    archive_row.signal_toggled.connect([this](){ update(&SettingsPage::save_all_options); });
-    compress_row.signal_toggled.connect([this](){ update(&SettingsPage::save_all_options); });
-    // mode_listbox.signal_row_selected().connect([this](){ update(&SettingsPage::save_all_options); });
-    target_size_row.signal_value_changed.connect([this](){ update(&SettingsPage::save_all_options); });
+    archive_row.signal_toggled.connect([this](){ update(&SettingsPage::save_archive_mode); });
+    compress_row.signal_toggled.connect([this](){ update(&SettingsPage::save_compress_mode); });
+    target_size_row.signal_value_changed.connect([this](){ update(&SettingsPage::save_target_size); });
+    fps_row.signal_value_changed.connect([this](){ update(&SettingsPage::save_target_fps); });
+    res_row.signal_value_changed.connect([this](){ update(&SettingsPage::save_target_res); });
     codec_flowbox.signal_child_activated().connect(sigc::mem_fun(*this, &SettingsPage::on_select_flowbox));
     cut_switch.signal_toggled.connect([this](){ update(&SettingsPage::save_cut); });
-    // cut_listbox.signal_row_activated().connect(sigc::mem_fun(*this, &SettingsPage::on_select_row));
-    cut_widget.signal_cut_change.connect([this](){ update(&SettingsPage::save_all_options); });
-    prefix_row.signal_changed.connect([this](){ update(&SettingsPage::save_all_options); });
+    cut_widget.signal_cut_change.connect([this](){ update(&SettingsPage::save_cut); });
+    prefix_row.signal_changed.connect([this](){ update(&SettingsPage::save_prefix); });
     output_row.signal_clicked.connect(sigc::mem_fun(*this, &SettingsPage::set_output_path));
-    fps_row.signal_value_changed.connect([this](){ update(&SettingsPage::save_all_options); });
-    res_row.signal_value_changed.connect([this](){ update(&SettingsPage::save_all_options); });
 }
 
 SettingsPage::~SettingsPage()
