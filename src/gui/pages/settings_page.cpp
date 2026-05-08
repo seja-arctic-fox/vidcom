@@ -253,7 +253,7 @@ void SettingsPage::on_folder_selected(Glib::RefPtr<Gio::AsyncResult> &result, Gl
         if (folder)
         {
             output_path = folder -> get_path();
-            update(&SettingsPage::save_all_options);
+            update(&SettingsPage::save_output_path);
         }
     }
     catch (const Gtk::DialogError& error)
@@ -328,7 +328,7 @@ void SettingsPage::save_target_res(VideoElement * element)
 void SettingsPage::save_target_fps(VideoElement * element)
 {
     int fps = fps_row.get_value();
-    element -> video.set_downscale_factor(fps);
+    element -> video.set_output_framerate(fps);
 }
 
 void SettingsPage::save_cut(VideoElement * element)
@@ -348,13 +348,15 @@ void SettingsPage::save_cut(VideoElement * element)
 
 void SettingsPage::save_prefix(VideoElement * element)
 {
-    string prefix = prefix_row.get_field_text();
+    Glib::ustring prefix = prefix_row.get_field_text();
     element -> video.set_prefix(prefix);
+    output_row.set_caption("Video(s) will be saved to: \n" + element -> video.get_output_path());
 }
 
 void SettingsPage::save_output_path(VideoElement * element)
 {
     element -> video.set_output_path(output_path);
+    output_row.set_caption("Video(s) will be saved to: \n" + element -> video.get_output_path());
 }
 
 // Bude se volat POUZE před začátkem kódování
@@ -462,9 +464,9 @@ void SettingsPage::load_options_into_GUI(Video * video)
         {
             archive_row.set_state(true);
             mode_listbox.select_row(*mode_listbox.get_row_at_index(0));
-            // target_size_row.set_sensitive(false);
-            // res_hbox.set_sensitive(false);
-            // fps_hbox.set_sensitive(false);
+            target_size_row.set_sensitive(false);
+            res_row.set_sensitive(false);
+            fps_row.set_sensitive(false);
         }
 
     // Kodek
