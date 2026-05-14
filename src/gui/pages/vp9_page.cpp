@@ -40,7 +40,7 @@ VP9_Parameters::VP9_Parameters()
     t_w(Glib::RefPtr<Gtk::Adjustment>(Gtk::Adjustment::create(0, 0, 2)))
 {
      add_css_class("navigation-sidebar");
-    add_css_class("card");
+    add_css_class("flat");
     set_margin_bottom(20);
 
     preset_text.set_halign(Gtk::Align::START);

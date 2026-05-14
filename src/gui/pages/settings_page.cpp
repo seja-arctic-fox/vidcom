@@ -1,4 +1,6 @@
+#include "adwaita.h"
 #include "giomm/file.h"
+#include "gtk/gtk.h"
 #include "gtkmm/box.h"
 #include "gtkmm/enums.h"
 #include "gtkmm/error.h"
@@ -73,16 +75,6 @@ SettingsPage::SettingsPage()
     mode_listbox.append(compress_row);
     mode_listbox.append(target_size_row);
 
-    // Kodek
-    string codec_help = 
-        "<big>Video Codec</big>\n"
-        "Sets the codec used for encoding video(s). \n\n"
-        "- <b>AV1</b> - Open source codec. Has the best compression efficiency, but may be more demanding on hardware. DEFAULT\n"
-        "- <b>HEVC</b> - Industry standart with great compression. \n"
-        "- <b>VP9</b> - Open source codec from Google, used mainly for videos on the web. ";
-
-    codec_heading.set_popover_contents(codec_help);
-    
     // Střih
     string cut_help = 
         "<big>Cut Feature</big>\n"
@@ -120,8 +112,13 @@ SettingsPage::SettingsPage()
     output_listbox.append(output_row);
     output_listbox.set_row_active(0, false);
 
-    // Parametry
-    string parameters_help = 
+    // Kodek
+    string codec_help = 
+        "<big>Video Codec</big>\n"
+        "Sets the codec used for encoding video(s). \n\n"
+        "- <b>AV1</b> - Open source codec. Has the best compression efficiency, but may be more demanding on hardware. DEFAULT\n"
+        "- <b>HEVC</b> - Industry standart with great compression. \n"
+        "- <b>VP9</b> - Open source codec from Google, used mainly for videos on the web. "
         "<big>Advanced Codec Options</big>\n"
         "You can adjust the default settings there to achieve faster encoding time or better quality. \n Different codecs have different options. Feel free to experiment. \n\n"
         "<big>General recommendations</big>\n"
@@ -129,6 +126,21 @@ SettingsPage::SettingsPage()
         "- If you want to increase quality, lower the <b>CRF</b> value. Keep in mind however that it will increase bitrate. \n"
         "- <b>Film grain synthesis</b> in <b>AV1</b> can be very useful when you have a lot of film grain/noise in your video(s). \n"
         "- <b>Psychovisual tuning</b> can achieve a better look. It puts more data in places where we are more likely to look, exploiting our way of seeing the world. \n";
+
+    codec_heading.set_popover_contents(codec_help);
+    
+    codec_pages = ADW_VIEW_STACK(adw_view_stack_new());
+    codec_switch = ADW_INLINE_VIEW_SWITCHER(adw_inline_view_switcher_new());
+    adw_view_stack_add_titled(codec_pages, GTK_WIDGET(av1_page.gobj()), "codec_av1", "AV1");
+    adw_view_stack_add_titled(codec_pages, GTK_WIDGET(hevc_page.gobj()), "codec_hevc", "HEVC");
+    adw_view_stack_add_titled(codec_pages, GTK_WIDGET(vp9_page.gobj()), "codec_vp9", "VP9");
+    adw_inline_view_switcher_set_stack(codec_switch, codec_pages);
+    
+    gtk_widget_add_css_class(GTK_WIDGET(codec_switch), "round");
+    codec_listbox.append(*Glib::wrap(GTK_WIDGET(codec_switch)));
+    codec_listbox.append(*Glib::wrap(GTK_WIDGET(codec_pages)));
+    codec_listbox.set_row_active(0, false);
+    codec_listbox.set_row_active(1, false);
 
     // Složení obsahu okna
     window_content.append(mode_heading);
@@ -138,6 +150,7 @@ SettingsPage::SettingsPage()
     window_content.append(output_heading);
     window_content.append(output_listbox);
     window_content.append(codec_heading);
+    window_content.append(codec_listbox);
 
     // Signál při změně jakéhokoliv prvku
     archive_row.signal_toggled.connect([this](){ update(&SettingsPage::save_archive_mode); });

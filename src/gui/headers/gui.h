@@ -320,6 +320,12 @@ class SettingsPage : public Gtk::ScrolledWindow
         
         // Kodeky
         OptionHeading codec_heading;
+        OptionListBox codec_listbox;
+        AdwViewStack * codec_pages;
+        AdwInlineViewSwitcher * codec_switch;
+        AV1_Parameters av1_page;
+        HEVC_Parameters hevc_page;
+        VP9_Parameters vp9_page;
 
         // Ukládací funkce
         void save_all_options(VideoElement * element);
