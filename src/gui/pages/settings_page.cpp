@@ -1,10 +1,8 @@
 #include "giomm/file.h"
-#include "glibmm/refptr.h"
 #include "gtkmm/box.h"
 #include "gtkmm/enums.h"
 #include "gtkmm/error.h"
 #include "gtkmm/filedialog.h"
-#include "gtkmm/object.h"
 #include "gtkmm/widget.h"
 #include "gtkmm/window.h"
 #include "../headers/gui.h"
@@ -26,28 +24,21 @@ SettingsPage::SettingsPage()
     compress_row("Compress", "Compresses the video to a target size. "),
     archive_row("Archive", "Makes the video a small as possible without loosing quality. "), 
     
-
     // Kodek
     target_size_row("Target size: ", "Sets the size the video will be compressed to in MB"),
     res_row("Downscale Factor", "Defines how many times smaller is the output resolution. "),
     fps_row("Framerate", "Sets the output framerate. "),
 
+    // Střih
     cut_heading("Cut Feature"),
-
     cut_switch("Enable Cut", "Enables a feature that trims the video from start time to end time. "),
 
-    // Střih
+    // Výstup
     output_heading("Saving"),
     output_row("Saving Destination", "Video(s) will be saved to: \n"),
-    // Rozlišení a fps
     prefix_row("File Prefix", "Prepends a text before video name(s). "),
-    codec_heading("Video Codec"),
-    // Výstup
-    codec_av1_toggle("AV1"),
-    codec_hevc_toggle("HEVC"),
-    codec_vp9_toggle("VP9"),
-    // Parametry
-    parameter_heading("Advanced Codec Options")
+    
+    codec_heading("Video Codec")
 {
     window_content.set_expand();
     window_content.set_margin(50);
@@ -91,23 +82,7 @@ SettingsPage::SettingsPage()
         "- <b>VP9</b> - Open source codec from Google, used mainly for videos on the web. ";
 
     codec_heading.set_popover_contents(codec_help);
-
-    codec_hevc_toggle.set_group(codec_av1_toggle);
-    codec_vp9_toggle.set_group(codec_av1_toggle);
-    codec_av1_toggle.set_can_target(false);
-    codec_hevc_toggle.set_can_target(false);
-    codec_vp9_toggle.set_can_target(false);
-
-    codec_flowbox.add_css_class("navigation-sidebar");
-    codec_flowbox.add_css_class("card");
-    codec_flowbox.set_orientation(Gtk::Orientation::HORIZONTAL);
-    codec_flowbox.set_halign(Gtk::Align::CENTER);
-    codec_flowbox.set_margin_bottom(20);
-    codec_flowbox.set_min_children_per_line(3);
-    codec_flowbox.append(codec_av1_toggle);
-    codec_flowbox.append(codec_hevc_toggle);
-    codec_flowbox.append(codec_vp9_toggle);
-
+    
     // Střih
     string cut_help = 
         "<big>Cut Feature</big>\n"
@@ -155,8 +130,6 @@ SettingsPage::SettingsPage()
         "- <b>Film grain synthesis</b> in <b>AV1</b> can be very useful when you have a lot of film grain/noise in your video(s). \n"
         "- <b>Psychovisual tuning</b> can achieve a better look. It puts more data in places where we are more likely to look, exploiting our way of seeing the world. \n";
 
-    parameter_heading.set_popover_contents(parameters_help);
-
     // Složení obsahu okna
     window_content.append(mode_heading);
     window_content.append(mode_listbox);
@@ -165,9 +138,6 @@ SettingsPage::SettingsPage()
     window_content.append(output_heading);
     window_content.append(output_listbox);
     window_content.append(codec_heading);
-    window_content.append(codec_flowbox);
-    window_content.append(parameter_heading);
-    window_content.append(*Gtk::make_managed<AV1_Parameters>(video_element));
 
     // Signál při změně jakéhokoliv prvku
     archive_row.signal_toggled.connect([this](){ update(&SettingsPage::save_archive_mode); });
@@ -175,7 +145,6 @@ SettingsPage::SettingsPage()
     target_size_row.signal_value_changed.connect([this](){ update(&SettingsPage::save_target_size); });
     fps_row.signal_value_changed.connect([this](){ update(&SettingsPage::save_target_fps); });
     res_row.signal_value_changed.connect([this](){ update(&SettingsPage::save_target_res); });
-    codec_flowbox.signal_child_activated().connect(sigc::mem_fun(*this, &SettingsPage::on_select_flowbox));
     cut_switch.signal_toggled.connect([this](){ update(&SettingsPage::save_cut); });
     cut_widget.signal_cut_change.connect([this](){ update(&SettingsPage::save_cut); });
     prefix_row.signal_changed.connect([this](){ update(&SettingsPage::save_prefix); });
@@ -184,51 +153,6 @@ SettingsPage::SettingsPage()
 
 SettingsPage::~SettingsPage()
 {}
-
-/* 
-Bude nahrazeno AdwPageView se zásobníkem, takže tohle retardované
-přepínání a dosazování aktualizací nebude absolutně třeba. VYMAZAT!!!
-*/
-void SettingsPage::switch_codec_page(Codec codec)
-{
-    window_content.remove(*window_content.get_last_child());
-
-    // Podle kodeků zařazuji příslušné stránky na místo té předchozí
-    // Díky friend jsou stránky odsud viditelné a můžu s nimi pracovat, což je potřebné
-    // Zavádím zde definici funkce stránky, která zaktualizuje i zbytek nastavení při změně ve stránce, 
-    // čímž se tyto stránky hezky propojí. Šlo by to udělat i přes signály, ale tohle se zdá být čistší postup. 
-    
-    switch (codec)
-    {
-        case AV1:
-        {
-            window_content.append(*Gtk::make_managed<AV1_Parameters>(video_element));
-            auto page = dynamic_cast<AV1_Parameters *>(window_content.get_last_child());
-            page -> on_updated = [this]() { update(&SettingsPage::save_all_options); };
-            page -> load();
-            break;
-        }
-
-        case HEVC:
-        {
-            window_content.append(*Gtk::make_managed<HEVC_Parameters>(video_element));
-            auto page = dynamic_cast<HEVC_Parameters *>(window_content.get_last_child());
-            page -> on_updated = [this]() { update(&SettingsPage::save_all_options); };
-            page -> load();
-            break;
-        }
-
-        case VP9:
-        {
-            window_content.append(*Gtk::make_managed<VP9_Parameters>(video_element));
-            auto page = dynamic_cast<VP9_Parameters *>(window_content.get_last_child());
-            page -> on_updated = [this]() { update(&SettingsPage::save_all_options); };
-            page -> load();
-            break;
-        }
-    }
-
-}
 
 void SettingsPage::set_output_path()
 {
@@ -266,32 +190,6 @@ void SettingsPage::on_folder_selected(Glib::RefPtr<Gio::AsyncResult> &result, Gl
         cerr << "Error selecting folder: " << error.what() << endl;
         dynamic_cast<MainWindow *>(get_root()) -> show_toast("Error selecting folder!");
     }
-}
-
-void SettingsPage::on_select_flowbox(Gtk::FlowBoxChild * child)
-{
-    // Kodek
-    if (child -> is_ancestor(codec_flowbox))
-    {
-        auto av1 = codec_flowbox.get_child_at_index(0);
-        auto hevc = codec_flowbox.get_child_at_index(1);
-        auto vp9 = codec_flowbox.get_child_at_index(2);
-
-        if (child == av1)
-        {
-            codec_av1_toggle.set_active();
-        }
-        else if (child == hevc) 
-        {
-            codec_hevc_toggle.set_active();
-        }
-        else if (child == vp9) 
-        {
-            codec_vp9_toggle.set_active();
-        }
-    }
-
-    update(&SettingsPage::save_all_options);
 }
 
 // Ukládací funkce
@@ -380,18 +278,7 @@ void SettingsPage::save_all_options(VideoElement * element)
         }
        
     // Kodek
-
-    Codec new_codec_setting;
-    
-    if (codec_av1_toggle.get_active()) new_codec_setting = AV1;
-    else if (codec_hevc_toggle.get_active()) new_codec_setting = HEVC;
-    else new_codec_setting = VP9;
-    
-    if (video -> get_codec() != new_codec_setting)
-    {
-        video -> set_codec(new_codec_setting);
-        switch_codec_page(new_codec_setting);
-    }
+    // TODO
     
     // Střih
     if (cut_switch.get_state())
@@ -446,7 +333,6 @@ void SettingsPage::update(void (SettingsPage::*func)(VideoElement *))
 void SettingsPage::load_options_into_GUI(Video * video)
 {
     SafeReset safe_reset(is_loading);
-    Codec codec = video -> get_codec();
 
     // Režim
     if (video -> is_compress_enabled())
@@ -468,24 +354,7 @@ void SettingsPage::load_options_into_GUI(Video * video)
         }
 
     // Kodek
-    if (codec == AV1)
-    {
-        codec_av1_toggle.set_active();
-        codec_flowbox.select_child(*codec_flowbox.get_child_at_index(0));
-        switch_codec_page(AV1);
-    }
-    else if (codec == HEVC)
-    {
-        codec_hevc_toggle.set_active();
-        codec_flowbox.select_child(*codec_flowbox.get_child_at_index(1));
-        switch_codec_page(HEVC);
-    }
-    else if (codec == VP9) 
-    {
-        codec_vp9_toggle.set_active();
-        codec_flowbox.select_child(*codec_flowbox.get_child_at_index(2));
-        switch_codec_page(VP9);
-    }
+    // TODO
 
     // Střih
     cut_switch.set_state(video -> is_cutting_enabled());

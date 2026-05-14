@@ -11,8 +11,7 @@
 #include "gtkmm/droptarget.h"
 #include "gtkmm/enums.h"
 #include "gtkmm/filedialog.h"
-#include "gtkmm/flowbox.h"
-#include "gtkmm/flowboxchild.h"
+
 #include "gtkmm/frame.h"
 #include "gtkmm/headerbar.h"
 #include "gtkmm/image.h"
@@ -318,16 +317,9 @@ class SettingsPage : public Gtk::ScrolledWindow
         ButtonRow output_row;
         FieldRow prefix_row;
         OptionListBox output_listbox;
-
-        // !WIP! kodeky
-        OptionHeading codec_heading;
-        Gtk::ToggleButton codec_av1_toggle;
-        Gtk::ToggleButton codec_hevc_toggle;
-        Gtk::ToggleButton codec_vp9_toggle;
-        Gtk::FlowBox codec_flowbox;
         
-        // Nastavení parametrů kodeků
-        OptionHeading parameter_heading;
+        // Kodeky
+        OptionHeading codec_heading;
 
         // Ukládací funkce
         void save_all_options(VideoElement * element);
@@ -343,12 +335,10 @@ class SettingsPage : public Gtk::ScrolledWindow
         
         void load_options_into_GUI(Video * video);
         void update(void (SettingsPage::*func)(VideoElement *));
-        void on_select_flowbox(Gtk::FlowBoxChild * child);
         void set_output_path();
         void on_folder_selected(Glib::RefPtr<Gio::AsyncResult> &result, 
                                 Glib::RefPtr<Gtk::FileDialog> folder_picker);
-        void switch_codec_page(Codec codec);
-    };
+};
 
 
 class ResultsPage : public Gtk::Box
