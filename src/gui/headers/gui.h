@@ -197,6 +197,22 @@ class QueueFrame : public Gtk::Box
         void on_row_selected(Gtk::ListBoxRow * row);
 };
 
+// Obecná stránka pro parametry
+class CodecParametersPage : public OptionListBox
+{
+    public:
+        CodecParametersPage();
+        ~CodecParametersPage();
+        
+    protected:
+        VideoElement * video_element;
+        bool is_loading;
+    
+        virtual void load(VideoElement * video_element);
+        virtual void update(void (CodecParametersPage::*func)(VideoElement *));
+        virtual void save_all_options();
+};
+
 // Stránka parametrů pro AV1
 class AV1_Parameters : public Gtk::ListBox
 {
