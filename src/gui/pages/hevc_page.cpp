@@ -4,8 +4,8 @@
 #include "src/video/video.h"
 #include <vector>
 
-HEVC_Parameters::HEVC_Parameters(VideoElement * video_element)
-:   video_element(video_element),
+HEVC_Parameters::HEVC_Parameters()
+:   video_element(nullptr),
     is_loading(false),
     preset_text("Encoding Preset"),
     crf_text("CRF"),
@@ -240,7 +240,7 @@ void HEVC_Parameters::update()
     if (on_updated) on_updated();
 }
 
-void HEVC_Parameters::load()
+void HEVC_Parameters::load(VideoElement * video_element)
 {
     SafeReset safe_reset(is_loading);
 

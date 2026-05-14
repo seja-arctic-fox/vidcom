@@ -203,7 +203,7 @@ class AV1_Parameters : public Gtk::ListBox
     friend class SettingsPage;
 
     public: 
-        AV1_Parameters(VideoElement * video_element);
+        AV1_Parameters();
         ~AV1_Parameters();
 
     protected:
@@ -217,7 +217,7 @@ class AV1_Parameters : public Gtk::ListBox
         Gtk::SpinButton preset_w, crf_w, fgl_w;
         Gtk::Switch fgs_w, bd_w, pt_w, vb_w;
 
-        void load();
+        void load(VideoElement * video_element);
         void update();
         void on_select_row(Gtk::ListBoxRow * row);
         std::function<void()> on_updated;
@@ -229,7 +229,7 @@ class HEVC_Parameters : public Gtk::ListBox
     friend class SettingsPage;
 
     public: 
-        HEVC_Parameters(VideoElement * video_element);
+        HEVC_Parameters();
         ~HEVC_Parameters();
 
     protected:
@@ -243,7 +243,7 @@ class HEVC_Parameters : public Gtk::ListBox
         Gtk::SpinButton preset_w, crf_w;
         Gtk::Switch me_w, aq_w, pt_w, ab_w;
 
-        void load();
+        void load(VideoElement * video_element);
         void update();
         void on_select_row(Gtk::ListBoxRow * row);
         std::function<void()> on_updated;
@@ -255,7 +255,7 @@ class VP9_Parameters : public Gtk::ListBox
     friend class SettingsPage;
 
     public: 
-        VP9_Parameters(VideoElement * video_element);
+        VP9_Parameters();
         ~VP9_Parameters();
 
     protected:
@@ -269,7 +269,7 @@ class VP9_Parameters : public Gtk::ListBox
         Gtk::SpinButton cpu_w, ns_w, preset_w, crf_w;
         Gtk::Scale q_w, t_w;
 
-        void load();
+        void load(VideoElement * video_element);
         void update();
         bool on_move_slider(Gtk::ScrollType, double);
         std::function<void()> on_updated;

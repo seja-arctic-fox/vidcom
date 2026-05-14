@@ -5,8 +5,8 @@
 #include "../headers/gui.h"
 #include "sigc++/functors/mem_fun.h"
 
-VP9_Parameters::VP9_Parameters(VideoElement * video_element)
-:   video_element(video_element),
+VP9_Parameters::VP9_Parameters()
+:   video_element(nullptr),
     is_loading(false),
     preset_text("Encoding Preset"),
     crf_text("CRF"),
@@ -197,7 +197,7 @@ void VP9_Parameters::update()
     if (on_updated) on_updated();
 }
 
-void VP9_Parameters::load()
+void VP9_Parameters::load(VideoElement * video_element)
 {
     SafeReset safe_reset(is_loading);
 

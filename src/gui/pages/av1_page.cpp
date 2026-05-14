@@ -7,8 +7,8 @@
 #include "src/video/video.h"
 #include <vector>
 
-AV1_Parameters::AV1_Parameters(VideoElement * video_element)
-:   video_element(video_element),
+AV1_Parameters::AV1_Parameters()
+:   video_element(nullptr),
     is_loading(false),
     preset_text("Encoding Preset"),
     crf_text("CRF"),
@@ -278,7 +278,7 @@ void AV1_Parameters::update()
  Stejně v jiných stránkách. Možná ještě vytvoř virtuální třídu pro 
  kodekové stránky
 */ 
-void AV1_Parameters::load()
+void AV1_Parameters::load(VideoElement * video_element)
 {
     SafeReset safe_reset(is_loading);
 
