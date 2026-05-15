@@ -268,62 +268,6 @@ void SettingsPage::save_output_path(VideoElement * element)
     output_row.set_caption("Video(s) will be saved to: \n" + element -> video.get_output_path());
 }
 
-// Bude se volat POUZE před začátkem kódování
-// Bude využívat ty ostatní podmetody
-// Ideálně to bude aktualizovat i kodekové stránky
-void SettingsPage::save_all_options(VideoElement * element)
-{
-    Video * video = &(element -> video);
-
-    // Režim
-    if (compress_row.get_state())
-        {
-            video -> set_compress(true);
-            video -> set_bitrate_by_size(target_size_row.get_value());
-
-            // Rozlišení a fps
-            video -> set_downscale_factor(res_row.get_value());
-            video -> set_output_framerate(fps_row.get_value());
-        }
-    else
-        {
-            video -> set_compress(false);
-        }
-       
-    // Kodek
-    // TODO
-    
-    // Střih
-    if (cut_switch.get_state())
-    {
-        video -> enable_cut(true);
-        video -> set_cut(cut_widget.get_start(), cut_widget.get_end());
-    }
-    else video -> enable_cut(false);
-    
-    // Výstup a prefix
-    video -> set_output_path(output_path);
-    video -> set_prefix(prefix_row.get_field_text());
-    output_row.set_caption("Video(s) will be saved to: \n" + video -> get_output_path());
-    
-    // Parametry kodeku
-    if (batch_settings)
-    {
-        Codec current_codec = video -> get_codec();
-        
-        if (video_element)
-        {
-            Video * displayed_video = &(video_element -> video);
-            
-            if (current_codec == AV1) video -> AV1_options = displayed_video -> AV1_options;
-            else if (current_codec == HEVC) video -> HEVC_options = displayed_video -> HEVC_options;
-            else video -> VP9_options = displayed_video -> VP9_options;
-        }
-    }
-}
-
-
-
 void SettingsPage::update(void (SettingsPage::*func)(VideoElement *))
 {
     // Nesmí se ukládat, když se načítá
@@ -388,7 +332,7 @@ void SettingsPage::load_options_into_GUI(Video * video)
 
 void SettingsPage::read_video_vector_options(std::vector<VideoElement *> video_vector)
 {
-    this -> video_queue = video_vector ;
+    this -> video_queue = video_vector;
     batch_settings = true;
     cut_heading.add_css_class("warning");
     cut_heading.set_heading("Cut Feature (set according to the shortest video)");

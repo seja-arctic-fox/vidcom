@@ -26,6 +26,7 @@
 #include "gtkmm/togglebutton.h"
 #include "gtkmm/widget.h"
 #include "gtkmm/window.h"
+#include <functional>
 #include <gtkmm.h>
 #include <adwaita.h>
 #include <string>
@@ -204,39 +205,44 @@ class CodecParametersPage : public OptionListBox
         CodecParametersPage();
         ~CodecParametersPage();
         
+        virtual void load(VideoElement * video_element);
+        virtual void load_vector(std::vector<VideoElement *>& vector, VideoElement * video_element);
+        
     protected:
         VideoElement * video_element;
+        std::vector<VideoElement *> * video_queue;
         bool is_loading;
-    
-        virtual void load(VideoElement * video_element);
-        virtual void update(void (CodecParametersPage::*func)(VideoElement *));
-        virtual void save_all_options();
+        bool batch_settings;
+        
+        SpinButtonRow encoding_preset;
+        SpinButtonRow crf;
+        
+        virtual void update(std::function<void(VideoElement *)> func);
+        void save_preset(VideoElement * element);
+        void save_crf(VideoElement * element);
 };
 
 // Stránka parametrů pro AV1
-class AV1_Parameters : public Gtk::ListBox
+class AV1_Parameters : public CodecParametersPage
 {
-    friend class SettingsPage;
-
     public: 
         AV1_Parameters();
         ~AV1_Parameters();
 
+        void load(VideoElement * video_element) override;
+        
     protected:
-        VideoElement * video_element;
-        bool is_loading;
-
-        Gtk::Label preset_text, crf_text, fgs_text, fgl_text, bd_text, pt_text, vb_text;
-        Gtk::Label preset_caption, crf_caption, fgs_caption, fgl_caption, bd_caption, pt_caption, vb_caption;
-        Gtk::Box preset_hbox, crf_hbox, fgs_hbox, fgl_hbox, bd_hbox, pt_hbox, vb_hbox;
-        Gtk::Box preset_vbox, crf_vbox, fgs_vbox, fgl_vbox, bd_vbox, pt_vbox, vb_vbox;
-        Gtk::SpinButton preset_w, crf_w, fgl_w;
-        Gtk::Switch fgs_w, bd_w, pt_w, vb_w;
-
-        void load(VideoElement * video_element);
-        void update();
-        void on_select_row(Gtk::ListBoxRow * row);
-        std::function<void()> on_updated;
+        SwitchRow film_grain_synthesis;
+        SpinButtonRow film_grain_level;
+        SwitchRow better_details;
+        SwitchRow psychovisual_tuning;
+        SwitchRow variance_boost;
+        
+        void save_film_grain(VideoElement * element);
+        void save_better_details(VideoElement * element);
+        void save_psychovisual_tuning(VideoElement * element);
+        void save_variance_boost(VideoElement * element);
+        
 };
 
 // Stránka parametrů pro HEVC
@@ -344,7 +350,6 @@ class SettingsPage : public Gtk::ScrolledWindow
         VP9_Parameters vp9_page;
 
         // Ukládací funkce
-        void save_all_options(VideoElement * element);
         void save_archive_mode(VideoElement * element);
         void save_compress_mode(VideoElement * element);
         void save_target_size(VideoElement * element);

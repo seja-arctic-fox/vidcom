@@ -24,6 +24,7 @@ gui = [
   './src/gui/pages/queue_frame.cpp',
   './src/gui/widgets/runner_title_bar.cpp',
   './src/gui/pages/settings_page.cpp',
+  './src/gui/pages/codec_page.cpp',
   './src/gui/pages/av1_page.cpp',
   './src/gui/pages/hevc_page.cpp',
   './src/gui/pages/vp9_page.cpp',
