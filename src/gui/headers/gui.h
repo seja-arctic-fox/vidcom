@@ -203,7 +203,7 @@ class CodecParametersPage : public OptionListBox
 {
     public:
         CodecParametersPage();
-        ~CodecParametersPage();
+        virtual ~CodecParametersPage() = default;
         
         virtual void load(VideoElement * video_element);
         virtual void load_vector(std::vector<VideoElement *>& vector, VideoElement * video_element);
@@ -227,8 +227,6 @@ class AV1_Parameters : public CodecParametersPage
 {
     public: 
         AV1_Parameters();
-        ~AV1_Parameters();
-
         void load(VideoElement * video_element) override;
         
     protected:

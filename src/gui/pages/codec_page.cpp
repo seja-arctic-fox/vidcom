@@ -11,7 +11,21 @@ CodecParametersPage::CodecParametersPage()
     encoding_preset("Encoding Preset", ""),
     crf("CRF", "")
 {
+    encoding_preset.set_digits(0);
+    encoding_preset.set_adjustment(5, 0, 16, 1);
+    
+    crf.set_digits(0);
+    crf.set_adjustment(35, 0, 63, 1);
+    
     add_css_class("flat");
+    append(encoding_preset);
+    append(crf);
+    
+    // Signály
+    encoding_preset.signal_value_changed.connect([this]() 
+        { update([this](VideoElement * e) { save_preset(e); }); });
+    crf.signal_value_changed.connect([this]()
+        { update([this](VideoElement * e) { save_crf(e); }); });
 }
 
 void CodecParametersPage::load(VideoElement * video_element)
@@ -39,3 +53,9 @@ void CodecParametersPage::update(std::function<void(VideoElement *)> func)
     else
     { func(video_element); }
 }
+
+void CodecParametersPage::save_preset(VideoElement * element)
+{ element -> video.AV1_options.preset = encoding_preset.get_value(); }
+
+void CodecParametersPage::save_crf(VideoElement * element)
+{ element -> video.AV1_options.crf = crf.get_value(); }
