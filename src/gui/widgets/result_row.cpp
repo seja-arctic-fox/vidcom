@@ -1,6 +1,6 @@
 #include "gtkmm/enums.h"
-#include "gui.h"
-#include "../cli/cli.h"
+#include "../headers/gui.h"
+#include "../../cli/cli.h"
 #include <iostream>
 
 ResultRow::ResultRow(fs::path video_path, int status)

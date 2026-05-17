@@ -2,7 +2,7 @@
 <component type="desktop-application">
   <id>io.github.seja_arctic_fox.vidcom</id>
   <name>VidCom</name>
-  <summary>Archive and compress videos easily</summary>
+  <summary>Archive your videos easily</summary>
   <developer id="io.github">
     <name>seja_arctic_fox</name>
   </developer>
@@ -16,7 +16,7 @@
 
   <description>
     <p>
-    VidCom (short for Video Compression) is a simple utility for compressing video. It offers both GUI and CLI interface and utilises <code>ffmpeg</code> for the video encoding.
+    VidCom (short for Video Compression) is a simple utility for archiving videos. It offers both GUI and CLI interface and utilises `ffmpeg` for the video encoding. 
     </p>
 
     <p>
@@ -32,7 +32,7 @@
     </ul>
 
     <p>
-        There are also other options for quick setup, such as reducing resolution and frame rate, choosing an output directory and a trimming function. More advanced users (and anyone else) can set the codec used for encoding and tweak some parameters of chosen codec to trade time for better compression and vice versa.
+        There are also other options for quick setup, such as reducing resolution and frame rate, choosing an output directory and a trimming function. More advanced users can set the codec used for encoding and tweak some parameters of chosen codec to trade time for better compression and vice versa. 
     </p>
 
     <p>

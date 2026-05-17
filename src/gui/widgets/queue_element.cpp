@@ -9,7 +9,7 @@
 #include "gtkmm/listbox.h"
 #include "gtkmm/listboxrow.h"
 #include "gtkmm/widgetpaintable.h"
-#include "gui.h"
+#include "../headers/gui.h"
 #include "pangomm/layout.h"
 #include "sigc++/functors/mem_fun.h"
 #include "src/video/video.h"

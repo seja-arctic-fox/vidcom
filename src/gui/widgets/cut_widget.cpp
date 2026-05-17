@@ -1,5 +1,5 @@
 #include "gtkmm/enums.h"
-#include "widgets.h"
+#include "../headers/widgets.h"
 
 CutWidget::CutWidget()
 :

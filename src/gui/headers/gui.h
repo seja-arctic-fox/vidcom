@@ -5,32 +5,23 @@
 #include "glibmm/refptr.h"
 #include "glibmm/value.h"
 #include "glibmm/variant.h"
-#include "gtkmm/adjustment.h"
 #include "gtkmm/box.h"
 #include "gtkmm/button.h"
-#include "gtkmm/checkbutton.h"
 #include "gtkmm/dragsource.h"
 #include "gtkmm/droptarget.h"
-#include "gtkmm/entry.h"
-#include "gtkmm/enums.h"
 #include "gtkmm/filedialog.h"
-#include "gtkmm/flowbox.h"
-#include "gtkmm/flowboxchild.h"
 #include "gtkmm/frame.h"
 #include "gtkmm/headerbar.h"
 #include "gtkmm/image.h"
 #include "gtkmm/label.h"
 #include "gtkmm/listbox.h"
 #include "gtkmm/listboxrow.h"
-#include "gtkmm/popover.h"
 #include "gtkmm/progressbar.h"
-#include "gtkmm/scale.h"
 #include "gtkmm/scrolledwindow.h"
-#include "gtkmm/spinbutton.h"
-#include "gtkmm/switch.h"
 #include "gtkmm/togglebutton.h"
 #include "gtkmm/widget.h"
 #include "gtkmm/window.h"
+#include <functional>
 #include <gtkmm.h>
 #include <adwaita.h>
 #include <string>
@@ -38,7 +29,7 @@
 #include <atomic>
 #include <mutex>
 #include <vector>
-#include "../video/video.h"
+#include "../../video/video.h"
 #include "sigc++/signal.h"
 #include "widgets.h"
 
@@ -202,187 +193,164 @@ class QueueFrame : public Gtk::Box
         void on_row_selected(Gtk::ListBoxRow * row);
 };
 
-// Stránka parametrů pro AV1
-class AV1_Parameters : public Gtk::ListBox
+// Obecná stránka pro parametry
+class CodecParametersPage : public OptionListBox
 {
-    friend class VideoSettings_VBox;
-
-    public: 
-        AV1_Parameters(VideoElement * video_element);
-        ~AV1_Parameters();
-
+    public:
+        CodecParametersPage();
+        virtual ~CodecParametersPage() = default;
+        
+        virtual void load(VideoElement * video_element);
+        virtual void load_vector(std::vector<VideoElement *>& vector);
+        
     protected:
         VideoElement * video_element;
+        std::vector<VideoElement *> * video_queue;
         bool is_loading;
+        bool batch_settings;
+        
+        SpinButtonRow encoding_preset;
+        SpinButtonRow crf;
+        
+        virtual void update(std::function<void(VideoElement *)> func);
+        void save_preset(VideoElement * element);
+        void save_crf(VideoElement * element);
+};
 
-        Gtk::Label preset_text, crf_text, fgs_text, fgl_text, bd_text, pt_text, vb_text;
-        Gtk::Label preset_caption, crf_caption, fgs_caption, fgl_caption, bd_caption, pt_caption, vb_caption;
-        Gtk::Box preset_hbox, crf_hbox, fgs_hbox, fgl_hbox, bd_hbox, pt_hbox, vb_hbox;
-        Gtk::Box preset_vbox, crf_vbox, fgs_vbox, fgl_vbox, bd_vbox, pt_vbox, vb_vbox;
-        Gtk::SpinButton preset_w, crf_w, fgl_w;
-        Gtk::Switch fgs_w, bd_w, pt_w, vb_w;
-
-        void load();
-        void update();
-        void on_select_row(Gtk::ListBoxRow * row);
-        std::function<void()> on_updated;
+// Stránka parametrů pro AV1
+class AV1_Parameters : public CodecParametersPage
+{
+    public: 
+        AV1_Parameters();
+        void load(VideoElement * video_element) override;
+        
+    protected:
+        SwitchRow film_grain_synthesis;
+        SpinButtonRow film_grain_level;
+        SwitchRow better_details;
+        SwitchRow psychovisual_tuning;
+        SwitchRow variance_boost;
+        
+        void save_preset(VideoElement * element);
+        void save_crf(VideoElement * element);
+        void save_film_grain(VideoElement * element);
+        void save_better_details(VideoElement * element);
+        void save_psychovisual_tuning(VideoElement * element);
+        void save_variance_boost(VideoElement * element);
+        
 };
 
 // Stránka parametrů pro HEVC
-class HEVC_Parameters : public Gtk::ListBox
+class HEVC_Parameters : public CodecParametersPage
 {
-    friend class VideoSettings_VBox;
-
     public: 
-        HEVC_Parameters(VideoElement * video_element);
-        ~HEVC_Parameters();
+        HEVC_Parameters();
+        void load(VideoElement * video_element) override;
 
     protected:
-        VideoElement * video_element;
-        bool is_loading;
+        SwitchRow motion_estimation;
+        SwitchRow psychovisual_tuning;
+        SwitchRow adaptive_quantisation;
+        SwitchRow adaptive_b_frames;
+        
+        void save_preset(VideoElement * element);
+        void save_crf(VideoElement * element);
+        void save_motion_estimation(VideoElement * element);
+        void save_psychovisual_tuning(VideoElement * element);
+        void save_adaptive_quantisation(VideoElement * element);
+        void save_adaptive_b_frames(VideoElement * element);
 
-        Gtk::Label preset_text, crf_text, me_text, aq_text, pt_text, ab_text;
-        Gtk::Label preset_caption, crf_caption, me_caption, aq_caption, pt_caption, ab_caption;
-        Gtk::Box preset_hbox, crf_hbox, me_hbox, aq_hbox, pt_hbox, ab_hbox;
-        Gtk::Box preset_vbox, crf_vbox, me_vbox, aq_vbox, pt_vbox, ab_vbox;
-        Gtk::SpinButton preset_w, crf_w;
-        Gtk::Switch me_w, aq_w, pt_w, ab_w;
-
-        void load();
-        void update();
-        void on_select_row(Gtk::ListBoxRow * row);
-        std::function<void()> on_updated;
 };
 
 // Stránka parametrů pro VP9
-class VP9_Parameters : public Gtk::ListBox
+class VP9_Parameters : public CodecParametersPage
 {
-    friend class VideoSettings_VBox;
-
     public: 
-        VP9_Parameters(VideoElement * video_element);
-        ~VP9_Parameters();
-
+        VP9_Parameters();
+        void load(VideoElement * video_element);
+        
     protected:
-        VideoElement * video_element;
-        bool is_loading;
-
-        Gtk::Label preset_text, crf_text, cpu_text, q_text, ns_text, t_text;
-        Gtk::Label preset_caption, crf_caption, cpu_caption, q_caption, ns_caption, t_caption;
-        Gtk::Box preset_hbox, crf_hbox, cpu_hbox, q_hbox, ns_hbox, t_hbox;
-        Gtk::Box preset_vbox, crf_vbox, cpu_vbox, q_vbox, ns_vbox, t_vbox; 
-        Gtk::SpinButton cpu_w, ns_w, preset_w, crf_w;
-        Gtk::Scale q_w, t_w;
-
-        void load();
-        void update();
-        bool on_move_slider(Gtk::ScrollType, double);
-        std::function<void()> on_updated;
+        SpinButtonRow cpu_usage;
+        SpinButtonRow noise_sensitivity;
+        SpinButtonRow quality_scale;
+        SpinButtonRow tune;
+        
+        void save_preset(VideoElement * element);
+        void save_crf(VideoElement * element);
+        void save_cpu_usage(VideoElement * element);
+        void save_noise_sensitivity(VideoElement * element);
+        void save_quality_scale(VideoElement * element);
+        void save_tune(VideoElement * element);
 };
 
 // Stránka pro označené video ve frontě. Obsahuje základní nastavení pro každé video individuálně
-class VideoSettings_VBox : public Gtk::ScrolledWindow
+class SettingsPage : public Gtk::ScrolledWindow
 {
     public:
-        VideoSettings_VBox();
-        ~VideoSettings_VBox();
+        SettingsPage();
+        ~SettingsPage();
 
         // Aktualizace nastavení videa
         void read_video_options(VideoElement * video);
         void read_video_vector_options(std::vector<VideoElement *> video_vector);
-        void no_video_selected();
 
     protected:
-        // Buď se bude dělat operace na jednom označeném videu, nebo na všech najednou
+        // Nastavení lze provádět pro jedno nebo více označených videí
         VideoElement * video_element;
         std::vector<VideoElement *> video_queue;
         bool batch_settings;
         bool is_loading;
         string output_path;
-
         Gtk::Box window_content;
 
         // Režim kódování
-        Gtk::CheckButton compress_mode_radio_button;
-        Gtk::CheckButton archive_mode_radio_button;
-        Gtk::Label compress_label;
-        Gtk::Label archive_label;
-        Gtk::Label compress_caption;
-        Gtk::Label archive_caption;
-        Gtk::Label mode_heading;
-        Gtk::Box archive_mode_text_vbox;
-        Gtk::Box archive_mode_hbox;
-        Gtk::Box compress_mode_text_vbox;
-        Gtk::Box compress_mode_hbox;
-        Gtk::Box mode_heading_hbox;
-        Gtk::ListBox mode_listbox;
-        Gtk::Button mode_desc_trigger;
-        Gtk::Popover mode_desc;
-        Gtk::Label mode_desc_text;
-
-        // Kodek
-        Gtk::ToggleButton codec_av1_toggle;
-        Gtk::ToggleButton codec_hevc_toggle;
-        Gtk::ToggleButton codec_vp9_toggle;
-        Gtk::FlowBox codec_flowbox;
-        Gtk::Box codec_heading_hbox;
-        Gtk::Label codec_heading;
-        Gtk::Button codec_desc_trigger;
-        Gtk::Popover codec_desc;
-        Gtk::Label codec_desc_text;
-        Gtk::Switch two_pass_check;
-        Gtk::Label two_pass_label;
-
-        // Cílová velikost
-        Gtk::Box target_size_hbox;
-        Gtk::Label target_size_label;
-        Gtk::Label target_size_unit;
-        Glib::RefPtr<Gtk::Adjustment> target_size_values;
-        Gtk::SpinButton target_size_field;
-
+        OptionHeading mode_heading;
+        OptionListBox mode_listbox;
+        RadioButtonRow compress_row;
+        RadioButtonRow archive_row;
+        
+        // Pro kompresi: 
+        SpinButtonRow target_size_row;
+        SpinButtonRow res_row, fps_row;
+        
         // Střih
-        Gtk::Label cut_heading;
-        Gtk::Button cut_desc_trigger;
-        Gtk::Popover cut_desc;
-        Gtk::Label cut_desc_text;
-        Gtk::Switch cut_switch;
-        Gtk::Box cut_heading_hbox, cut_switch_box, cut_switch_text_vbox;
-        Gtk::Label cut_switch_text, cut_switch_desc;
-        Gtk::ListBox cut_listbox;
+        OptionHeading cut_heading;
+        OptionListBox cut_listbox;
+        SwitchRow cut_switch;
         CutWidget cut_widget;
 
-        // Fps a rozlišení
-        Gtk::Box res_hbox, res_text_vbox, fps_hbox, fps_text_vbox;
-        Gtk::Label res_text, fps_text, res_caption, fps_caption;
-        Gtk::SpinButton res_field, fps_field;
-
         // Výstupní složka a prefix
-        Gtk::Label output_heading;
-        Gtk::Button output_desc_trigger;
-        Gtk::Popover output_desc;
-        Gtk::Label output_desc_text;
-        Gtk::Box output_heading_hbox, output_hbox, output_text_vbox, prefix_hbox, prefix_text_vbox;
-        Gtk::Label output_text, output_caption, prefix_text, prefix_caption;
-        Gtk::Button set_output_folder_button;
-        Gtk::Entry set_prefix_field;
-        Gtk::ListBox output_listbox;
+        OptionHeading output_heading;
+        ButtonRow output_row;
+        FieldRow prefix_row;
+        OptionListBox output_listbox;
+        
+        // Kodeky
+        OptionHeading codec_heading;
+        OptionListBox codec_listbox;
+        AdwViewStack * codec_pages;
+        AdwInlineViewSwitcher * codec_switch;
+        AV1_Parameters av1_page;
+        HEVC_Parameters hevc_page;
+        VP9_Parameters vp9_page;
 
-        // Nastavení parametrů kodeků
-        Gtk::Label parameters_heading;
-        Gtk::Label parameters_desc_text;
-        Gtk::Button parameters_desc_trigger;
-        Gtk::Box parameters_heading_hbox;
-        Gtk::Popover parameters_desc;
-
+        // Ukládací funkce
+        void save_archive_mode(VideoElement * element);
+        void save_compress_mode(VideoElement * element);
+        void save_target_size(VideoElement * element);
+        void save_target_res(VideoElement * element);
+        void save_target_fps(VideoElement * element);
+        void save_cut(VideoElement * element);
+        void save_prefix(VideoElement * element);
+        void save_output_path(VideoElement * element);
+        void save_codec(VideoElement * element);
+        
         void load_options_into_GUI(Video * video);
-        void update();
-        void save_options(VideoElement * element);
-        void on_select_row(Gtk::ListBoxRow * selected_row);
-        void on_select_flowbox(Gtk::FlowBoxChild * child);
+        void update(void (SettingsPage::*func)(VideoElement *));
         void set_output_path();
-        void on_folder_selected(Glib::RefPtr<Gio::AsyncResult> &result, Glib::RefPtr<Gtk::FileDialog> folder_picker);
-        void switch_codec_page(Codec codec);
-    };
+        void on_folder_selected(Glib::RefPtr<Gio::AsyncResult> &result, 
+                                Glib::RefPtr<Gtk::FileDialog> folder_picker);
+};
 
 
 class ResultsPage : public Gtk::Box
@@ -436,7 +404,7 @@ class MainWindow : public Gtk::Window
     protected:
         RunnerPanel runner_panel;
         QueueFrame video_queue;
-        VideoSettings_VBox options_page;
+        SettingsPage options_page;
         Gtk::Stack main_page_stack;
         AdwStatusPage * queue_empty_page;
         AdwStatusPage * encoding_page;

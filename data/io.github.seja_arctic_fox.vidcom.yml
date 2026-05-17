@@ -49,8 +49,8 @@ modules:
       - '/lib/glibmm-*'
     sources: 
       - type: archive
-        url: https://download.gnome.org/sources/glibmm/2.86/glibmm-2.86.0.tar.xz
-        sha256: 39c0e9f6da046d679390774efdb9ad564436236736dc2f7825e614b2d4087826
+        url: https://download.gnome.org/sources/glibmm/2.88/glibmm-2.88.0.tar.xz
+        sha256: a6549da3a6c43de83b8717dae5413c57a60d92f6ecc624615c612d0bb0ad0fe2
 
   - name: cairomm
     buildsystem: meson
@@ -89,8 +89,8 @@ modules:
       - '/lib/gtkmm-*'
     sources: 
     - type: archive
-      url: https://download.gnome.org/sources/gtkmm/4.20/gtkmm-4.20.0.tar.xz
-      sha256: daad9bf9b70f90975f91781fc7a656c923a91374261f576c883cd3aebd59c833
+      url: https://download.gnome.org/sources/gtkmm/4.22/gtkmm-4.22.0.tar.xz
+      sha256: 2e8a21b4b0725f620e33aaee0cd343ed121b533275b632896619b1c89e96de67
 
   - name: vidcom
     buildsystem: meson

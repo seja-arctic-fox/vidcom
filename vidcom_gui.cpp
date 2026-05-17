@@ -1,7 +1,7 @@
 #include "adwaita.h"
 #include "gtkmm/application.h"
 #include "src/cli/cli.h"
-#include "src/gui/gui.h"
+#include "src/gui/headers/gui.h"
 
 #define PROJECT_NAME "vidcom-gui"
 

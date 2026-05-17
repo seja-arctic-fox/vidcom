@@ -1,4 +1,4 @@
-#include "gui.h"
+#include "headers/gui.h"
 #include "adwaita.h"
 #include "giomm/simpleaction.h"
 #include "gtk/gtk.h"
@@ -20,6 +20,8 @@ MainWindow::MainWindow()
     set_title("VidCom");
     set_default_size(960, 540);
     gtk_window_set_titlebar(GTK_WINDOW(gobj()), gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
+    // Jen pro BETA verze: 
+    add_css_class("devel");
     
     // Stránka pro prázdnou frontu
     add_videos_pill_button.add_css_class("pill");
@@ -144,9 +146,8 @@ MainWindow::MainWindow()
     );
     
     // Propojení signálů pro aktualizaci nastavení videa
-    video_queue.signal_video_selected.connect(sigc::mem_fun(options_page, &VideoSettings_VBox::read_video_options));
-    video_queue.signal_all_videos_selected.connect(sigc::mem_fun(options_page, &VideoSettings_VBox::read_video_vector_options));
-    video_queue.signal_nothing_selected.connect(sigc::mem_fun(options_page, &VideoSettings_VBox::no_video_selected));
+    video_queue.signal_video_selected.connect(sigc::mem_fun(options_page, &SettingsPage::read_video_options));
+    video_queue.signal_all_videos_selected.connect(sigc::mem_fun(options_page, &SettingsPage::read_video_vector_options));
 
     // Signály pro začátek a zastavení kódování, načítání videí do fronty
     runner_panel.signal_start_encoding.connect(sigc::mem_fun(*this, &MainWindow::start_encoding));
