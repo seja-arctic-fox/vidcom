@@ -9,7 +9,6 @@
 #include "gtkmm/button.h"
 #include "gtkmm/dragsource.h"
 #include "gtkmm/droptarget.h"
-#include "gtkmm/enums.h"
 #include "gtkmm/filedialog.h"
 
 #include "gtkmm/frame.h"
@@ -19,10 +18,7 @@
 #include "gtkmm/listbox.h"
 #include "gtkmm/listboxrow.h"
 #include "gtkmm/progressbar.h"
-#include "gtkmm/scale.h"
 #include "gtkmm/scrolledwindow.h"
-#include "gtkmm/spinbutton.h"
-#include "gtkmm/switch.h"
 #include "gtkmm/togglebutton.h"
 #include "gtkmm/widget.h"
 #include "gtkmm/window.h"
@@ -244,29 +240,23 @@ class AV1_Parameters : public CodecParametersPage
 };
 
 // Stránka parametrů pro HEVC
-class HEVC_Parameters : public Gtk::ListBox
+class HEVC_Parameters : public CodecParametersPage
 {
-    friend class SettingsPage;
-
     public: 
         HEVC_Parameters();
-        ~HEVC_Parameters();
+        void load(VideoElement * video_element) override;
 
     protected:
-        VideoElement * video_element;
-        bool is_loading;
+        SwitchRow motion_estimation;
+        SwitchRow psychovisual_tuning;
+        SwitchRow adaptive_quantisation;
+        SwitchRow adaptive_b_frames;
+        
+        void save_motion_estimation(VideoElement * element);
+        void save_psychovisual_tuning(VideoElement * element);
+        void save_adaptive_quantisation(VideoElement * element);
+        void save_adaptive_b_frames(VideoElement * element);
 
-        Gtk::Label preset_text, crf_text, me_text, aq_text, pt_text, ab_text;
-        Gtk::Label preset_caption, crf_caption, me_caption, aq_caption, pt_caption, ab_caption;
-        Gtk::Box preset_hbox, crf_hbox, me_hbox, aq_hbox, pt_hbox, ab_hbox;
-        Gtk::Box preset_vbox, crf_vbox, me_vbox, aq_vbox, pt_vbox, ab_vbox;
-        Gtk::SpinButton preset_w, crf_w;
-        Gtk::Switch me_w, aq_w, pt_w, ab_w;
-
-        void load(VideoElement * video_element);
-        void update();
-        void on_select_row(Gtk::ListBoxRow * row);
-        std::function<void()> on_updated;
 };
 
 // Stránka parametrů pro VP9

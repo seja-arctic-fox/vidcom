@@ -17,7 +17,9 @@ CodecParametersPage::CodecParametersPage()
     crf.set_digits(0);
     crf.set_adjustment(35, 0, 63, 1);
     
+    remove_css_class("card");
     add_css_class("flat");
+    set_margin_bottom(0);
     append(encoding_preset);
     append(crf);
     
