@@ -27,6 +27,10 @@ VP9_Parameters::VP9_Parameters()
     append(tune);
     
     // Signály
+    encoding_preset.signal_value_changed.connect([this]() 
+        { update([this](VideoElement * e) { save_preset(e); }); });
+    crf.signal_value_changed.connect([this]()
+        { update([this](VideoElement * e) { save_crf(e); }); });
     cpu_usage.signal_value_changed.connect([this]()
         { update([this](VideoElement * e){ save_cpu_usage(e); }); });
     noise_sensitivity.signal_value_changed.connect([this]()
@@ -51,14 +55,20 @@ void VP9_Parameters::load(VideoElement * video_element)
     tune.set_value(options.tune_content);
 }
 
+void VP9_Parameters::save_preset(VideoElement * element)
+{ element -> video.VP9_options.preset = encoding_preset.get_value(); }
+
+void VP9_Parameters::save_crf(VideoElement * element)
+{ element -> video.VP9_options.crf = crf.get_value(); }
+
 void VP9_Parameters::save_cpu_usage(VideoElement * element)
-{ element->video.VP9_options.cpu_used = cpu_usage.get_value(); }
+{ element -> video.VP9_options.cpu_used = cpu_usage.get_value(); }
 
 void VP9_Parameters::save_noise_sensitivity(VideoElement * element)
-{ element->video.VP9_options.cpu_used = noise_sensitivity.get_value(); }
+{ element -> video.VP9_options.noise_sensitivity = noise_sensitivity.get_value(); }
 
 void VP9_Parameters::save_quality_scale(VideoElement * element)
-{ element->video.VP9_options.cpu_used = quality_scale.get_value(); }
+{ element -> video.VP9_options.quality = quality_scale.get_value(); }
 
 void VP9_Parameters::save_tune(VideoElement * element)
-{ element->video.VP9_options.cpu_used = tune.get_value(); }
+{ element -> video.VP9_options.tune_content = tune.get_value(); }

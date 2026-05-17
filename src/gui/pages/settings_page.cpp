@@ -23,6 +23,7 @@ SettingsPage::SettingsPage()
     batch_settings(false),
     is_loading(false),
     output_path(""),
+    
     // Režim
     mode_heading("Encoding Mode"), 
     compress_row("Compress", "Compresses the video to a target size. "),
@@ -51,10 +52,8 @@ SettingsPage::SettingsPage()
     set_policy(Gtk::PolicyType::NEVER, Gtk::PolicyType::AUTOMATIC);
     set_child(window_content);
     set_expand();
-    set_sensitive(false);
 
     // Režim kódování
-
     string mode_help = 
         "<big>Encoding Mode</big>\n"
         "There are two modes for encoding: \n\n"
@@ -107,7 +106,6 @@ SettingsPage::SettingsPage()
 
     output_heading.set_popover_contents(output_help);
     output_row.set_button_text("Set output folder");
-    
     prefix_row.set_field_placeholder_text("Enter file prefix");
 
     output_listbox.append(prefix_row);
@@ -136,6 +134,7 @@ SettingsPage::SettingsPage()
     adw_view_stack_add_titled(codec_pages, GTK_WIDGET(av1_page.gobj()), "codec_av1", "AV1");
     adw_view_stack_add_titled(codec_pages, GTK_WIDGET(hevc_page.gobj()), "codec_hevc", "HEVC");
     adw_view_stack_add_titled(codec_pages, GTK_WIDGET(vp9_page.gobj()), "codec_vp9", "VP9");
+    adw_view_stack_set_vhomogeneous(codec_pages, false);
     adw_inline_view_switcher_set_stack(codec_switch, codec_pages);
     
     gtk_widget_add_css_class(GTK_WIDGET(codec_switch), "round");
@@ -165,11 +164,10 @@ SettingsPage::SettingsPage()
     prefix_row.signal_changed.connect([this](){ update(&SettingsPage::save_prefix); });
     output_row.signal_clicked.connect(sigc::mem_fun(*this, &SettingsPage::set_output_path));
     g_signal_connect(codec_pages, "notify::visible-child", 
-        G_CALLBACK(+[](AdwViewStack *, GParamSpec, gpointer data)
+        G_CALLBACK(+[](AdwViewStack *, GParamSpec *, gpointer data)
             {
                 SettingsPage * self = static_cast<SettingsPage *>(data);
                 self -> update(&SettingsPage::save_codec);
-                cout << "Přepnuto" << endl;
             }),
         this);
 }
@@ -182,10 +180,8 @@ void SettingsPage::set_output_path()
     auto folder_picker = Gtk::FileDialog::create();
     folder_picker -> set_title("Select Output Folder");
     folder_picker -> set_modal();
-
     auto current_folder = Gio::File::create_for_path(output_path);
     folder_picker -> set_initial_folder(current_folder);
-
     folder_picker -> select_folder(* dynamic_cast<Gtk::Window *>(get_root()), sigc::bind(sigc::mem_fun(*this, &SettingsPage::on_folder_selected), folder_picker));
 }
 
@@ -281,7 +277,6 @@ void SettingsPage::save_output_path(VideoElement * element)
 void SettingsPage::save_codec(VideoElement * element)
 {
     const char * page_name = adw_view_stack_get_visible_child_name(codec_pages);
-    cout << page_name << endl;
     if (string(page_name) == "codec_av1") { element -> video.set_codec(AV1); }
     else if (string(page_name) == "codec_hevc") { element -> video.set_codec(HEVC); }
     else if (string(page_name) == "codec_vp9") { element -> video.set_codec(VP9); }
@@ -369,16 +364,17 @@ void SettingsPage::load_options_into_GUI(Video * video)
     // Výstup a prefix
     prefix_row.set_field_text(video -> get_prefix());
     output_row.set_caption("Video(s) will be saved to: \n" + video -> get_output_path());
-
-    set_sensitive();
 }
 
 void SettingsPage::read_video_vector_options(std::vector<VideoElement *> video_vector)
 {
     this -> video_queue = video_vector;
-    batch_settings = true;
-    cut_heading.add_css_class("warning");
-    cut_heading.set_heading("Cut Feature (set according to the shortest video)");
+    if (!batch_settings)
+    {
+        batch_settings = true;
+        cut_heading.add_css_class("warning");
+        cut_heading.set_heading("Cut Feature (set according to the shortest video)");
+    }
 
     if (video_queue.size() > 0)
     {
@@ -410,15 +406,13 @@ void SettingsPage::read_video_options(VideoElement * video_element)
     Video * video = &(video_element -> video);
     output_path = video -> get_output_path();
     output_path = filesystem::path(output_path).parent_path().generic_string().substr(0, output_path.find("encoded_videos/"));
-    batch_settings = false;
-
-    cut_heading.remove_css_class("warning");
-    cut_heading.set_heading("Cut Feature");
+    
+    if (batch_settings)
+    {
+        cut_heading.remove_css_class("warning");
+        cut_heading.set_heading("Cut Feature");
+        batch_settings = false;
+    }
 
     load_options_into_GUI(video);
-}
-
-void SettingsPage::no_video_selected()
-{
-    set_sensitive(false);
 }

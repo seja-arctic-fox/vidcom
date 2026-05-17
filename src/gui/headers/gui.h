@@ -231,6 +231,8 @@ class AV1_Parameters : public CodecParametersPage
         SwitchRow psychovisual_tuning;
         SwitchRow variance_boost;
         
+        void save_preset(VideoElement * element);
+        void save_crf(VideoElement * element);
         void save_film_grain(VideoElement * element);
         void save_better_details(VideoElement * element);
         void save_psychovisual_tuning(VideoElement * element);
@@ -251,6 +253,8 @@ class HEVC_Parameters : public CodecParametersPage
         SwitchRow adaptive_quantisation;
         SwitchRow adaptive_b_frames;
         
+        void save_preset(VideoElement * element);
+        void save_crf(VideoElement * element);
         void save_motion_estimation(VideoElement * element);
         void save_psychovisual_tuning(VideoElement * element);
         void save_adaptive_quantisation(VideoElement * element);
@@ -271,6 +275,8 @@ class VP9_Parameters : public CodecParametersPage
         SpinButtonRow quality_scale;
         SpinButtonRow tune;
         
+        void save_preset(VideoElement * element);
+        void save_crf(VideoElement * element);
         void save_cpu_usage(VideoElement * element);
         void save_noise_sensitivity(VideoElement * element);
         void save_quality_scale(VideoElement * element);
@@ -287,7 +293,6 @@ class SettingsPage : public Gtk::ScrolledWindow
         // Aktualizace nastavení videa
         void read_video_options(VideoElement * video);
         void read_video_vector_options(std::vector<VideoElement *> video_vector);
-        void no_video_selected();
 
     protected:
         // Nastavení lze provádět pro jedno nebo více označených videí

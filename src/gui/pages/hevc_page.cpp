@@ -21,6 +21,10 @@ HEVC_Parameters::HEVC_Parameters()
     append(adaptive_b_frames);
     
     // Signály
+    encoding_preset.signal_value_changed.connect([this]() 
+        { update([this](VideoElement * e) { save_preset(e); }); });
+    crf.signal_value_changed.connect([this]()
+        { update([this](VideoElement * e) { save_crf(e); }); });
     motion_estimation.signal_toggled.connect([this]()
         { update([this](VideoElement * e){ save_motion_estimation(e); }); });
     psychovisual_tuning.signal_toggled.connect([this]()
@@ -45,14 +49,20 @@ void HEVC_Parameters::load(VideoElement * video_element)
     adaptive_b_frames.set_state(options.adaptive_b_frames);
 }
 
+void HEVC_Parameters::save_preset(VideoElement * element)
+{ element -> video.HEVC_options.preset = encoding_preset.get_value(); }
+
+void HEVC_Parameters::save_crf(VideoElement * element)
+{ element -> video.HEVC_options.crf = crf.get_value(); }
+
 void HEVC_Parameters::save_motion_estimation(VideoElement * element)
-{ element->video.HEVC_options.motion_estimation = motion_estimation.get_state(); }
+{ element -> video.HEVC_options.motion_estimation = motion_estimation.get_state(); }
 
 void HEVC_Parameters::save_psychovisual_tuning(VideoElement * element)
-{ element->video.HEVC_options.psychovisual_tuning = psychovisual_tuning.get_state(); }
+{ element -> video.HEVC_options.psychovisual_tuning = psychovisual_tuning.get_state(); }
 
 void HEVC_Parameters::save_adaptive_quantisation(VideoElement * element)
-{ element->video.HEVC_options.adaptive_quantisation = adaptive_quantisation.get_state(); }
+{ element -> video.HEVC_options.adaptive_quantisation = adaptive_quantisation.get_state(); }
 
 void HEVC_Parameters::save_adaptive_b_frames(VideoElement * element)
-{ element->video.HEVC_options.adaptive_b_frames = adaptive_b_frames.get_state(); }
+{ element -> video.HEVC_options.adaptive_b_frames = adaptive_b_frames.get_state(); }

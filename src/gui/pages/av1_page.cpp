@@ -24,6 +24,10 @@ AV1_Parameters::AV1_Parameters()
     append(variance_boost);
     
     // Signály
+    encoding_preset.signal_value_changed.connect([this]() 
+        { update([this](VideoElement * e) { save_preset(e); }); });
+    crf.signal_value_changed.connect([this]()
+        { update([this](VideoElement * e) { save_crf(e); }); });
     film_grain_synthesis.signal_toggled.connect([this]()
         { update([this](VideoElement * e){ save_film_grain(e); }); });
     film_grain_level.signal_value_changed.connect([this]()
@@ -52,6 +56,12 @@ void AV1_Parameters::load(VideoElement * video_element)
     variance_boost.set_state(options.variance_boost);
 }
 
+void AV1_Parameters::save_preset(VideoElement * element)
+{ element -> video.AV1_options.preset = encoding_preset.get_value(); }
+
+void AV1_Parameters::save_crf(VideoElement * element)
+{ element -> video.AV1_options.crf = crf.get_value(); }
+
 void AV1_Parameters::save_film_grain(VideoElement * element)
 {
     element -> video.AV1_options.film_grain_synthesis = film_grain_synthesis.get_state();
@@ -60,10 +70,10 @@ void AV1_Parameters::save_film_grain(VideoElement * element)
 }
 
 void AV1_Parameters::save_better_details(VideoElement * element)
-{ element->video.AV1_options.better_details = better_details.get_state(); }
+{ element -> video.AV1_options.better_details = better_details.get_state(); }
 
 void AV1_Parameters::save_psychovisual_tuning(VideoElement * element)
-{ element->video.AV1_options.psychovisual_tuning = psychovisual_tuning.get_state(); }
+{ element -> video.AV1_options.psychovisual_tuning = psychovisual_tuning.get_state(); }
 
 void AV1_Parameters::save_variance_boost(VideoElement * element)
-{ element->video.AV1_options.variance_boost = variance_boost.get_state(); }
+{ element -> video.AV1_options.variance_boost = variance_boost.get_state(); }
