@@ -10,7 +10,6 @@
 #include "gtkmm/dragsource.h"
 #include "gtkmm/droptarget.h"
 #include "gtkmm/filedialog.h"
-
 #include "gtkmm/frame.h"
 #include "gtkmm/headerbar.h"
 #include "gtkmm/image.h"
@@ -202,7 +201,7 @@ class CodecParametersPage : public OptionListBox
         virtual ~CodecParametersPage() = default;
         
         virtual void load(VideoElement * video_element);
-        virtual void load_vector(std::vector<VideoElement *>& vector, VideoElement * video_element);
+        virtual void load_vector(std::vector<VideoElement *>& vector);
         
     protected:
         VideoElement * video_element;

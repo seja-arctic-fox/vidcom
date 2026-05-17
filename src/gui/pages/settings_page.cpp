@@ -1,5 +1,7 @@
 #include "adwaita.h"
 #include "giomm/file.h"
+#include "glib-object.h"
+#include "glib.h"
 #include "gtk/gtk.h"
 #include "gtkmm/box.h"
 #include "gtkmm/enums.h"
@@ -162,6 +164,14 @@ SettingsPage::SettingsPage()
     cut_widget.signal_cut_change.connect([this](){ update(&SettingsPage::save_cut); });
     prefix_row.signal_changed.connect([this](){ update(&SettingsPage::save_prefix); });
     output_row.signal_clicked.connect(sigc::mem_fun(*this, &SettingsPage::set_output_path));
+    g_signal_connect(codec_pages, "notify::visible-child", 
+        G_CALLBACK(+[](AdwViewStack *, GParamSpec, gpointer data)
+            {
+                SettingsPage * self = static_cast<SettingsPage *>(data);
+                self -> update(&SettingsPage::save_codec);
+                cout << "Přepnuto" << endl;
+            }),
+        this);
 }
 
 SettingsPage::~SettingsPage()
@@ -268,6 +278,15 @@ void SettingsPage::save_output_path(VideoElement * element)
     output_row.set_caption("Video(s) will be saved to: \n" + element -> video.get_output_path());
 }
 
+void SettingsPage::save_codec(VideoElement * element)
+{
+    const char * page_name = adw_view_stack_get_visible_child_name(codec_pages);
+    cout << page_name << endl;
+    if (string(page_name) == "codec_av1") { element -> video.set_codec(AV1); }
+    else if (string(page_name) == "codec_hevc") { element -> video.set_codec(HEVC); }
+    else if (string(page_name) == "codec_vp9") { element -> video.set_codec(VP9); }
+}
+
 void SettingsPage::update(void (SettingsPage::*func)(VideoElement *))
 {
     // Nesmí se ukládat, když se načítá
@@ -311,7 +330,31 @@ void SettingsPage::load_options_into_GUI(Video * video)
         }
 
     // Kodek
-    // TODO
+    av1_page.load(video_element);
+    hevc_page.load(video_element);
+    vp9_page.load(video_element);
+    
+    if (batch_settings)
+    {
+        av1_page.load_vector(video_queue);
+        hevc_page.load_vector(video_queue);
+        vp9_page.load_vector(video_queue);
+    }
+    
+    switch(video_element -> video.get_codec())
+    {
+        case AV1:
+            adw_view_stack_set_visible_child_name(codec_pages, "codec_av1");
+            break;
+        
+        case HEVC:
+            adw_view_stack_set_visible_child_name(codec_pages, "codec_hevc");
+            break;
+                
+        case VP9:
+            adw_view_stack_set_visible_child_name(codec_pages, "codec_vp9");
+            break;
+    }
 
     // Střih
     cut_switch.set_state(video -> is_cutting_enabled());

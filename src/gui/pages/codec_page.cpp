@@ -3,6 +3,7 @@
 
 CodecParametersPage::CodecParametersPage()
 :
+    OptionListBox(),
     video_element(nullptr),
     video_queue(nullptr),
     is_loading(false),
@@ -36,11 +37,10 @@ void CodecParametersPage::load(VideoElement * video_element)
     this -> video_element = video_element;
 }
 
-void CodecParametersPage::load_vector(std::vector<VideoElement *>& vector, VideoElement * video_element)
+void CodecParametersPage::load_vector(std::vector<VideoElement *>& vector)
 {
     batch_settings = true;
     this -> video_queue = &vector;
-    load(video_element);
 }
 
 void CodecParametersPage::update(std::function<void(VideoElement *)> func)
@@ -54,6 +54,8 @@ void CodecParametersPage::update(std::function<void(VideoElement *)> func)
         { func(element); }
     else
     { func(video_element); }
+    
+    video_element->video.test_commands();
 }
 
 void CodecParametersPage::save_preset(VideoElement * element)
