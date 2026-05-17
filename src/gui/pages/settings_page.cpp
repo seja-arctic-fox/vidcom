@@ -79,8 +79,7 @@ SettingsPage::SettingsPage()
     // Střih
     string cut_help = 
         "<big>Cut Feature</big>\n"
-        "Trims the video from start time to end time. \n"
-        "This feature cannot be used with all videos selected. ";
+        "Trims the video from start time to end time. ";
 
     cut_heading.set_popover_contents(cut_help);
 
@@ -101,7 +100,7 @@ SettingsPage::SettingsPage()
     string output_help = 
         "<big>Saving</big>\n"
         "You can set the output folder for you video(s) by clicking the button below. \n"
-        "The program will create a subfolder called 'encoded_videos' in the output folder and save the result there. \n"
+        "The app will create a subfolder called 'encoded_videos' in the output folder and save the result there. \n"
         "<b>Prefix</b> field lets you set a string that will be prepended before the original filename(s). ";
 
     output_heading.set_popover_contents(output_help);
@@ -117,10 +116,11 @@ SettingsPage::SettingsPage()
         "<big>Video Codec</big>\n"
         "Sets the codec used for encoding video(s). \n\n"
         "- <b>AV1</b> - Open source codec. Has the best compression efficiency, but may be more demanding on hardware. DEFAULT\n"
-        "- <b>HEVC</b> - Industry standart with great compression. \n"
-        "- <b>VP9</b> - Open source codec from Google, used mainly for videos on the web. "
+        "- <b>HEVC</b> - Industry standard with great compression. \n"
+        "- <b>VP9</b> - Open source codec from Google, used mainly for videos on the web. \n\n"
         "<big>Advanced Codec Options</big>\n"
-        "You can adjust the default settings there to achieve faster encoding time or better quality. \n Different codecs have different options. Feel free to experiment. \n\n"
+        "You can adjust the default settings there to achieve faster encoding time or better quality. \n"
+        "Different codecs have different options. Feel free to experiment. \n\n"
         "<big>General recommendations</big>\n"
         "- Adjust the <b>preset</b> value if you want to speed up encoding and you don't mind the potential quality decrease. \n"
         "- If you want to increase quality, lower the <b>CRF</b> value. Keep in mind however that it will increase bitrate. \n"
