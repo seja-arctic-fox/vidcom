@@ -44,7 +44,7 @@ RunnerPanel::RunnerPanel()
         { signal_toggle_queue.emit(); });
     
     // Stavový text a ikona
-    EncodingIconStatus.set_from_icon_name("tool-select-ellipse-symbolic");
+    EncodingIconStatus.set_from_icon_name("radio-symbolic");
     EncodingIconStatus.set_margin_start(10);
     EncodingTextStatus.set_expand(false);
 
@@ -212,7 +212,7 @@ void RunnerPanel::update_status(const std::string& status, const std::string& cs
     }
     
     if (status == "Queue Empty")
-        EncodingIconStatus.set_from_icon_name("tool-select-ellipse-symbolic");
+        EncodingIconStatus.set_from_icon_name("radio-symbolic");
 }
 
 void RunnerPanel::block_encoding_button(bool block)
