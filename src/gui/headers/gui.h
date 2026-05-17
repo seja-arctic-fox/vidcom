@@ -260,29 +260,22 @@ class HEVC_Parameters : public CodecParametersPage
 };
 
 // Stránka parametrů pro VP9
-class VP9_Parameters : public Gtk::ListBox
+class VP9_Parameters : public CodecParametersPage
 {
-    friend class SettingsPage;
-
     public: 
         VP9_Parameters();
-        ~VP9_Parameters();
-
-    protected:
-        VideoElement * video_element;
-        bool is_loading;
-
-        Gtk::Label preset_text, crf_text, cpu_text, q_text, ns_text, t_text;
-        Gtk::Label preset_caption, crf_caption, cpu_caption, q_caption, ns_caption, t_caption;
-        Gtk::Box preset_hbox, crf_hbox, cpu_hbox, q_hbox, ns_hbox, t_hbox;
-        Gtk::Box preset_vbox, crf_vbox, cpu_vbox, q_vbox, ns_vbox, t_vbox; 
-        Gtk::SpinButton cpu_w, ns_w, preset_w, crf_w;
-        Gtk::Scale q_w, t_w;
-
         void load(VideoElement * video_element);
-        void update();
-        bool on_move_slider(Gtk::ScrollType, double);
-        std::function<void()> on_updated;
+        
+    protected:
+        SpinButtonRow cpu_usage;
+        SpinButtonRow noise_sensitivity;
+        SpinButtonRow quality_scale;
+        SpinButtonRow tune;
+        
+        void save_cpu_usage(VideoElement * element);
+        void save_noise_sensitivity(VideoElement * element);
+        void save_quality_scale(VideoElement * element);
+        void save_tune(VideoElement * element);
 };
 
 // Stránka pro označené video ve frontě. Obsahuje základní nastavení pro každé video individuálně
