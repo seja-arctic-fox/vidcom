@@ -28,7 +28,7 @@ Video::Video(string input_path)
     set_output_framerate(inputVideo.framerate);
     set_bitrate_by_size(10);
     set_cut(0, inputVideo.duration);
-    set_output_path(inputVideo.path.parent_path());
+    set_output_path(fs::path(getenv("HOME")) / fs::path(".var/app/io.github.seja_arctic_fox.vidcom/"));
 }
 
 // Destruktor
