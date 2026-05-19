@@ -1,6 +1,8 @@
 #include "headers/gui.h"
 #include "adwaita.h"
 #include "giomm/simpleaction.h"
+#include "glib-object.h"
+#include "glib.h"
 #include "gtk/gtk.h"
 #include "sigc++/functors/mem_fun.h"
 #include "src/cli/cli.h"
@@ -245,7 +247,17 @@ void MainWindow::show_toast_grant_access(std::vector<std::string> file_paths)
     AdwToast * toast = adw_toast_new("Access to files needs to be granted");
     adw_toast_set_timeout(toast, 15);
     adw_toast_set_button_label(toast, "Give access");
+    adw_toast_set_priority(toast, ADW_TOAST_PRIORITY_HIGH);
     adw_toast_set_action_name(toast, "app.grant_access_dnd");
+    
+    g_signal_connect(toast, "dismissed",
+        G_CALLBACK(+[](AdwToast *, gpointer data)
+            {
+                auto self = static_cast<MainWindow *>(data);
+                self -> video_queue.add_video("");
+                self -> video_queue.signal_loading_videos(false);
+            }), this);
+    
     adw_toast_overlay_add_toast(toast_overlay, toast);
 }
 
