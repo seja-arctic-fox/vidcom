@@ -54,7 +54,6 @@ RunnerPanel::RunnerPanel()
     EncodingProgressBar.set_size_request(200);
     EncodingProgressBar.set_show_text(false);
     EncodingProgressBar.set_valign(Gtk::Align::CENTER);
-    EncodingProgressBar.set_text("Nothing to do...");
     EncodingProgressBar.add_css_class("monospace");
     EncodingProgressBar.set_fraction(0);
     EncodingProgressBar.set_ellipsize(Pango::EllipsizeMode::MIDDLE);
@@ -104,7 +103,6 @@ void RunnerPanel::update_loading_progress(int video_index, int video_count)
 {
     float i = video_index;
     EncodingProgressBar.set_fraction(i / video_count);
-    EncodingProgressBar.set_text("Loading videos: " + to_string(video_index) + " / " + to_string(video_count));
 }
 
 void RunnerPanel::set_loading_state(bool is_loading)
@@ -120,7 +118,6 @@ void RunnerPanel::set_loading_state(bool is_loading)
         update_status("Ready", "success");
         block_encoding_button(false);
         EncodingIconStatus.set_from_icon_name("selection-mode-symbolic");
-        EncodingProgressBar.set_text("Nothing to do...");
         request_button_unblock = false;
     }
     else
@@ -148,10 +145,7 @@ void RunnerPanel::update_encoding_progress(const EncodingProgress& progress)
     double fraction = (progress.current_index - 1.0) / progress.total_count;
     fraction += (progress.progress_percent / 100.0) / progress.total_count;
     if (fraction > 1) fraction = 1;
-    int percentage = fraction * 100;
-    
     EncodingProgressBar.set_fraction(fraction);
-    EncodingProgressBar.set_text(progress.video_name + " ( " + to_string(percentage) + "% )");
     EncodingTextStatus.set_markup("<b>Encoding... " + to_string(progress.current_index) + "/" + to_string(progress.total_count) + "</b>");
 }
 
@@ -189,7 +183,6 @@ void RunnerPanel::set_encoding_state(bool is_encoding)
         EncodingTextStatus.add_css_class("success");
         EncodingTextStatus.set_markup("<b>Ready</b>");
 
-        EncodingProgressBar.set_text("Nothing to do...");
         EncodingProgressBar.set_fraction(0.0);
     }
 }
