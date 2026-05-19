@@ -30,6 +30,7 @@
 #include <mutex>
 #include <vector>
 #include "../../video/video.h"
+#include "sigc++/connection.h"
 #include "sigc++/signal.h"
 #include "widgets.h"
 
@@ -184,6 +185,7 @@ class QueueFrame : public Gtk::Box
 
         // Drag and drop
         Glib::RefPtr<Gtk::DropTarget> drag_and_drop_target;
+        sigc::connection idle_handler;
 
         // Metody
         void on_clear_clicked();
