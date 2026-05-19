@@ -256,9 +256,13 @@ void MainWindow::file_picker_grant_access(std::vector<std::string> file_paths)
     file_picker -> set_title("Give access to this folder");
     file_picker -> set_accept_label("Give access");
     file_picker -> set_modal();
-
-    auto initial_folder = Gio::File::create_for_path(fs::path(file_paths[0]).parent_path().string());
-    file_picker -> set_initial_folder(initial_folder);
+    
+    auto file = Gio::File::create_for_path(file_paths[0]);
+    auto initial_folder = file -> get_parent();
+    if (initial_folder)
+        file_picker -> set_initial_folder(initial_folder);
+    else
+        file_picker -> set_initial_file(Gio::File::create_for_path(Glib::get_home_dir()));
     
     file_picker -> select_folder(*this, [this, file_picker, file_paths](Glib::RefPtr<Gio::AsyncResult>& result)
     {
