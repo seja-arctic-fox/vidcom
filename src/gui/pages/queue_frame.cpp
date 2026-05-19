@@ -296,7 +296,10 @@ bool QueueFrame::on_drop(const Glib::ValueBase& value, double, double)
     // Musím použít idle handler, protože jinak mi to nešlo
     // Akce puštění souboru totiž blokovala všechny signály, dokud se nedokončila
     // Videa se zpracovávají po jednom. Když se vrátí true, idle handler se vykoná znovu
-    Glib::signal_idle().connect([this, state]() -> bool
+    if (idle_handler.connected())
+        idle_handler.disconnect();
+    
+    idle_handler = Glib::signal_idle().connect([this, state]() -> bool
     {
         size_t& i = state->second;
         auto& paths = state->first;
