@@ -265,7 +265,7 @@ void MainWindow::file_picker_grant_access(std::vector<std::string> file_paths)
 {
     // Pro každou složku zobrazit FileChooser
     auto file_picker = Gtk::FileDialog::create();
-    file_picker -> set_title("Give access to this folder");
+    file_picker -> set_title("Give access to the folder containing your video(s)");
     file_picker -> set_accept_label("Give access");
     file_picker -> set_modal();
     
@@ -274,7 +274,7 @@ void MainWindow::file_picker_grant_access(std::vector<std::string> file_paths)
     if (initial_folder)
         file_picker -> set_initial_folder(initial_folder);
     else
-        file_picker -> set_initial_file(Gio::File::create_for_path(Glib::get_home_dir()));
+        file_picker -> set_initial_folder(Gio::File::create_for_path(Glib::get_home_dir()));
     
     file_picker -> select_folder(*this, [this, file_picker, file_paths](Glib::RefPtr<Gio::AsyncResult>& result)
     {
