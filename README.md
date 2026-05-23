@@ -1,6 +1,6 @@
 # VidCom
 
-VidCom (short for Video Compression) is a simple utility for compressing video. It offers both GUI and CLI interface and utilises `ffmpeg` for the video encoding. 
+VidCom (short for Video Compression) is a simple utility for archiving videos. It offers both GUI and CLI interface and utilises `ffmpeg` for the video encoding. 
 
 For screenshots and basic information, visit the [project website](https://seja-arctic-fox.github.io). 
 
@@ -10,7 +10,7 @@ VidCom features two modes; **Archive mode** and **Compress mode**:
 
 - **Compress mode** compresses a video to a specified target size. 
 
-There are also other options for quick setup, such as reducing resolution and frame rate, choosing an output directory and a trimming function. More advanced users (and anyone else) can set the codec used for encoding and tweak some parameters of chosen codec to trade time for better compression and vice versa. 
+There are also other options for quick setup, such as reducing resolution and frame rate, choosing an output directory and a trimming function. More advanced users can set the codec used for encoding and tweak some parameters of chosen codec to trade time for better compression and vice versa. 
 
 You can process as many videos as you want by adding them to a queue (GUI) or specifying their paths in the command (CLI). 
 
@@ -56,8 +56,10 @@ yay -S vidcom
 #### Flatpak
 You can get VidCom on [Flathub](https://flathub.org/en/apps/io.github.seja_arctic_fox.vidcom)
 
+Beta versions are also avaiable during development. You can test them by adding the `flathub-beta` repository and installing the app from there. 
+
 #### Building
-1. Install dependencies: `meson`, `ffmpeg`, `gtk4`, `libadwaita` and `jsoncpp`. Alternatively change `gtk4` for `gtkmm-4.0`. For example on Arch Linux: 
+1. Install dependencies: `meson`, `ffmpeg`, `gtk4`, `gtkmm-4.0`, `libadwaita` and `jsoncpp`. For example on Arch Linux: 
 
 ```bash
 pacman -S meson ffmpeg gtk4 libadwaita jsoncpp
@@ -96,36 +98,33 @@ I will make a Windows build only if it is not unecessary hard to do so.
 
 ## Conclusion
 
-Of course this app is not perfect and definitely can be improved. Still, I hope you will find it useful, at least a little! :D 
+I will continue to maintain this project/add new features as new codecs become avaiable. 
 
-I will continue to maintain this project/add new features as new codecs become avaiable, but I might be slow to implement them. 
+There's still a lot of improvements/changes to be made. The app will probably be restructured as it moves towards 1.0 release. The ultimate goal is to join the **GNOME Circle**. 
 
 If you have a suggestion or you found a bug, feel free to report it in the [Issues](https://github.com/seja-arctic-fox/vidcom/issues) page. Check the list below or the issues to see if it has been reported before. 
 
 I will update the lists below from time to time;
 
 ### Planned features / suggestions
-- [ ] Bring the app to
-	- [X] Flatpak
-	- [X] AUR
-	
-	~~- Make a AppImage~~
-	- [ ] winget?
 - [ ] At least try to make a Windows build
 - [ ] Implement translations (or ability to translate the app)
-- [ ] About window/section
-- [x] Notify when the encoding finishes? (maybe don't focus the window then)
+- [x] About window/section
 - [ ] Add an ability to change default configuration/settings. save the configs in a file
-- [ ] Make the queue hide when shrinking the Window + adding a button to hide the shrink/expand the queue
-- [x] Don't regenerate thumbnails when they already exist
+- [x] Change the current paned window split into the typical Adwaita side panel for queue and the main page
+- [x] "No video selected" page for the settings page
+- [x] Copy subtitles automatically when they are present in the original video
+- [ ] Be able to select multiple videos manually, not be limited to just selecting single or all the videos (when holding Shift or other key)
+- [x] Make the runner (in the header bar) slimmer and simpler
+- [x] Show state of loading/encoding in the settings page space
+
+~~- Highlight the currently encoding video in the queue~~
+
+- [ ] Copy settings from one video to another with right click/shortcut/button
+- [ ] Keyboard shortcuts
 
 ### Known Issues
-- [ ] Box for widgets in the "Cut Feature" section is rigid, the plan is to make a flex box that behaves normally. Currently, it blocks the window from resizing
-- [x] The app doesn't show any status change when importing videos. When importing more videos at the same time, the app will appear non-active. It should show a "Loading" status at the top at least
-- [x] CLI doesn't create a newline after finishing encoding (regression)
-- [x] The description of present when HEVC codec is selected is wrong, it should be the other way around
-- [x] The batch editing does not work for video codec parameters. Either block the usage of this section or (preferably) implement a fix. Maybe block it if all the videos are not set to the same codec
-- [x] Problem with the "Open video" pill button on the "results" page; sometimes it does not open a video at all. The problem may be trivial (wrong path supplied) and should be fixed easily. 
-- [x] The app crashes when it attempts to write files/folders to a restricted location. It should notify the user  
+- [ ] Cut feature - change spinbuttons for something more manageable, specifically for time setting + make it less rigid
+- [ ] The button in the results page is not visible when more results are displayed (it's on the bottom), which might be confusing
 
 This project follows [GNOME's Code of Conduct](https://conduct.gnome.org/).

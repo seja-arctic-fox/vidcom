@@ -12,13 +12,23 @@
 
 // Konstruktor
 Video::Video(string input_path)
-:   cancelling_encoding(false)
+:   
+    prefix("C"),
+    eCodec(AV1),
+    downscaleFactor(1),
+    Compress(false),
+    TwoPass(false), 
+    EnableCut(false),
+    cancelling_encoding(false)
 {
     // Načtení informací o vstupním videu
     set_video_info(input_path);
 
     // Nastavení výchozích možností
-    set_default_output_settings();
+    set_output_framerate(inputVideo.framerate);
+    set_bitrate_by_size(10);
+    set_cut(0, inputVideo.duration);
+    set_output_path(fs::path(getenv("HOME")) / fs::path(".var/app/io.github.seja_arctic_fox.vidcom/"));
 }
 
 // Destruktor
@@ -60,6 +70,7 @@ void Video::get_video_info_from_json(Json::Value data)
 
     Json::Value video_stream;
     bool video_stream_found = false;
+    int num_video_streams = 0;
 
     // Najdu první video proud v seznamu
     for (int i = 0; i < N; i++)
@@ -67,9 +78,24 @@ void Video::get_video_info_from_json(Json::Value data)
         Json::Value stream_data = data["streams"][i];
         if (stream_data["codec_type"] == "video")
         {
-            video_stream = stream_data;
-            video_stream_found = true;
-            break;
+            if (!video_stream_found)
+            {
+                video_stream = stream_data;
+                video_stream_found = true;
+            }
+            
+            num_video_streams++;
+        }
+        
+        if (stream_data["codec_type"] == "subtitle")
+        {
+            auto subtitle_codec = stream_data["codec_name"];
+            bool subtitles_compatible = subtitle_codec == "subrip" ||
+                                        subtitle_codec == "webvtt" ||
+                                        subtitle_codec == "text"   ||
+                                        subtitle_codec == "mov_text";
+            
+            if (!subtitles_compatible) { inputVideo.use_matroska = true; }
         }
     }
 
@@ -86,6 +112,13 @@ void Video::get_video_info_from_json(Json::Value data)
     inputVideo.resolution.width = get_int_from_json(video_stream, "width");
     inputVideo.resolution.height = get_int_from_json(video_stream, "height");
     validate_video_info();
+    
+    if (num_video_streams > 1) 
+    {
+        inputVideo.use_matroska = true; 
+        inputVideo.multiple_video_streams = true; 
+        cout << YELLOW << "WARNING: Multiple video streams detected!" << RESET << endl;
+    }
 
     return;
 }

@@ -1,7 +1,7 @@
 project(
   'vidcom-gui',
   'cpp',
-  version : '0.81',
+  version : '0.82',
   meson_version : '>= 1.3.0',
   default_options : ['warning_level=3', 'cpp_std=c++20'],
 )
@@ -20,14 +20,26 @@ dependencies = [
 
 gui = [
   './src/gui/gui.cpp',
-  './src/gui/queue_element.cpp',
-  './src/gui/queue_frame.cpp',
-  './src/gui/runner_title_bar.cpp',
-  './src/gui/settings_page.cpp',
-  './src/gui/av1_page.cpp',
-  './src/gui/hevc_page.cpp',
-  './src/gui/vp9_page.cpp',
-  './src/gui/results_dialog.cpp'
+  './src/gui/widgets/queue_element.cpp',
+  './src/gui/pages/queue_frame.cpp',
+  './src/gui/widgets/runner_title_bar.cpp',
+  './src/gui/pages/settings_page.cpp',
+  './src/gui/pages/codec_page.cpp',
+  './src/gui/pages/av1_page.cpp',
+  './src/gui/pages/hevc_page.cpp',
+  './src/gui/pages/vp9_page.cpp',
+  './src/gui/pages/results_page.cpp',
+  './src/gui/widgets/result_row.cpp',
+  './src/gui/widgets/time_setter.cpp',
+  './src/gui/widgets/cut_widget.cpp',
+  './src/gui/widgets/option_row.cpp',
+  './src/gui/widgets/switch_row.cpp',
+  './src/gui/widgets/option_list_box.cpp',
+  './src/gui/widgets/option_heading.cpp',
+  './src/gui/widgets/button_row.cpp',
+  './src/gui/widgets/radio_button_row.cpp',
+  './src/gui/widgets/spin_button_row.cpp',
+  './src/gui/widgets/field_row.cpp'
 ]
 
 video = [
