@@ -122,6 +122,10 @@ I will update the lists below from time to time;
 
 - [ ] Copy settings from one video to another with right click/shortcut/button
 - [ ] Keyboard shortcuts
+- [ ] "Open With" function/binding for VidCom
+- [ ] Replace popups with visible messages inside window and/or notification
+- [ ] Different behavior for cases when the output videos already exist - show conflicts
+- [ ] Better TAB behavior + accelerators
 
 ### Known Issues
 - [ ] Cut feature - change spinbuttons for something more manageable, specifically for time setting + make it less rigid
