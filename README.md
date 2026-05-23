@@ -1,6 +1,6 @@
 # VidCom
 
-VidCom (short for Video Compression) is a simple utility for compressing video. It offers both GUI and CLI interface and utilises `ffmpeg` for the video encoding. 
+VidCom (short for Video Compression) is a simple utility for archiving videos. It offers both GUI and CLI interface and utilises `ffmpeg` for the video encoding. 
 
 For screenshots and basic information, visit the [project website](https://seja-arctic-fox.github.io). 
 
@@ -10,7 +10,7 @@ VidCom features two modes; **Archive mode** and **Compress mode**:
 
 - **Compress mode** compresses a video to a specified target size. 
 
-There are also other options for quick setup, such as reducing resolution and frame rate, choosing an output directory and a trimming function. More advanced users (and anyone else) can set the codec used for encoding and tweak some parameters of chosen codec to trade time for better compression and vice versa. 
+There are also other options for quick setup, such as reducing resolution and frame rate, choosing an output directory and a trimming function. More advanced users can set the codec used for encoding and tweak some parameters of chosen codec to trade time for better compression and vice versa. 
 
 You can process as many videos as you want by adding them to a queue (GUI) or specifying their paths in the command (CLI). 
 
@@ -56,8 +56,10 @@ yay -S vidcom
 #### Flatpak
 You can get VidCom on [Flathub](https://flathub.org/en/apps/io.github.seja_arctic_fox.vidcom)
 
+Beta versions are also avaiable during development. You can test them by adding the `flathub-beta` repository and installing the app from there. 
+
 #### Building
-1. Install dependencies: `meson`, `ffmpeg`, `gtk4`, `libadwaita` and `jsoncpp`. Alternatively change `gtk4` for `gtkmm-4.0`. For example on Arch Linux: 
+1. Install dependencies: `meson`, `ffmpeg`, `gtk4`, `gtkmm-4.0`, `libadwaita` and `jsoncpp`. For example on Arch Linux: 
 
 ```bash
 pacman -S meson ffmpeg gtk4 libadwaita jsoncpp
@@ -107,15 +109,17 @@ I will update the lists below from time to time;
 ### Planned features / suggestions
 - [ ] At least try to make a Windows build
 - [ ] Implement translations (or ability to translate the app)
-- [ ] About window/section
+- [x] About window/section
 - [ ] Add an ability to change default configuration/settings. save the configs in a file
-- [ ] Change the current paned window split into the typical Adwaita side panel for queue and the main page
-- [ ] "No video selected" placeholder for the settings page
-- [ ] Copy subtitles automatically when they are present in the original video
+- [x] Change the current paned window split into the typical Adwaita side panel for queue and the main page
+- [x] "No video selected" page for the settings page
+- [x] Copy subtitles automatically when they are present in the original video
 - [ ] Be able to select multiple videos manually, not be limited to just selecting single or all the videos (when holding Shift or other key)
-- [ ] Make the runner (in the header bar) slimmer and simpler
-- [ ] Show state of loading/encoding in the settings page space
-- [ ] Highlight the currently encoding video in the queue
+- [x] Make the runner (in the header bar) slimmer and simpler
+- [x] Show state of loading/encoding in the settings page space
+
+~~- Highlight the currently encoding video in the queue~~
+
 - [ ] Copy settings from one video to another with right click/shortcut/button
 - [ ] Keyboard shortcuts
 - [ ] "Open With" function/binding for VidCom

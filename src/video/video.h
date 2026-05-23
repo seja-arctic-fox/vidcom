@@ -69,6 +69,8 @@ struct VideoInfo // informace u vstupním videu
         Resolution resolution;  // rozlišení v pixelech
         unsigned int framerate; // snímková frekvence
         fs::path path;          // cesta k vstupnímu souboru
+        bool use_matroska = false;              // Výchozí kontejner je MP4, v určitých případech bude však lepší MKV
+        bool multiple_video_streams = false;    // true, pokud je ve videu více video streamů
     };
 
 struct Cut // informace o střihu
@@ -104,7 +106,6 @@ class Video
 
         // Metody
         void set_video_info(string input_path);                                         // načte informace o vstupním videu
-        void set_default_output_settings();                                             // nastaví výstupní parametry podle vstupních a přiřadí výchozí hodnoty k proměnným
         string read_video_info(string input_path);                                      // přečte soubor a načte údaje
         void get_video_info_from_json(Json::Value data);                                // vytáhne z json dataframu potřebné údaje
         float get_duration_from_json(Json::Value data, Json::Value video_stream);       // přečte délku videa. Používá tři způsoby
@@ -155,7 +156,8 @@ class Video
         void set_codec(enum Codec codec);                  // nastavit kodek
         void set_cut(float start_time, float end_time);    // nastaví upravený začátek a konec videa
         void set_downscale_factor(float downscale_factor); // nastaví faktor zmenšení
-
+        void set_default_output_settings();                                             // nastaví výstupní parametry podle vstupních a přiřadí výchozí hodnoty k proměnným
+        
         void set_compress(bool compress);                   // nastvit režim
         void set_two_pass(bool two_pass);                   // povolit/zakázat dvouprůchodové kódování
         void enable_cut(bool cut);                          // povolit/zakázat střih
