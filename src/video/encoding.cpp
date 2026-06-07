@@ -297,6 +297,7 @@ string Video::make_options()
     
     // Titulky
     if (!inputVideo.use_matroska) { command_params += "-c:s mov_text "; }
+    else                          { command_params += "-c:s copy "; }
 
     // Nastavení střihu
     if (EnableCut)
