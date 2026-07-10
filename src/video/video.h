@@ -133,6 +133,8 @@ class Video
         struct AV1_options AV1_options;
         struct HEVC_options HEVC_options;
         struct VP9_options VP9_options;
+        
+        string last_error_message = "";
 
         // gettery a settery
         VideoInfo get_video_info();             // vrátí strukturu s informacemi o videu
