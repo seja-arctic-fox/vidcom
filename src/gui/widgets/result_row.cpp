@@ -1,12 +1,18 @@
+#include "gtkmm/button.h"
 #include "gtkmm/enums.h"
 #include "../headers/gui.h"
 #include "../../cli/cli.h"
+#include "gtkmm/label.h"
+#include "gtkmm/object.h"
+#include "gtkmm/popover.h"
 #include <iostream>
+#include <locale>
 
-ResultRow::ResultRow(fs::path video_path, int status)
+ResultRow::ResultRow(fs::path video_path, int status, string error_msg)
 :   
     video_path(video_path),
     status(status),
+    error_msg(error_msg),
     video_name(video_path.filename().string()),
     output_folder_button("Show output folder"),
     box_right(Gtk::Orientation::HORIZONTAL)
@@ -64,11 +70,11 @@ void ResultRow::set_status()
             break;
             
         case -1:
-            status_icon.add_css_class("warning");
-            status_text.add_css_class("warning");
+            status_icon.add_css_class("error");
+            status_text.add_css_class("error");
     
             status_icon.set_from_icon_name("dialog-warning-symbolic");
-            status_text.set_markup("<b>Cancelled</b>");
+            status_text.set_markup("<b>Unexpected error</b>");
             
             break;
             
@@ -87,7 +93,17 @@ void ResultRow::set_status()
     
             status_icon.set_from_icon_name("process-stop-symbolic");
             status_text.set_markup("<b>Error: Code " + to_string(status) + "</b>");
-            
+            auto error_trigger = Gtk::make_managed<Gtk::Button>();
+            auto error_popover = std::make_shared<Gtk::Popover>();
+            auto error_label = Gtk::make_managed<Gtk::Label>();
+            error_label -> set_markup(error_msg);
+            error_label -> add_css_class("monospace");
+            error_trigger -> set_icon_name("help-about-symbolic");
+            error_trigger -> add_css_class("flat");
+            error_popover -> set_child(*error_label);
+            error_popover -> set_parent(*error_trigger);
+            error_trigger -> signal_clicked().connect([=](){ error_popover -> popup(); });
+            box_right.prepend(*error_trigger);
             break;
     }
 }

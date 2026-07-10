@@ -353,6 +353,7 @@ void MainWindow::encoding_worker()
         result.video_path = video -> get_output_path();
         result.exit_status = exit_code;
         result.was_cancelled = (exit_code == -2);
+        result.error_msg = video -> last_error_message;
 
         {
             std::lock_guard<std::mutex> lock(encoding_mutex);
