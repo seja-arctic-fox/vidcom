@@ -230,7 +230,6 @@ int Video::encode(fs::path output_path, string command, ProgressCallback progres
     int exit_status = WIFEXITED(child_status) ? WEXITSTATUS(child_status) : -1;
     
     if (exit_status != 0) this -> last_error_message = error_msg;
-    cout << this -> last_error_message << endl;
 
     // Obnovit přechozí SIGINT akci
     sigaction(SIGINT, &old_sa, nullptr);

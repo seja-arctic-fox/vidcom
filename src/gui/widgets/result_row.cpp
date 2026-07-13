@@ -5,8 +5,8 @@
 #include "gtkmm/label.h"
 #include "gtkmm/object.h"
 #include "gtkmm/popover.h"
+#include "gtkmm/scrolledwindow.h"
 #include <iostream>
-#include <locale>
 
 ResultRow::ResultRow(fs::path video_path, int status, string error_msg)
 :   
@@ -90,19 +90,21 @@ void ResultRow::set_status()
         default:
             status_icon.add_css_class("error");
             status_text.add_css_class("error");
-    
             status_icon.set_from_icon_name("process-stop-symbolic");
             status_text.set_markup("<b>Error: Code " + to_string(status) + "</b>");
-            auto error_trigger = Gtk::make_managed<Gtk::Button>();
+            
+            auto error_trigger = Gtk::make_managed<Gtk::MenuButton>();
             auto error_popover = std::make_shared<Gtk::Popover>();
             auto error_label = Gtk::make_managed<Gtk::Label>();
-            error_label -> set_markup(error_msg);
+            auto error_scrolled = Gtk::make_managed<Gtk::ScrolledWindow>();
+            error_scrolled -> set_size_request(960, 540);
+            error_label -> set_text(error_msg);
             error_label -> add_css_class("monospace");
+            error_scrolled -> set_child(*error_label);
+            error_popover -> set_child(*error_scrolled);
             error_trigger -> set_icon_name("help-about-symbolic");
             error_trigger -> add_css_class("flat");
-            error_popover -> set_child(*error_label);
-            error_popover -> set_parent(*error_trigger);
-            error_trigger -> signal_clicked().connect([=](){ error_popover -> popup(); });
+            error_trigger -> set_popover(*error_popover);
             box_right.prepend(*error_trigger);
             break;
     }
