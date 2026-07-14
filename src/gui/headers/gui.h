@@ -440,6 +440,7 @@ class MainWindow : public Gtk::Window
         EncodingProgress current_progress;
         std::vector<EncodingResult> encoding_results;
         bool queue_lock = false;
+        guint inhibition_cookie = 0;
 
         // Kódování
         void start_encoding();
