@@ -164,7 +164,7 @@ class Video
         void set_two_pass(bool two_pass);                   // povolit/zakázat dvouprůchodové kódování
         void enable_cut(bool cut);                          // povolit/zakázat střih
 
-        int encode(fs::path output_path = "", string command = "", ProgressCallback progress_callback = nullptr); // metoda pro spuštění kódování
+        int encode(fs::path output_path = "", ProgressCallback progress_callback = nullptr); // metoda pro spuštění kódování
         void cancel_encoding();
         static void sigint_handler(int signum);
 

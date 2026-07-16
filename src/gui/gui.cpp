@@ -331,7 +331,7 @@ void MainWindow::encoding_worker()
         };
 
         video -> test_commands();
-        int exit_code = video -> encode("", "", progress_callback);
+        int exit_code = video -> encode("", progress_callback);
         
         if (exit_code == -3)
         {

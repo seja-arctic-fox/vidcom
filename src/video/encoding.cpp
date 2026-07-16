@@ -32,7 +32,7 @@ void Video::sigint_handler(int)
     }
 }
 
-int Video::encode(fs::path output_path, string command, ProgressCallback progress_callback)
+int Video::encode(fs::path output_path, ProgressCallback progress_callback)
 {
     cancelling_encoding.store(false);
     encoding_pid = -1;
