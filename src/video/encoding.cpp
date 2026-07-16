@@ -37,15 +37,16 @@ int Video::encode(fs::path output_path, ProgressCallback progress_callback)
     cancelling_encoding.store(false);
     encoding_pid = -1;
     float duration;
+    vector<string> command = make_options();
+    vector<const char *> argv = {"ffmpeg"};
+    
+    for (const auto& arg : command)
+        argv.push_back(arg.c_str());
+    argv.push_back(nullptr);
 
     if (output_path == "")
     {
         output_path = outputPath;
-    }
-
-    if (command == "")
-    {
-        command = make_options();
     }
 
     // vytvořit výstupní složku
@@ -84,8 +85,6 @@ int Video::encode(fs::path output_path, ProgressCallback progress_callback)
         return -1;
     }
 
-    const char* argv[] = { "sh", "-c", command.c_str(), nullptr };
-
     // Přesměrování výstupu na pipe_fds[1]
     posix_spawn_file_actions_t file_actions;
     posix_spawn_file_actions_init(&file_actions);
@@ -118,7 +117,7 @@ int Video::encode(fs::path output_path, ProgressCallback progress_callback)
     posix_spawnattr_setpgroup(&attr, 0);
 
     // Vytvořit proces
-    int spawn_result = posix_spawn(&encoding_pid, "/bin/sh", &file_actions, &attr, const_cast<char* const*>(argv), nullptr);
+    int spawn_result = posix_spawnp(&encoding_pid, "ffmpeg", &file_actions, &attr, const_cast<char* const*>(argv.data()), nullptr);
     posix_spawnattr_destroy(&attr);
     posix_spawn_file_actions_destroy(&file_actions);
 
@@ -285,26 +284,34 @@ void Video::cancel_encoding()
     cancelling_encoding.store(true);
 }
 
-string Video::make_options()
+vector<string> Video::make_options()
 {
-    string command = "";        // Konečný příkaz
+    // Konečný příkaz
+    vector<string> command;
 
-    string command_prefix = "-v 16 -y -progress pipe:1 -stats_period 0.1 ";                                                              // Základní nastavení ffmpegu
-    string command_input = "-i '" + inputVideo.path.generic_string() + "' -map 0:v -map 0:a? -map 0:s? ";                                                            // Vstupní soubor
-    string command_output = "'" + outputPath.generic_string() + "'";   // Výstupní soubor                                                                                                              // Nastavení použití NVENC
-    string command_params = "";                                                                                                                // Nastavení bitratu a velikosti při kompresi
-    string command_codec;                                                                                                               // Nastavení použitého kodeku
+    // Základní nastavení ffmpegu
+    vector<string> command_prefix = 
+        {"-v", "16", "-y", "-progress", "pipe:1", "-stats_period", "0.1"};
+    // Vstupní soubor
+    vector<string> command_input = 
+        {"-i", inputVideo.path.string(), "-map", "0:v", "-map", "0:a?", "-map", "0:s?"};
+    // Výstupní soubor
+    vector<string> command_output = {outputPath.string()};
+    // Nastavení bitratu a velikosti při kompresi
+    vector<string> command_params;
+    // Nastavení použitého kodeku
+    vector<string> command_codec;
 
     // Nastavení limitu bitratu, menšího rozlišení a snímkové frekvence v případě komprese
     if (Compress)
     {
-        command_params = "-fs " + format("{}", targetSize) + "M -b:v " + format("{}", bitrate) + "M ";
+        command_params = 
+            {"-fs", format("{}", targetSize) + "M", "-b:v", format("{}", bitrate) + "M"};
 
         // Pro použití v tomto programu SVT_AV1 nepřijímá nastavení maximálního bitratu
         if (eCodec != AV1)
-        {
-            command_params += "-maxrate " + format("{}", maxBitrate) + "M ";
-        }
+            command_params.insert(command_params.end(), 
+                {"-maxrate", format("{}", maxBitrate) + "M"});
 
         // Zmenšování rozlišení
         if (downscaleFactor != 1)
@@ -312,27 +319,33 @@ string Video::make_options()
             int new_x = inputVideo.resolution.width / downscaleFactor;
             int new_y = inputVideo.resolution.height / downscaleFactor;
 
-            command_params += "-s " + to_string(new_x) + "x" + to_string(new_y) + " ";
+            command_params.insert(command_params.end(), 
+                {"-s", to_string(new_x) + "x" + to_string(new_y)});
         }
 
         // Snížení fps
         if (outputFPS != inputVideo.framerate)
-        {
-            command_params += "-r " + to_string(outputFPS) + " ";
-        }
+            command_params.insert(command_params.end(), 
+                {"-r", to_string(outputFPS)});
     }
     
     // Titulky
-    if (!inputVideo.use_matroska) { command_params += "-c:s mov_text "; }
-    else                          { command_params += "-c:s copy "; }
+    if (!inputVideo.use_matroska) 
+        command_params.insert(command_params.end(), 
+            {"-c:s", "mov_text"});
+    else
+        command_params.insert(command_params.end(), 
+            {"-c:s", "copy"});
 
     // Nastavení střihu
     if (EnableCut)
     {
         float video_duration = cut.endTime - cut.startTime;
         
-        command_params += "-t " + format("{}", video_duration) + " ";
-        command_input = "-ss " + format("{}", cut.startTime) + " " + command_input;
+        command_params.insert(command_params.end(), 
+            {"-t", format("{}", video_duration)});
+        command_input.insert(command_input.begin(), 
+            {"-ss", format("{}", cut.startTime)});
     }
     
     if (eCodec == AV1)
@@ -353,167 +366,158 @@ string Video::make_options()
     // NVENC varianty mají implementaci dvou průchodů jinak
 
     if (TwoPass && eCodec != AV1)
-    {
-        command =   "ffmpeg " + command_prefix + command_input + command_params + command_codec + "-pass 1 -an -f null /dev/null; "
-                    +"ffmpeg " + command_prefix + command_input + command_params + command_codec + "-pass 2 " + command_output;
-    }
+    {}
+    // Will be implemented later. VidCom GUI doesn't even use two-pass now
+    // {
+    //     command =   "ffmpeg " + command_prefix + command_input + command_params + command_codec + "-pass 1 -an -f null /dev/null; "
+    //                 +"ffmpeg " + command_prefix + command_input + command_params + command_codec + "-pass 2 " + command_output;
+    // }
     else
     {
-        command = "ffmpeg " + command_prefix + command_input + command_params + command_codec + command_output;
+        command = command_prefix;
+        command.insert(command.end(), command_input.begin(), command_input.end());
+        command.insert(command.end(), command_params.begin(), command_params.end());
+        command.insert(command.end(), command_codec.begin(), command_codec.end());
+        command.insert(command.end(), command_output.begin(), command_output.end());
     }
     return command;
 }
 
-string Video::encode_AV1()
+vector<string> Video::encode_AV1()
 {
-    string command_codec;
+    vector<string> command_codec;
+    string params;
 
     // U komprimace se nastaví základnější profil, u archivace parametr kvality
     // Při komprimaci zmenšujeme i zvuk pomocí Opus kodeku, při archivaci kopírujeme původní zvuk 
     if (Compress)
-    {
-        command_codec += "-profile main ";
-        command_codec += "-c:a libopus ";
-    } 
-    else {
-        command_codec += "-crf " + to_string(AV1_options.crf) + " ";
-        command_codec += "-c:a aac -q:a 1 ";
-    }
+        command_codec.insert(command_codec.end(), 
+            {"-profile", "main", "-c:a", "libopus"});
+    else
+        command_codec.insert(command_codec.end(), 
+            {"-crf", to_string(AV1_options.crf), "-c:a", "aac", "-q:a", "1"});
 
     // Nastavit preset, na který se bude kódovat a začít parametry kodeku
-    command_codec += "-preset " + to_string(AV1_options.preset) + 
-                    " -c:v libsvtav1" + 
-                     " -svtav1-params ";
+    command_codec.insert(command_codec.end(), 
+        {"-c:v", "libsvtav1", "-preset", to_string(AV1_options.preset), "-svtav1-params"}
+    );
 
     // Syntéza šumu
     if (AV1_options.film_grain_synthesis)
     {
-        command_codec += "film-grain-denoise=1:";
-        command_codec += "film-grain=" + to_string(AV1_options.film_grain_level) + ":";
+        params += "film-grain-denoise=1:";
+        params += "film-grain=" + to_string(AV1_options.film_grain_level) + ":";
     }
 
     // tune=0 je lepší pro lidské oko, tune=1 pro strojovou přesnost
     if (AV1_options.psychovisual_tuning)
-    {
-        command_codec += "tune=0:";
-    }
-    else {
-        command_codec += "tune=1:";
-    }
+        params += "tune=0:";
+    else
+        params += "tune=1:";
 
     // Vrstvené snímky s přesnějšími detaily
     if (AV1_options.better_details)
-    {
-        command_codec += "enable_overlays=1:";
-    }
-    else {
-        command_codec += "enable_overlays=0:";
-    }
+        params += "enable_overlays=1:";
+    else
+        params += "enable_overlays=0:";
 
     // Adaptivní zvýšení bitratu pro lepší kvalitu
     if (AV1_options.variance_boost)
-    {
-        command_codec += "enable-variance-boost=1:variance-boost-strength=3:";
-    }
+        params += "enable-variance-boost=1:variance-boost-strength=3:";
 
     // Pro komprimaci zapnout režim variable bitrate
     if (Compress)
-    {
-        command_codec += "rc=1:";
-    }
+        params += "rc=1:";
 
     // Další možnosti, jako kvantizační matice, přechody mezi scénami, referenční snímky a rychlejší dekódování
     // 10-bitový formát pixelů je doporučovaný pro přesnost barev a dobře přehratelný
-    command_codec += "enable-qm=1:scm=2:lp=60:tile-columns=1:fast-decode=2 -pix_fmt yuv420p10le ";
+    params += "enable-qm=1:scm=2:lp=60:tile-columns=1:fast-decode=2 -pix_fmt yuv420p10le";
 
+    command_codec.insert(command_codec.end(), {params});
     return command_codec;
 }
 
-string Video::encode_HEVC()
+vector<string> Video::encode_HEVC()
 {
-    string command_codec;
+    vector<string> command_codec;
+    string params;
 
     // U komprimace se nastaví základnější profil, u archivace parametr kvality
     // Při komprimaci zmenšujeme i zvuk pomocí Opus kodeku, při archivaci kopírujeme původní zvuk 
     if (Compress)
-    {
-        command_codec += "-profile main -pix_fmt yuv420p ";
-        command_codec += "-c:a libopus ";
-        
-    } 
-    else {
-        command_codec += "-crf " + to_string(HEVC_options.crf) + " ";
-        command_codec += "-c:a aac -q:a 1 ";
-    }
+        command_codec.insert(command_codec.end(), 
+            {"-profile", "main", "-pix_fmt", "yuv420p", "-c:a", "libopus"});
+    else
+        command_codec.insert(command_codec.end(), 
+            {"-crf", to_string(HEVC_options.crf), "-c:a", "aac", "-q:a", "1"});
 
     // Nastavit preset, na který se bude kódovat a začít parametry kodeku
-    command_codec += "-preset " + to_string(HEVC_options.preset) + 
-                    " -c:v libx265" + 
-                     " -x265-params ";
+    command_codec.insert(command_codec.end(), 
+        {"-preset", to_string(HEVC_options.preset), "-c:v", "libx265", "-x265-params"});
 
     // Psycho-vizuální ladění. Možný nárůst bitratu
     // Dosáhne vyšší kvality pro lidské oko, ale sníží přesnost
     if (HEVC_options.psychovisual_tuning)
     {
-        command_codec += "rdoq-level=2:psy-rd=2.5:psy-rdoq=4.0:";
+        params += "rdoq-level=2:psy-rd=2.5:psy-rdoq=4.0:";
     }
     else {
-        command_codec += "rdoq-level=1:";
+        params += "rdoq-level=1:";
     }
 
     // Motion estimation - vyhledávání pohybových vektorů
     if (HEVC_options.motion_estimation)
     {
-        command_codec += "me=3:merange=100:";
+        params += "me=3:merange=100:";
     }
 
     // Adaptivní kvantizace s pokročilými možnostmi, jako je lepší přechody barev v tmavých scénách, detekce hran a auto-variance
     if (HEVC_options.adaptive_quantisation)
     {
-        command_codec += "aq-mode=4:";
+        params += "aq-mode=4:";
     }
 
     // Adaptivní B snímky
     if (HEVC_options.adaptive_b_frames)
     {
-        command_codec += "b-adapt=2:";
+        params += "b-adapt=2:";
     }
 
     // Pro archivaci zakázat tyto dva filtry pro lepší zachování šumu, protože tady není problém s bitratem
     if (!Compress)
     {
-        command_codec += "no-sao:no-deblock:";
+        params += "no-sao:no-deblock:";
     }
 
     // Lepší nastavení počtu B snímků
-    command_codec += "bframes=8 ";
+    params += "bframes=8";
 
+    command_codec.insert(command_codec.end(), {params});
     return command_codec;
 }
 
-string Video::encode_VP9()
+vector<string> Video::encode_VP9()
 {
-    string command_codec;
+    vector<string> command_codec;
 
     // U komprimace se nastaví základnější profil, u archivace parametr kvality
     // Při komprimaci zmenšujeme i zvuk pomocí Opus kodeku, při archivaci kopírujeme původní zvuk 
     if (Compress)
-    {
-        command_codec += "-pix_fmt yuv420p ";
-        command_codec += "-c:a libopus ";
-        
-    } 
-    else {
-        command_codec += "-crf " + to_string(VP9_options.crf) + " ";
-        command_codec += "-c:a aac -q:a 1 ";
-    }
+        command_codec.insert(command_codec.end(), 
+            {"-pix_fmt", "yuv420p", "-c:a", "libopus"});
+    else
+        command_codec.insert(command_codec.end(), 
+            {"-crf", to_string(VP9_options.crf), "-c:a", "aac", "-q:a", "1"});
 
     // Nastavit preset, na který se bude kódovat a parametry kodeku
-    command_codec += "-c:v libvpx-vp9 -preset " + to_string(VP9_options.preset) + 
-                     " -quality " + to_string(VP9_options.quality) + 
-                     " -tune-content " + to_string(VP9_options.tune_content) +
-                     " -cpu-used " + to_string(VP9_options.cpu_used) +
-                     " -noise-sensitivity " + to_string(VP9_options.noise_sensitivity) + " ";
+    command_codec.insert(command_codec.end(), 
+        {
+            "-c:v", "libvpx-vp9", "-preset", to_string(VP9_options.preset),
+            "-quality", to_string(VP9_options.quality),
+            "-tune-content", to_string(VP9_options.tune_content),
+            "-cpu-used", to_string(VP9_options.cpu_used),
+            "-noise-sensitivity", to_string(VP9_options.noise_sensitivity)
+        });
 
     return command_codec;
 }
@@ -521,6 +525,10 @@ string Video::encode_VP9()
 void Video::test_commands()
 {
     cout << YELLOW << "Debugging parameter was used. The ffmpeg command that is being executed is: " << RESET << endl;
-    cout << make_options() << "\n" << endl;
-
+    
+    string command;
+    for (auto c : make_options())
+        command += c + " ";
+        
+    cout << "ffmpeg " << command << "\n" << endl;
 }
