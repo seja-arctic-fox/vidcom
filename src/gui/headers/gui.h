@@ -1,5 +1,6 @@
 #include "gdkmm/contentprovider.h"
 #include "gdkmm/drag.h"
+#include "gdkmm/enums.h"
 #include "giomm/asyncresult.h"
 #include "glibmm/dispatcher.h"
 #include "glibmm/refptr.h"
@@ -18,7 +19,6 @@
 #include "gtkmm/listboxrow.h"
 #include "gtkmm/progressbar.h"
 #include "gtkmm/scrolledwindow.h"
-#include "gtkmm/togglebutton.h"
 #include "gtkmm/widget.h"
 #include "gtkmm/window.h"
 #include <functional>
@@ -153,7 +153,7 @@ class QueueFrame : public Gtk::Box
         void add_video(const std::string& input_path);
         std::vector<Video *> get_all_videos();
         sigc::signal<void(VideoElement *)> signal_video_selected;
-        sigc::signal<void(std::vector<VideoElement*>)> signal_all_videos_selected;
+        sigc::signal<void(std::vector<VideoElement*>)> signal_multiple_videos_selected;
         sigc::signal<void()> signal_nothing_selected;
         sigc::signal<void(bool)> signal_loading_videos;
         sigc::signal<void(int, int)> signal_loading_videos_count;
@@ -181,11 +181,16 @@ class QueueFrame : public Gtk::Box
         Gtk::Label clear_queue_text;
         Gtk::Label select_all_text;
         Gtk::Button clear_queue_button;
-        Gtk::ToggleButton select_all_button;
+        Gtk::Button select_all_button;
 
         // Drag and drop
         Glib::RefPtr<Gtk::DropTarget> drag_and_drop_target;
         sigc::connection idle_handler;
+        
+        // Shift pressed
+        bool select_multiple = false;
+        bool on_key_pressed(guint keyval, guint, Gdk::ModifierType);
+        void on_key_released(guint keyval, guint, Gdk::ModifierType);
 
         // Metody
         void on_clear_clicked();
