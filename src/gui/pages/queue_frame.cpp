@@ -277,8 +277,11 @@ void QueueFrame::on_select_all_clicked()
             all_video_elements.push_back(element);
         }
     }
-
-    signal_multiple_videos_selected.emit(all_video_elements);
+    
+    if (all_video_elements.size() == 1)
+        signal_video_selected.emit(all_video_elements.at(0));
+    else
+        signal_multiple_videos_selected.emit(all_video_elements);
 }
 
 bool QueueFrame::on_drop(const Glib::ValueBase& value, double, double)
