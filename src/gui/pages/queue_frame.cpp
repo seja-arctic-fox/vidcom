@@ -141,6 +141,20 @@ std::vector<Video *> QueueFrame::get_all_videos()
     return all_elements;
 }
 
+void QueueFrame::change_select_all_status(bool action_all)
+{
+    if (action_all)
+    {
+        select_all_text.set_text("Select all");
+        select_all_icon.set_from_icon_name("edit-select-all-symbolic");
+    }
+    else
+    {
+        select_all_text.set_text("Deselect all");
+        select_all_icon.set_from_icon_name("ui-deselect-symbolic");
+    }
+}
+
 void QueueFrame::on_row_selected(Gtk::ListBoxRow * row)
 {
     if (row)
@@ -158,6 +172,10 @@ void QueueFrame::on_row_selected(Gtk::ListBoxRow * row)
                     video_elements.push_back(element);
                 }
             }
+            
+            if (all_rows.size() == get_all_videos().size())
+                change_select_all_status(false);
+            
             signal_multiple_videos_selected.emit(video_elements);
         }
         else 
@@ -170,6 +188,7 @@ void QueueFrame::on_row_selected(Gtk::ListBoxRow * row)
             {
                 signal_video_selected.emit(element);
             }
+            change_select_all_status(true);
         }
     }
 }
@@ -264,6 +283,16 @@ void QueueFrame::on_clear_clicked()
 
 void QueueFrame::on_select_all_clicked()
 {
+    if (video_listbox.get_selected_rows().size() == get_all_videos().size())
+    {
+        video_listbox.set_selection_mode(Gtk::SelectionMode::SINGLE);
+        on_row_selected(video_listbox.get_row_at_index(0));
+        change_select_all_status(true);
+        return;
+    }
+    else
+        change_select_all_status(false);
+    
     video_listbox.set_selection_mode(Gtk::SelectionMode::MULTIPLE);
     video_listbox.select_all();
     vector<VideoElement *> all_video_elements;

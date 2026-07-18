@@ -195,6 +195,7 @@ class QueueFrame : public Gtk::Box
         // Metody
         void on_clear_clicked();
         void on_select_all_clicked();
+        void change_select_all_status(bool action_all);
         bool on_drop(const Glib::ValueBase& value, double, double);
         void error_toast_not_a_video(string file);
         void on_row_selected(Gtk::ListBoxRow * row);
