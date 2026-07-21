@@ -151,7 +151,7 @@ void QueueFrame::change_select_all_status(bool action_all)
     else
     {
         select_all_text.set_text("Deselect all");
-        select_all_icon.set_from_icon_name("ui-deselect-symbolic");
+        select_all_icon.set_from_icon_name("edit-select-none-symbolic");
     }
 }
 
