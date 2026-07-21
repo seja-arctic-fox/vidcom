@@ -18,7 +18,8 @@ enum Codec // podporované formáty pro kódování videa
 {
     AV1,
     VP9,
-    HEVC
+    HEVC,
+    AVC
 };
 
 // Možnosti pro enkodéry, které mají být nastavitelné uživatelem
@@ -53,6 +54,15 @@ struct VP9_options
     short cpu_used = 0;             // Mezi -8 a 8
     short noise_sensitivity = 4;    // od 0 do 4
     short crf = 23;                 // ideální kompromis
+};
+
+struct AVC_options
+{
+    short preset = 8;                   // = slower. from 0 to 9
+    short crf = 23;                     // default, from 0 to 51
+    bool adaptive_quantisation = true;  // aq-mode=2
+    bool motion_estimation = true;      // me=umh, subme=9
+    short tune = 0;                     // 0 = film, 1 = animation, 2 = grain, 3 = stillimage
 };
 
 // ------------------------------------------------------------
@@ -121,6 +131,7 @@ class Video
         vector<string> encode_AV1();         // vytvoří příkaz pro kódování v AV1
         vector<string> encode_HEVC();        // vytvoří příkaz pro kódování v HEVC
         vector<string> encode_VP9();         // vytvoří příkaz pro kódování v VP9
+        vector<string> encode_AVC();         // constructs a command for encoding to AVC
 
         // Sledování postupu
         void parse_progress(char * buffer, float duration, ProgressCallback callback);
@@ -133,6 +144,7 @@ class Video
         struct AV1_options AV1_options;
         struct HEVC_options HEVC_options;
         struct VP9_options VP9_options;
+        struct AVC_options AVC_options;
         
         string last_error_message = "";
 
