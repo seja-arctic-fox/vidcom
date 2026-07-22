@@ -362,6 +362,10 @@ vector<string> Video::make_options()
     {
         command_codec = encode_VP9();
     }
+    if (eCodec == AVC)
+    {
+        command_codec = encode_AVC();
+    }
 
     // Konečný příkaz
     // U AV1 se mi ještě nepodařilo vytvořit úspěšný příkaz pro dvouprůchodové kódování
@@ -535,8 +539,9 @@ vector<string> Video::encode_AVC()
         command_codec.insert(command_codec.end(), 
             {"-crf", to_string(VP9_options.crf), "-c:a", "aac", "-q:a", "1"});
     
+    // set the preset and codec
     command_codec.insert(command_codec.end(), 
-        {"-preset", to_string(AVC_options.preset), "-crf", to_string(AVC_options.crf)});
+        {"-c:v", "libx264", "-preset", to_string(AVC_options.preset)});
     
     array<string, 4> tunes = {"film", "animation", "grain", "stillimage"};
     command_codec.insert(command_codec.end(), 
