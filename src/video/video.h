@@ -61,7 +61,8 @@ struct AVC_options
     short preset = 8;                   // = slower. from 0 to 9
     short crf = 23;                     // default, from 0 to 51
     bool adaptive_quantisation = true;  // aq-mode=2
-    bool motion_estimation = true;      // me=umh, subme=9
+    bool motion_estimation = true;      // me=umh:subme=9
+    bool adaptive_b_frames = true;      // b-adapt=2:bframes=6
     short tune = 0;                     // 0 = film, 1 = animation, 2 = grain, 3 = stillimage
 };
 

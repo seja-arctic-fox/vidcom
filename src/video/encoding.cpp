@@ -554,7 +554,12 @@ vector<string> Video::encode_AVC()
         params += "aq-mode=2:";
     }
     
-    params += "b-adapt=2:bframes=6:ref=4:no-fast-pskip=1:keyint=" 
+    if (AVC_options.adaptive_b_frames)
+    {
+        params += "b-adapt=2:bframes=6:";
+    }
+    
+    params += "ref=4:no-fast-pskip=1:keyint=" 
             + to_string(this -> outputFPS * 10);
     command_codec.insert(command_codec.end(),
         {"-x264-params", params});
