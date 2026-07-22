@@ -319,6 +319,10 @@ void VideoElement::update_labels()
         case VP9:
             mode_text_string += "VP9";
             break;
+            
+        case AVC:
+            mode_text_string += "AVC";
+            break;
     }
     mode_text_string += "";
     mode_text.set_markup(mode_text_string);
