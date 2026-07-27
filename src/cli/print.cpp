@@ -114,5 +114,12 @@ void CLI::print_help()
          << "\t\tt\tint: \t0...1...2\tTune. 0 = default, 1 = screen, 2 = film. Default: 0\n"
          << "\t\tcpu\tint: \t-8......8\tCPU used during encoding. Lower value means longer encoding time. Default: 0\n"
          << "\t\tns\tint: \t0.......4\tNoise sensitivity of the deblocking filter. Should remove compression artifacts. Default: 4\n\n"
+         << "\tAVC (libx264) parameters\n"
+         << "\t\tp\tint: \t0......9\tEncoding preset. Higher means better compression but longer encoding time. Default: 8\n"
+         << "\t\tcrf\tint: \t0......51\tQuality level. Lower values increase quality and bitrate. Default: 23\n"
+         << "\t\ttn\tint: \t0......3\tEnables psychovisual tuning (better for human eye). Default: 0\n"
+         << "\t\tme\tbool: \ttrue/false\tEnables better motion estimation. Default: true\n"
+         << "\t\taq\tbool: \ttrue/false\tAdaptive quantisation. Default: true\n"
+         << "\t\tab\tbool: \ttrue/false\tAdaptive B-frames. Default: true\n\n"
          << endl;
 }
