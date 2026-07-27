@@ -75,7 +75,7 @@ void CLI::print_help()
     cout << "Automatic utility for compressing and archiving videos. This is a CLI interface. You can run the GUI by executing 'vidcom'. \n"
          << "The script features two MODES. COMPRESS compresses the video to a target size and other settings, while ARCHIVE mode (default) makes the video as small as possible without quality sacrifices. \n";
     cout << "____________________" << endl;
-    cout << "Usage: \n vidcom [PATH_TO_VIDEO1 PATH_TO_VIDEO2] -Cm/Am -s SIZE_MB -c CODEC -p [PARAMETER1=VALUE1,PARAMETER2=VALUE2] -cut START-STOP -ds FACTOR -fps FPS -2p -o OUTPUT_FOLDER -pr PREFIX -d\n" << endl;
+    cout << "Usage: \n vidcom -cli [PATH_TO_VIDEO1 PATH_TO_VIDEO2] -Cm/Am -s SIZE_MB -c CODEC -p [PARAMETER1=VALUE1,PARAMETER2=VALUE2] -cut START-STOP -ds FACTOR -fps FPS -2p -o OUTPUT_FOLDER -pr PREFIX -d\n" << endl;
     cout << "Positional arguments \n\t Input videos: \t Paths to video files you want to process. Must be first. Specify as many as you like. \n" << endl;
     cout << "Voluntary arguments (order shouldn't matter)\n\t "
          << "MODES\n"

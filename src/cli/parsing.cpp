@@ -249,6 +249,7 @@ int CLI::parse_arguments(int argc, char **argv)
         if (argv[a][0] == '-')
         {
             // Argumenty a nastavení
+            if (command == "-cli") continue;
 
             // Pomoc
             if (command == "-h")
