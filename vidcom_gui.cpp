@@ -13,7 +13,34 @@ int main(int argc, char **argv)
     else
     {
         adw_init();
-        auto app = Gtk::Application::create("io.github.seja_arctic_fox.vidcom");
-        return app -> make_window_and_run<MainWindow>(argc, argv);
+        auto app = Gtk::Application::create(
+            "io.github.seja_arctic_fox.vidcom", 
+            Gio::Application::Flags::HANDLES_OPEN
+        );
+        
+        MainWindow * window = nullptr;
+        
+        app -> signal_activate().connect([&app, &window]() {
+            if (!window) 
+            {
+                window = new MainWindow(); app -> add_window(*window);
+            }
+            window -> present();
+        });
+    
+        app -> signal_open().connect([&app, &window]
+            (const Gio::Application::type_vec_files& files, const Glib::ustring&) 
+        {
+                if (!window) 
+                {
+                    window = new MainWindow(); app -> add_window(*window); 
+                }
+            window -> on_open_videos(files, "");
+            window -> present();
+        });
+    
+        int result = app -> run(argc, argv);
+        delete window;
+        return result;
     }
 }

@@ -1,5 +1,6 @@
 #include "headers/gui.h"
 #include "adwaita.h"
+#include "giomm/application.h"
 #include "giomm/simpleaction.h"
 #include "gtk/gtk.h"
 #include "sigc++/functors/mem_fun.h"
@@ -76,6 +77,9 @@ MainWindow::MainWindow()
     
     // Akce
     auto app = Gtk::Application::get_default();
+    
+    // "Open With" functionality
+    app -> signal_open().connect(sigc::mem_fun(*this, &MainWindow::on_open_videos));
     
     // O aplikaci
     auto about_action = Gio::SimpleAction::create("about");
@@ -501,4 +505,48 @@ void MainWindow::file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& re
         show_toast("Error opening files with file picker!");
         video_queue.signal_loading_videos.emit(false);
     }
+}
+
+void MainWindow::on_open_videos(
+    const Gio::Application::type_vec_files& file_vector, 
+    const Glib::ustring
+)
+{
+    video_queue.signal_loading_videos(true);
+    auto state = std::make_shared<std::pair<std::vector<std::string>, size_t>>();
+    state -> second = 0;
+    
+    for (guint i = 0; i < file_vector.size(); i++)
+    {
+        auto file = file_vector.at(i);
+
+        if (file)
+        {
+            auto path = file -> get_path();
+
+            if (!path.empty())
+            {
+                state -> first.push_back(path);
+            }
+        }
+    }
+    
+    video_queue.signal_loading_videos_count.emit(0, (int) state -> first.size());
+    
+    Glib::signal_idle().connect([this, state]() -> bool
+    {
+        size_t& i = state -> second;
+        auto& paths = state -> first;
+        
+        if (i < paths.size())
+        {
+            video_queue.signal_loading_videos_count.emit((int) i + 1, (int) paths.size());
+            video_queue.add_video(paths[i]);
+            i++;
+            return true;
+        }
+        
+        video_queue.signal_loading_videos.emit(false);
+        return false;
+    });
 }

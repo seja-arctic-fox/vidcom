@@ -401,6 +401,7 @@ class MainWindow : public Gtk::Window
         ~MainWindow();
         
         void show_toast(char const * message);
+        void on_open_videos(const Gio::Application::type_vec_files& file_vector, const Glib::ustring);
 
     protected:
         RunnerPanel runner_panel;
