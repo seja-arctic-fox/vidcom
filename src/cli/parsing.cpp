@@ -388,6 +388,7 @@ int CLI::parse_arguments(int argc, char **argv)
                     else 
                     {
                         cerr << RED << "Invalid codec name. Please use -h to list avaiable codecs. " << RESET << endl;
+                        return 1;
                     }
 
                     continue;
@@ -399,7 +400,12 @@ int CLI::parse_arguments(int argc, char **argv)
                     a++;
                     command = argv[a];
 
-                    set_codec_parameters(*video_list, command);
+                    int param_state = set_codec_parameters(*video_list, command);
+                    if (param_state != 0) 
+                    {
+                        cerr << RED << "Invalid codec parameters. Please use -h to see correct parameter usage. " << RESET << endl;
+                        return param_state;
+                    }
                     continue;
                 }
 

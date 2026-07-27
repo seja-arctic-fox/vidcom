@@ -87,7 +87,7 @@ void CLI::print_help()
          << "\t-cut START-STOP  Enables a simple cut feature that trimms video from specified start time to end time. Times are float values in seconds and should be separated by '-'. Disabled by default. \n"
          << "\t-ds FACTOR \t Defines how many times smaller is the output resolution. Expects values larger or equal to 1. Only works in COMPRESS mode. Default is 1, which means it keeps the original resolution. \n"
          << "\t-fps FPS \t Sets the output framerate. Output framerate cannot be larger than the original framerate. Only works in COMPRESS mode. Default is the framerate of the original video. \n"
-         << "\t-2p \t\t Enables two-pass encoding and better compression. NOTE: SVTAV1 does not have two-pass encoding in a working state. Disabled by default. \n"
+         //<< "\t-2p \t\t Enables two-pass encoding and better compression. NOTE: SVTAV1 does not have two-pass encoding in a working state. Disabled by default. \n"
          << "\t-o OUTPUT_PATH \t Sets the output folder where videos are saved. If the path does not end with '/', the last part is used as a prefix for new videos. Default behavior is to save each video in a subfolder created in the parent folder of the video. \n"
          << "\t-pr PREFIX \t Sets the prefix of output videos. Format: PREFIX_ORIGINAL_NAME.mp4. Default is 'C'\n"
          << "\t-d \t\t Prints the ffmpeg command that is being executed. Disables encoding. For debugging purposes. \n"
