@@ -82,6 +82,13 @@ MainWindow::MainWindow()
     about_action -> signal_activate().connect(sigc::mem_fun(*this, &MainWindow::display_about_dialog));
     app -> add_action(about_action);
     
+    // Preferences
+    auto preferences_action = Gio::SimpleAction::create("preferences");
+    preferences_action -> signal_activate().connect(sigc::mem_fun(
+        *this, &MainWindow::display_preferences
+    ));
+    app -> add_action(preferences_action);
+    
     // Přidat video
     add_videos_button.set_icon_name("tab-new-symbolic");
     add_videos_button.set_tooltip_text("Add video(s)");
@@ -198,6 +205,11 @@ void MainWindow::display_about_dialog(const Glib::VariantBase&)
         );
     
     adw_dialog_present(ADW_DIALOG(dialog), GTK_WIDGET(gobj()));
+}
+
+void MainWindow::display_preferences(const Glib::VariantBase&)
+{
+    cout << "Preferences action works!" << endl;
 }
 
 MainWindow::~MainWindow()

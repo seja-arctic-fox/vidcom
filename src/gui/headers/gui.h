@@ -426,6 +426,7 @@ class MainWindow : public Gtk::Window
         void on_window_resize(int width, int height);
         void on_import_video_clicked();
         void display_about_dialog(const Glib::VariantBase&);
+        void display_preferences(const Glib::VariantBase&);
         void file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& result, Glib::RefPtr<Gtk::FileDialog> file_picker);
         
         // Vlákno pro kódování videí, synchronizace
