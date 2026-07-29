@@ -394,6 +394,23 @@ class ResultRow : public Gtk::Box
         void set_output_folder_button();
 };
 
+class PreferencesWindow : public Gtk::Window
+{
+    public:
+        PreferencesWindow();
+        ~PreferencesWindow();
+    
+    protected:
+        Gtk::HeaderBar header_bar;
+        Gtk::Box content_box;
+        Gtk::Label pref_title;
+        Gtk::ScrolledWindow scrolled;
+        OptionListBox default_mode_box, default_output_box;
+        OptionHeading default_mode_h, default_output_h;
+        RadioButtonRow archive_mode, compress_mode;
+        ButtonRow default_output;
+};
+
 class MainWindow : public Gtk::Window
 {
     public:

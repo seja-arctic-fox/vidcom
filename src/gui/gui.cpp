@@ -1,7 +1,9 @@
 #include "headers/gui.h"
 #include "adwaita.h"
 #include "giomm/simpleaction.h"
+#include "glibmm/refptr.h"
 #include "gtk/gtk.h"
+#include "gtkmm/object.h"
 #include "sigc++/functors/mem_fun.h"
 #include "src/cli/cli.h"
 #include <iostream>
@@ -209,7 +211,8 @@ void MainWindow::display_about_dialog(const Glib::VariantBase&)
 
 void MainWindow::display_preferences(const Glib::VariantBase&)
 {
-    cout << "Preferences action works!" << endl;
+    auto preferences = Gtk::make_managed<PreferencesWindow>();
+    preferences -> set_transient_for(*this);
 }
 
 MainWindow::~MainWindow()
