@@ -82,7 +82,8 @@ meson setup build
 
 ```bash
 cd build/
-
+# COMPILING WITHOUT INSTALLATION
+meson devenv
 meson compile
 # OR
 meson install

@@ -80,10 +80,11 @@ If you've decided to help with development, then that's great! Please read this 
 
 ```bash
 meson setup build
-meson compile -C build
+meson devenv -C build
+meson compile
 ```
 
-There is only one `meson.build` file located in the project's root. 
+There is one `meson.build` file located in the project's root. The second `meson.build` is in the `./data` directory and serves for compiling GSettings during both ordinary compiling and installation.
 
 ### Guide for contributing
 
