@@ -66,7 +66,7 @@ exe = executable(
 
 test('basic', exe)
 
-
+subdir('data')
 datadir = get_option('datadir')
 metainfodir = datadir / 'metainfo'
 desktopdir = datadir / 'applications'

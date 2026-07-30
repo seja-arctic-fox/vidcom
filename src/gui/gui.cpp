@@ -6,6 +6,7 @@
 #include "gtkmm/object.h"
 #include "sigc++/functors/mem_fun.h"
 #include "src/cli/cli.h"
+#include <exception>
 #include <iostream>
 #include <mutex>
 #include <thread>
@@ -211,6 +212,7 @@ void MainWindow::display_about_dialog(const Glib::VariantBase&)
 
 void MainWindow::display_preferences(const Glib::VariantBase&)
 {
+    cout << SETTINGS -> get_boolean("encoding-mode") << endl;
     auto preferences = Gtk::make_managed<PreferencesWindow>();
     preferences -> set_transient_for(*this);
 }

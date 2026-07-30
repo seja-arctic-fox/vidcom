@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema path="/io/github/seja_arctic_fox/vidcom/" id="io.github.seja_arctic_fox.vidcom">
+    <key name="encoding-mode" type="b">
+      <default>false</default>
+      <summary>Encoding Mode</summary>
+      <description>Choose either Archive or Compress mode</description>
+    </key>
+    <key name="output-path" type="s">
+      <default>'none'</default>
+      <summary>Default output path</summary>
+      <description>Videos will be saved here by default. none will output the result next to the original video. </description>
+    </key>
+  </schema>
+</schemalist>
