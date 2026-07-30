@@ -396,18 +396,20 @@ class ResultRow : public Gtk::Box
         void set_output_folder_button();
 };
 
-class PreferencesWindow : public Gtk::Window
+class PreferencesWindow
 {
     public:
         PreferencesWindow();
         ~PreferencesWindow();
+        
+        AdwPreferencesDialog * dialog;
     
     protected:
-        Gtk::HeaderBar header_bar;
-        Gtk::Box content_box;
-        Gtk::Label pref_title;
-        Gtk::ScrolledWindow scrolled;
-        OptionListBox default_mode_box, default_output_box;
+        // Defaults page
+        AdwNavigationPage * defaults_page;
+        AdwPreferencesGroup * default_mode_group, * default_output_group;
+        Gtk::Box default_mode_box, default_output_box;
+        OptionListBox default_mode_option, default_output_option;
         OptionHeading default_mode_h, default_output_h;
         RadioButtonRow archive_mode, compress_mode;
         ButtonRow default_output;
