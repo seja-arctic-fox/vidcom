@@ -1,15 +1,191 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
   <schema path="/io/github/seja_arctic_fox/vidcom/" id="io.github.seja_arctic_fox.vidcom">
+  
+    <!-- Basic parameters -->
     <key name="encoding-mode" type="b">
       <default>false</default>
       <summary>Encoding Mode</summary>
       <description>Choose either Archive or Compress mode</description>
     </key>
+    
+    <key name="target-size" type="d">
+      <default>10.0</default>
+      <summary>Target size</summary>
+      <description>Size in MB the video will be compressed to in Compress mode</description>
+    </key>
+    
+    <key name="downscale-factor" type="d">
+      <default>1.0</default>
+      <summary>Downscale factor</summary>
+      <description>How many times smaller is the output resolution</description>
+    </key>
+    
+    <key name="framerate" type="d">
+      <default>-1</default>
+      <summary>Framerate</summary>
+      <description>Output framerate</description>
+    </key>
+    
+    <key name="output-next-to-original" type="b">
+      <default>true</default>
+      <summary>Output next to original</summary>
+      <description>Video(s) will be created next to the original in a subfolder</description>
+    </key>
+    
     <key name="output-path" type="s">
       <default>''</default>
       <summary>Default output path</summary>
       <description>Videos will be saved here by default. none will output the result next to the original video. </description>
     </key>
+    
+    <!-- AV1 parameters -->
+    <key name="av1-preset" type="n">
+      <default>3</default>
+      <summary>Encoding preset</summary>
+      <description>Lower value means better compression but longer encoding time</description>
+    </key>
+    
+    <key name="av1-crf" type="n">
+      <default>35</default>
+      <summary>CRF</summary>
+      <description>Quality level. Lower values increase quality and bitrate</description>
+    </key>
+    
+    <key name="av1-fgs" type="b">
+      <default>false</default>
+      <summary>Film Grain Synthesis</summary>
+      <description>Enables film grain synthesis postprocessing filter. </description>
+    </key>
+    
+    <key name="av1-fgl" type="n">
+      <default>16</default>
+      <summary>Film Grain Level</summary>
+      <description>Level of film grain in shot. </description>
+    </key>
+    
+    <key name="av1-bd" type="b">
+      <default>true</default>
+      <summary>Better Details</summary>
+      <description>Enables overlay frames for better details. </description>
+    </key>
+    
+    <key name="av1-psy" type="b">
+      <default>true</default>
+      <summary>Psychovisual Tuning</summary>
+      <description>Enables psychovisual tuning (better for human eye), instead of PSNR (exact method). </description>
+    </key>
+    
+    <!-- HEVC parameters -->
+    <key name="hevc-preset" type="n">
+      <default>7</default>
+      <summary>Encoding preset</summary>
+      <description>Higher value means better compression but longer encoding time</description>
+    </key>
+    
+    <key name="hevc-crf" type="n">
+      <default>19</default>
+      <summary>CRF</summary>
+      <description>Quality level. Lower values increase quality and bitrate</description>
+    </key>
+    
+    <key name="hevc-me" type="b">
+      <default>true</default>
+      <summary></summary>
+      <description></description>
+    </key>
+    
+    <key name="hevc-psy" type="b">
+      <default>true</default>
+      <summary>Psychovisual Tuning</summary>
+      <description>Enables psychovisual tuning (better for human eye). </description>
+    </key>
+    
+    <key name="hevc-aq" type="b">
+      <default>true</default>
+      <summary>Adaptive Quantisation</summary>
+      <description>Enables adaptive quantisation. Better quality in frames with more details. </description>
+    </key>
+    
+    <key name="hevc-ab" type="b">
+      <default>true</default>
+      <summary>Adaptive B-Frames</summary>
+      <description>Enables adaptive B-frames. Inserts as much B-frames as needed for better compression. </description>
+    </key>
+    
+    <!-- VP9 parameters -->
+    <key name="vp9-preset" type="n">
+      <default>2</default>
+      <summary>Encoding preset</summary>
+      <description>Lower value means better compression but longer encoding time</description>
+    </key>
+    
+    <key name="vp9-crf" type="n">
+      <default>23</default>
+      <summary>CRF</summary>
+      <description>Quality level. Lower values increase quality and bitrate</description>
+    </key>
+    
+    <key name="vp9-cpu" type="n">
+      <default>0</default>
+      <summary>CPU Usage</summary>
+      <description>Amount of CPU used during encoding. Lower values mean better compression but longer encoding time. </description>
+    </key>
+    
+    <key name="vp9-ns" type="n">
+      <default>4</default>
+      <summary>Noise Sensitivity</summary>
+      <description>Sensitivity of the deblocking filter which removes encoding artifacts. </description>
+    </key>
+    
+    <key name="vp9-qs" type="n">
+      <default>0</default>
+      <summary>Quality Scale</summary>
+      <description>0 = best, 1 = realtime, 2 = good</description>
+    </key>
+    
+    <key name="vp9-tune" type="n">
+      <default>0</default>
+      <summary>Tune</summary>
+      <description>0 = default, 1 = screen recording, 2 = film content</description>
+    </key>
+    
+    <!-- AVC parameters -->
+    <key name="avc-preset" type="n">
+      <default>8</default>
+      <summary>Encoding preset</summary>
+      <description>Higher value means better compression but longer encoding time</description>
+    </key>
+    
+    <key name="avc-crf" type="n">
+      <default>23</default>
+      <summary>CRF</summary>
+      <description>Quality level. Lower values increase quality and bitrate</description>
+    </key>
+    
+    <key name="avc-me" type="b">
+      <default>true</default>
+      <summary>Motion Estimation</summary>
+      <description>Enables better motion estimation. Good for better compression, but increases encoding time. </description>
+    </key>
+    
+    <key name="avc-aq" type="b">
+      <default>true</default>
+      <summary>Adaptive Quantisation</summary>
+      <description>Enables adaptive quantisation. Better quality in frames with more details. </description>
+    </key>
+    
+    <key name="avc-ab" type="b">
+      <default>true</default>
+      <summary>Adaptive B-Frames</summary>
+      <description>Enables adaptive B-frames. Inserts as much B-frames as needed for better compression. </description>
+    </key>
+    
+    <key name="avc-tune" type="n">
+      <default>0</default>
+      <summary>Tune</summary>
+      <description>0 = film, 1 = animation, 2 = grain, 3 = stillimage</description>
+    </key>
+    
   </schema>
 </schemalist>

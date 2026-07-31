@@ -26,18 +26,21 @@ Video::Video(string input_path)
     cancelling_encoding(false)
 {
     // Načtení informací o vstupním videu
-    set_video_info(input_path);
+    if (input_path == "")
+        inputVideo.path = fs::path(getenv("HOME")) / "example_video.mp4";
+    else
+        set_video_info(input_path);
 
     // Nastavení výchozích možností
     set_output_framerate(inputVideo.framerate);
     set_bitrate_by_size(10);
     set_cut(0, inputVideo.duration);
     
-    string output_folder = SETTINGS -> get_string("output-path");
-    if (output_folder == "")
+    bool next_to_original = SETTINGS -> get_boolean("output-next-to-original");
+    if (next_to_original)
         set_output_path(inputVideo.path.parent_path());
     else
-        set_output_path(output_folder);
+        set_output_path(SETTINGS -> get_string("output-path"));
 }
 
 // Destruktor

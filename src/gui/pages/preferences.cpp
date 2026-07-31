@@ -6,87 +6,88 @@
 #include "gtkmm/enums.h"
 #include "sigc++/functors/mem_fun.h"
 #include "src/video/video.h"
-#include <iostream>
+
+DummyVideoElement::DummyVideoElement()
+:   
+    VideoElement("")
+{}
+
+DummyVideoElement::~DummyVideoElement()
+{}
+
+DefaultsPage::DefaultsPage(VideoElement * video)
+:   
+    SettingsPage(),
+    next_to_original_switch(
+        "Save next to original",
+        "Save video(s) next to original file(s)"
+    )
+{
+    // Load dummy video
+    SettingsPage::read_video_options(video);
+    set_policy(Gtk::PolicyType::NEVER, Gtk::PolicyType::NEVER);
+    
+    // Remove unused settings from the view
+    cut_heading.set_visible(false);
+    cut_listbox.set_visible(false);
+    fps_row.set_visible(false);
+    
+    // Extra switch for deciding whether to store next to the original video
+    bool output_next_to_original = SETTINGS -> get_boolean(
+        "output-next-to-original"
+    );
+    next_to_original_switch.set_state(output_next_to_original);
+    output_row.set_sensitive(!output_next_to_original);
+    output_listbox.insert(next_to_original_switch, 1);
+    next_to_original_switch.signal_toggled.connect(sigc::mem_fun(
+        *this, &DefaultsPage::on_nto_switched
+    ));
+}
+
+DefaultsPage::~DefaultsPage()
+{}
+
+void DefaultsPage::on_nto_switched()
+{ output_row.set_sensitive(!next_to_original_switch.get_state()); }
+
+// Only reason for this is removing the sensitivity setters
+// (they don't make sense here)
+void DefaultsPage::save_archive_mode(VideoElement * element)
+{ element -> video.set_compress(false); }
+
+void DefaultsPage::save_compress_mode(VideoElement * element)
+{ element -> video.set_compress(true); }
 
 PreferencesWindow::PreferencesWindow(MainWindow * root)
 :
     root(root),
-    default_mode_box(Gtk::Orientation::VERTICAL),
-    default_output_box(Gtk::Orientation::VERTICAL),
-    reset_defaults_box(Gtk::Orientation::VERTICAL),
-    default_mode_h("Default Encoding Mode"),
-    default_output_h("Default Output Folder"),
-    archive_mode(
-        "Archive", 
-        "Makes the video a small as possible without loosing quality. "
-    ),
-    compress_mode(
-        "Compress", 
-        "Compresses the video to a target size. "
-    ),
-    default_output(
-        "Saving Destination", 
-        "Video(s) will be saved to: \n"
-    ), 
+    dummy(),
+    defaults_box(&dummy),
+    set_defaults_box(Gtk::Orientation::VERTICAL),
+    apply_defaults_button("Apply defaults"),
     reset_defaults_button("Restore original defaults")
 {
     dialog = ADW_PREFERENCES_DIALOG(adw_preferences_dialog_new());
+    
     // Preferences for default values
     // -----------------
-    // Group for mode
-    default_mode_group = ADW_PREFERENCES_GROUP(adw_preferences_group_new());
-    default_mode_option.append(archive_mode);
-    default_mode_option.append(compress_mode);
-    archive_mode.set_group(compress_mode);
-    default_mode_box.append(default_mode_h);
-    default_mode_box.append(default_mode_option);
-    adw_preferences_group_add(
-        default_mode_group, GTK_WIDGET(default_mode_box.gobj())
-    );
-    
-    // Connect mode with GSettings
-    compress_mode.set_state(SETTINGS -> get_boolean("encoding-mode"));
-    archive_mode.set_state(!SETTINGS -> get_boolean("encoding-mode"));
-    archive_mode.signal_toggled.connect(sigc::mem_fun(
-        *this, &PreferencesWindow::set_default_mode
-    ));
-    compress_mode.signal_toggled.connect(sigc::mem_fun(
-        *this, &PreferencesWindow::set_default_mode
-    ));
-    
-    // Group for output
-    default_output.set_button_text("Set default output folder");
-    default_output_option.append(default_output);
-    default_output_group = ADW_PREFERENCES_GROUP(adw_preferences_group_new());
-    default_output_box.append(default_output_h);
-    default_output_box.append(default_output_option);
-    adw_preferences_group_add(
-        default_output_group, GTK_WIDGET(default_output_box.gobj())
-    );
-    
-    // Connect default output with GSettings
-    string output_path = SETTINGS -> get_string("output-path");
-    
-    if (output_path == "")
-        default_output.set_caption(
-            "Video(s) will be saved next to the original file(s)."
-        );
-    else
-        default_output.set_caption(
-            "Video(s) will be saved to a subfolder in:\n" + output_path
-        );
-    default_output.signal_clicked.connect(sigc::mem_fun(
-        *this, &PreferencesWindow::set_default_output
-    ));
+    defaults_box.set_size_request(root -> get_width() * 0.5, -1);
+    defaults_group = ADW_PREFERENCES_GROUP(adw_preferences_group_new());
+    adw_preferences_group_add(defaults_group, GTK_WIDGET(defaults_box.gobj()));
     
     // Group for resetting defaults
+    apply_defaults_button.add_css_class("pill");
+    apply_defaults_button.add_css_class("suggested-action");
+    apply_defaults_button.set_margin(5);
     reset_defaults_button.add_css_class("pill");
     reset_defaults_button.add_css_class("destructive-action");
-    reset_defaults_box.append(reset_defaults_button);
+    reset_defaults_button.set_margin(5);
+    set_defaults_box.append(apply_defaults_button);
+    set_defaults_box.append(reset_defaults_button);
     reset_defaults_group = ADW_PREFERENCES_GROUP(adw_preferences_group_new());
     adw_preferences_group_add(
         reset_defaults_group, 
-        GTK_WIDGET(reset_defaults_box.gobj())
+        GTK_WIDGET(set_defaults_box.gobj())
     );
     
     // Connect button to the resetting method
@@ -100,68 +101,16 @@ PreferencesWindow::PreferencesWindow(MainWindow * root)
     adw_preferences_page_set_icon_name(
         defaults_page, "org.gnome.Settings-symbolic"
     );
-    adw_preferences_page_add(defaults_page, default_mode_group);
-    adw_preferences_page_add(defaults_page, default_output_group);
+    adw_preferences_page_add(defaults_page, defaults_group);
     adw_preferences_page_add(defaults_page, reset_defaults_group);
     
     // Add page(s)
     adw_preferences_dialog_add(dialog, defaults_page);
+    adw_dialog_set_content_width(ADW_DIALOG(dialog), root -> get_width() * 0.75);
+    adw_dialog_set_content_height(ADW_DIALOG(dialog), root -> get_height() * 0.75);
 }
 
 PreferencesWindow::~PreferencesWindow() {}
-
-void PreferencesWindow::set_default_mode()
-{ SETTINGS -> set_boolean("encoding-mode", compress_mode.get_state()); }
-
-void PreferencesWindow::set_default_output()
-{
-    string output_path = SETTINGS -> get_string("output-path");
-    auto folder_picker = Gtk::FileDialog::create();
-    folder_picker -> set_title("Select Output Folder");
-    folder_picker -> set_modal();
-    if (output_path == "")
-        output_path = fs::path(getenv("HOME"));
-    auto current_folder = Gio::File::create_for_path(output_path);
-    folder_picker -> set_initial_folder(current_folder);
-    folder_picker -> select_folder(*root, sigc::bind(sigc::mem_fun(
-        *this, 
-        &PreferencesWindow::on_folder_selected
-    ), folder_picker));
-}
-
-void PreferencesWindow::on_folder_selected(
-    Glib::RefPtr<Gio::AsyncResult> &result, 
-    Glib::RefPtr<Gtk::FileDialog> folder_picker
-)
-{
-    string output_path;
-    
-    try
-    {
-        auto folder = folder_picker -> select_folder_finish(result);
-
-        if (folder)
-        {
-            output_path = folder -> get_path();
-            SETTINGS -> set_string("output-path", output_path);
-            default_output.set_caption(
-                "Video(s) will be saved to a subfolder in:\n" + output_path
-            );
-        }
-    }
-    catch (const Gtk::DialogError& error)
-    {
-        if (error.code() != Gtk::DialogError::DISMISSED)
-        {
-            cerr << "Folder picker cancelled by user." << endl;
-        }
-    }
-    catch (const Glib::Error& error)
-    {
-        cerr << "Error selecting folder: " << error.what() << endl;
-        root -> show_toast("Error selecting folder!");
-    }
-}
 
 void PreferencesWindow::reset_defaults_dialog()
 {

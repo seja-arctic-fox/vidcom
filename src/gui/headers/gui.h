@@ -360,8 +360,8 @@ class SettingsPage : public Gtk::ScrolledWindow
         AVC_Parameters avc_page;
 
         // Ukládací funkce
-        void save_archive_mode(VideoElement * element);
-        void save_compress_mode(VideoElement * element);
+        virtual void save_archive_mode(VideoElement * element);
+        virtual void save_compress_mode(VideoElement * element);
         void save_target_size(VideoElement * element);
         void save_target_res(VideoElement * element);
         void save_target_fps(VideoElement * element);
@@ -475,6 +475,27 @@ class MainWindow : public Gtk::Window
         void show_results_dialog();
 };
 
+class DummyVideoElement : public VideoElement
+{
+    public:
+        DummyVideoElement();
+        ~DummyVideoElement();
+};
+
+class DefaultsPage : public SettingsPage
+{
+    public:
+        DefaultsPage(VideoElement * video);
+        ~DefaultsPage();
+        
+    protected:
+        SwitchRow next_to_original_switch;
+    
+        void save_archive_mode(VideoElement * element) override;
+        void save_compress_mode(VideoElement * element) override;
+        void on_nto_switched();
+};
+
 class PreferencesWindow
 {
     public:
@@ -485,30 +506,17 @@ class PreferencesWindow
     
     protected:
         MainWindow * root;
+        DummyVideoElement dummy;
     
         // Defaults page
         AdwPreferencesPage * defaults_page;
-        AdwPreferencesGroup * default_mode_group, 
-                            * default_output_group,
+        AdwPreferencesGroup * defaults_group, 
                             * reset_defaults_group;
-        Gtk::Box    default_mode_box, 
-                    default_output_box,
-                    reset_defaults_box;
-        OptionListBox   default_mode_option, 
-                        default_output_option;
-        OptionHeading   default_mode_h, 
-                        default_output_h;
-        RadioButtonRow  archive_mode, 
-                        compress_mode;
-        ButtonRow default_output;
-        Gtk::Button reset_defaults_button;
+        DefaultsPage defaults_box;
+        Gtk::Box    set_defaults_box;
+        Gtk::Button apply_defaults_button, 
+                    reset_defaults_button;
         
-        void set_default_mode();
-        void set_default_output();
-        void on_folder_selected(
-            Glib::RefPtr<Gio::AsyncResult> &result, 
-            Glib::RefPtr<Gtk::FileDialog> folder_picker
-        );
         void reset_defaults_dialog();
         void reset_defaults();
 };
