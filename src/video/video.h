@@ -1,6 +1,8 @@
 #ifndef VIDEO_ITEM_H
 #define VIDEO_ITEM_H
 
+#include "giomm/settings.h"
+#include "glibmm/refptr.h"
 #include <json/value.h>
 #include <string>
 #include <filesystem>
@@ -13,6 +15,7 @@ using namespace std;
 using ProgressCallback = std::function<void(float, int)>;
 
 namespace fs = std::filesystem;
+extern Glib::RefPtr<Gio::Settings> SETTINGS;
 
 enum Codec // podporované formáty pro kódování videa
 {

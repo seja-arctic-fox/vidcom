@@ -16,7 +16,7 @@ Video::Video(string input_path)
     prefix("C"),
     eCodec(AV1),
     downscaleFactor(1),
-    Compress(false),
+    Compress(SETTINGS -> get_boolean("encoding-mode")),
     TwoPass(false), 
     EnableCut(false),
     cancelling_encoding(false)
@@ -28,7 +28,12 @@ Video::Video(string input_path)
     set_output_framerate(inputVideo.framerate);
     set_bitrate_by_size(10);
     set_cut(0, inputVideo.duration);
-    set_output_path(inputVideo.path.parent_path());
+    
+    string output_folder = SETTINGS -> get_string("output-path");
+    if (output_folder == "")
+        set_output_path(inputVideo.path.parent_path());
+    else
+        set_output_path(output_folder);
 }
 
 // Destruktor

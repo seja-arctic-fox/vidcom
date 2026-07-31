@@ -37,8 +37,6 @@
 #ifndef GUI
 #define GUI
 
-extern Glib::RefPtr<Gio::Settings> SETTINGS;
-
 // Bezpečný reset stavu načítání
 // Bez tohoto by mohla nastat výjimka a pak už by všechna nastavení nešla změnit, protože by to blokoval is_loading
 // SafeReset po skončení funkce zavolá vždy destruktor, který to nastaví zpět, i když se ta dotyčná metoda nedokončí
@@ -396,25 +394,6 @@ class ResultRow : public Gtk::Box
         void set_output_folder_button();
 };
 
-class PreferencesWindow
-{
-    public:
-        PreferencesWindow();
-        ~PreferencesWindow();
-        
-        AdwPreferencesDialog * dialog;
-    
-    protected:
-        // Defaults page
-        AdwNavigationPage * defaults_page;
-        AdwPreferencesGroup * default_mode_group, * default_output_group;
-        Gtk::Box default_mode_box, default_output_box;
-        OptionListBox default_mode_option, default_output_option;
-        OptionHeading default_mode_h, default_output_h;
-        RadioButtonRow archive_mode, compress_mode;
-        ButtonRow default_output;
-};
-
 class MainWindow : public Gtk::Window
 {
     public:
@@ -470,6 +449,44 @@ class MainWindow : public Gtk::Window
         void on_progress_update();
         void on_encoding_complete();
         void show_results_dialog();
+};
+
+class PreferencesWindow
+{
+    public:
+        PreferencesWindow(MainWindow * root);
+        ~PreferencesWindow();
+        
+        AdwPreferencesDialog * dialog;
+    
+    protected:
+        MainWindow * root;
+    
+        // Defaults page
+        AdwPreferencesPage * defaults_page;
+        AdwPreferencesGroup * default_mode_group, 
+                            * default_output_group,
+                            * reset_defaults_group;
+        Gtk::Box    default_mode_box, 
+                    default_output_box,
+                    reset_defaults_box;
+        OptionListBox   default_mode_option, 
+                        default_output_option;
+        OptionHeading   default_mode_h, 
+                        default_output_h;
+        RadioButtonRow  archive_mode, 
+                        compress_mode;
+        ButtonRow default_output;
+        Gtk::Button reset_defaults_button;
+        
+        void set_default_mode();
+        void set_default_output();
+        void on_folder_selected(
+            Glib::RefPtr<Gio::AsyncResult> &result, 
+            Glib::RefPtr<Gtk::FileDialog> folder_picker
+        );
+        void reset_defaults_dialog();
+        void reset_defaults();
 };
 
 #endif

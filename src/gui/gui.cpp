@@ -1,6 +1,7 @@
 #include "headers/gui.h"
 #include "adwaita.h"
 #include "giomm/simpleaction.h"
+#include "glib-object.h"
 #include "glibmm/refptr.h"
 #include "gtk/gtk.h"
 #include "sigc++/functors/mem_fun.h"
@@ -210,8 +211,20 @@ void MainWindow::display_about_dialog(const Glib::VariantBase&)
 
 void MainWindow::display_preferences(const Glib::VariantBase&)
 {
-    PreferencesWindow preferences;
-    adw_dialog_present(ADW_DIALOG(preferences.dialog), GTK_WIDGET(this -> gobj()));
+    // Must be on heap, otherwise many things are not working properly
+    // Running from stack technically worked, but was problematic
+    PreferencesWindow * preferences = new PreferencesWindow(this);
+    adw_dialog_present(
+        ADW_DIALOG(preferences -> dialog), GTK_WIDGET(this -> gobj())
+    );
+    
+    // Free when closed!
+    g_signal_connect(
+        preferences -> dialog, "closed", 
+        G_CALLBACK(+[](AdwDialog *, gpointer data) 
+            { delete static_cast<PreferencesWindow *>(data); }), 
+        preferences
+    );
 }
 
 MainWindow::~MainWindow()

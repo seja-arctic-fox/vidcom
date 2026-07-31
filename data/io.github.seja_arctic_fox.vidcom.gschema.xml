@@ -7,7 +7,7 @@
       <description>Choose either Archive or Compress mode</description>
     </key>
     <key name="output-path" type="s">
-      <default>'none'</default>
+      <default>''</default>
       <summary>Default output path</summary>
       <description>Videos will be saved here by default. none will output the result next to the original video. </description>
     </key>
