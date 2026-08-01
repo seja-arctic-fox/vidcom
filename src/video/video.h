@@ -25,48 +25,73 @@ enum Codec // podporované formáty pro kódování videa
     AVC
 };
 
-// Možnosti pro enkodéry, které mají být nastavitelné uživatelem
+// Parameters for encoders adjustable by user
 
 struct AV1_options
 {
-    bool film_grain_synthesis = false;  // odšumení + syntéza šumu, film-grain-denoise=1:film-grain=16
-    short film_grain_level = 16;        // úroveň šumu
-    short preset = 3;                   // vysoká úroveň komprese za přijatelný čas
-    bool better_details = true;         // enable_overlays
-    bool psychovisual_tuning = true;    // tune=0
-    short crf = 35;                     // výchozí úroveň kvality
-    bool variance_boost = false;        // adaptivní zvýšení bitratu
+    // av1 preset
+    short preset = SETTINGS -> get_int("av1-preset");
+    // denoising + noise synthesis, film-grain-denoise=1:film-grain=16
+    // av1 crf value
+    short crf = SETTINGS -> get_int("av1-crf");
+    bool film_grain_synthesis = SETTINGS -> get_boolean("av1-fgs");
+    // noise level
+    short film_grain_level = SETTINGS -> get_int("av1-fgl");
+    // overlay frames for better quality
+    bool better_details = SETTINGS -> get_boolean("av1-bd");
+    // psychovisual tuning for better perceived quality
+    bool psychovisual_tuning = SETTINGS -> get_boolean("av1-psy");
+    // adaptive bitrate increase based on content
+    bool variance_boost = SETTINGS -> get_boolean("av1-vb");
 
 };
 
 struct HEVC_options
 {
-    short preset = 7;                   // = slower. Hodnoty od 0 do 9
-    short crf = 19;                     // dobrá kvalita i komprese
-    bool psychovisual_tuning = true;    // psy-rd=2.5:psy-rdoq=4.0
-    bool motion_estimation = true;      // merange=100:me=3
-    bool adaptive_quantisation = true;  // aq-mode=4
-    bool adaptive_b_frames = true;      // bframes=8:b-adapt=2
+    // 7 = slower. Values from 0 to 9
+    short preset = SETTINGS -> get_int("hevc-preset");
+    // hevc crf value
+    short crf = SETTINGS -> get_int("hevc-crf");
+    // psy-rd=2.5:psy-rdoq=4.0
+    bool psychovisual_tuning = SETTINGS -> get_boolean("hevc-psy");
+    // merange=100:me=3
+    bool motion_estimation = SETTINGS -> get_boolean("hevc-me");
+    // aq-mode=4
+    bool adaptive_quantisation = SETTINGS -> get_boolean("hevc-aq");
+    // bframes=8:b-adapt=2
+    bool adaptive_b_frames = SETTINGS -> get_boolean("hevc-ab");
 };
 
 struct VP9_options
 {
-    short preset = 2;               // = slower. Hodnoty od 0 do 7
-    short quality = 0;              // 0 = best, 1 = realtime, 2 = good
-    short tune_content = 0;         // 0 = default, 1 = screen (záznamy obrazovky), 2 = film
-    short cpu_used = 0;             // Mezi -8 a 8
-    short noise_sensitivity = 4;    // od 0 do 4
-    short crf = 23;                 // ideální kompromis
+    // 2 = slower. Values from 0 to 7
+    short preset = SETTINGS -> get_int("vp9-preset");
+    // vp9 crf value
+    short crf = SETTINGS -> get_int("vp9-crf");
+    // 0 = best, 1 = realtime, 2 = good
+    short quality = SETTINGS -> get_int("vp9-qs");
+    // 0 = default, 1 = screen (screen recordings), 2 = film
+    short tune_content = SETTINGS -> get_int("vp9-tune");
+    // Between -8 and 8
+    short cpu_used = SETTINGS -> get_int("vp9-cpu");
+    // from 0 to 4
+    short noise_sensitivity = SETTINGS -> get_int("vp9-ns");
 };
 
 struct AVC_options
 {
-    short preset = 8;                   // = slower. from 0 to 9
-    short crf = 23;                     // default, from 0 to 51
-    bool adaptive_quantisation = true;  // aq-mode=2
-    bool motion_estimation = true;      // me=umh:subme=9
-    bool adaptive_b_frames = true;      // b-adapt=2:bframes=6
-    short tune = 0;                     // 0 = film, 1 = animation, 2 = grain, 3 = stillimage
+    // = slower. from 0 to 9
+    short preset = SETTINGS -> get_int("avc-preset");
+    // default, from 0 to 51
+    short crf = SETTINGS -> get_int("avc-crf");
+    // aq-mode=2
+    bool adaptive_quantisation = SETTINGS -> get_boolean("avc-aq");
+    // me=umh:subme=9
+    bool motion_estimation = SETTINGS -> get_boolean("avc-me");
+    // b-adapt=2:bframes=6
+    bool adaptive_b_frames = SETTINGS -> get_boolean("avc-ab");
+    // 0 = film, 1 = animation, 2 = grain, 3 = stillimage
+    short tune = SETTINGS -> get_int("avc-tune");
 };
 
 // ------------------------------------------------------------

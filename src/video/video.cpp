@@ -17,9 +17,9 @@
 // Konstruktor
 Video::Video(string input_path)
 :   
-    prefix("C"),
-    eCodec(AV1),
-    downscaleFactor(1),
+    prefix(SETTINGS -> get_string("prefix")),
+    eCodec(Codec(SETTINGS -> get_enum("codec"))),
+    downscaleFactor(SETTINGS -> get_double("downscale-factor")),
     Compress(SETTINGS -> get_boolean("encoding-mode")),
     TwoPass(false), 
     EnableCut(false),
@@ -33,7 +33,7 @@ Video::Video(string input_path)
 
     // Nastavení výchozích možností
     set_output_framerate(inputVideo.framerate);
-    set_bitrate_by_size(10);
+    set_bitrate_by_size(SETTINGS -> get_double("target-size"));
     set_cut(0, inputVideo.duration);
     
     bool next_to_original = SETTINGS -> get_boolean("output-next-to-original");

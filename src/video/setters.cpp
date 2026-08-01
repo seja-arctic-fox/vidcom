@@ -10,15 +10,19 @@
 void Video::set_default_output_settings()
 {
     set_output_framerate(inputVideo.framerate);
-    set_prefix("C");
+    set_prefix(SETTINGS -> get_string("prefix"));
     enable_cut(false);
-    set_compress(false);
+    set_compress(SETTINGS -> get_boolean("encoding-mode"));
     set_two_pass(false);
-    set_bitrate_by_size(10);
+    set_bitrate_by_size(SETTINGS -> get_double("target-size"));
     set_cut(0, inputVideo.duration);
-    set_output_path(inputVideo.path.parent_path());
-    set_codec(AV1);
-    set_downscale_factor(1);
+    bool next_to_original = SETTINGS -> get_boolean("output-next-to-original");
+    if (next_to_original)
+        set_output_path(inputVideo.path.parent_path());
+    else
+        set_output_path(SETTINGS -> get_string("output-path"));
+    set_codec(Codec(SETTINGS -> get_enum("codec")));
+    set_downscale_factor(SETTINGS -> get_double("downscale-factor"));
 }
 
 void Video::set_output_path(string output_path)
