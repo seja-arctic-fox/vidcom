@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
+
+    <enum id="io.github.seja_arctic_fox.vidcom.codec_enum">
+        <value nick="AV1" value="0"/>
+        <value nick="HEVC" value="1"/>
+        <value nick="VP9" value="2"/>
+        <value nick="AVC" value="3"/>
+    </enum>
+
   <schema path="/io/github/seja_arctic_fox/vidcom/" id="io.github.seja_arctic_fox.vidcom">
   
     <!-- Basic parameters -->
@@ -21,16 +29,16 @@
       <description>How many times smaller is the output resolution</description>
     </key>
     
-    <key name="framerate" type="d">
-      <default>-1</default>
-      <summary>Framerate</summary>
-      <description>Output framerate</description>
-    </key>
-    
     <key name="output-next-to-original" type="b">
       <default>true</default>
       <summary>Output next to original</summary>
       <description>Video(s) will be created next to the original in a subfolder</description>
+    </key>
+    
+    <key name="prefix" type="s">
+      <default>'C'</default>
+      <summary>File prefix</summary>
+      <description>Prefix prepended to output file(s)</description>
     </key>
     
     <key name="output-path" type="s">
@@ -39,14 +47,20 @@
       <description>Videos will be saved here by default. none will output the result next to the original video. </description>
     </key>
     
+    <key name="codec" enum="io.github.seja_arctic_fox.vidcom.codec_enum">
+      <default>'AV1'</default>
+      <summary>Codec</summary>
+      <description>Sets which video codec to use for encoding. </description>
+    </key>
+    
     <!-- AV1 parameters -->
-    <key name="av1-preset" type="n">
+    <key name="av1-preset" type="i">
       <default>3</default>
       <summary>Encoding preset</summary>
       <description>Lower value means better compression but longer encoding time</description>
     </key>
     
-    <key name="av1-crf" type="n">
+    <key name="av1-crf" type="i">
       <default>35</default>
       <summary>CRF</summary>
       <description>Quality level. Lower values increase quality and bitrate</description>
@@ -58,7 +72,7 @@
       <description>Enables film grain synthesis postprocessing filter. </description>
     </key>
     
-    <key name="av1-fgl" type="n">
+    <key name="av1-fgl" type="i">
       <default>16</default>
       <summary>Film Grain Level</summary>
       <description>Level of film grain in shot. </description>
@@ -76,14 +90,20 @@
       <description>Enables psychovisual tuning (better for human eye), instead of PSNR (exact method). </description>
     </key>
     
+    <key name="av1-vb" type="b">
+      <default>false</default>
+      <summary>Variance Boost</summary>
+      <description>Adaptively increases bitrate when needed. </description>
+    </key>
+    
     <!-- HEVC parameters -->
-    <key name="hevc-preset" type="n">
+    <key name="hevc-preset" type="i">
       <default>7</default>
       <summary>Encoding preset</summary>
       <description>Higher value means better compression but longer encoding time</description>
     </key>
     
-    <key name="hevc-crf" type="n">
+    <key name="hevc-crf" type="i">
       <default>19</default>
       <summary>CRF</summary>
       <description>Quality level. Lower values increase quality and bitrate</description>
@@ -114,50 +134,50 @@
     </key>
     
     <!-- VP9 parameters -->
-    <key name="vp9-preset" type="n">
+    <key name="vp9-preset" type="i">
       <default>2</default>
       <summary>Encoding preset</summary>
       <description>Lower value means better compression but longer encoding time</description>
     </key>
     
-    <key name="vp9-crf" type="n">
+    <key name="vp9-crf" type="i">
       <default>23</default>
       <summary>CRF</summary>
       <description>Quality level. Lower values increase quality and bitrate</description>
     </key>
     
-    <key name="vp9-cpu" type="n">
+    <key name="vp9-cpu" type="i">
       <default>0</default>
       <summary>CPU Usage</summary>
       <description>Amount of CPU used during encoding. Lower values mean better compression but longer encoding time. </description>
     </key>
     
-    <key name="vp9-ns" type="n">
+    <key name="vp9-ns" type="i">
       <default>4</default>
       <summary>Noise Sensitivity</summary>
       <description>Sensitivity of the deblocking filter which removes encoding artifacts. </description>
     </key>
     
-    <key name="vp9-qs" type="n">
+    <key name="vp9-qs" type="i">
       <default>0</default>
       <summary>Quality Scale</summary>
       <description>0 = best, 1 = realtime, 2 = good</description>
     </key>
     
-    <key name="vp9-tune" type="n">
+    <key name="vp9-tune" type="i">
       <default>0</default>
       <summary>Tune</summary>
       <description>0 = default, 1 = screen recording, 2 = film content</description>
     </key>
     
     <!-- AVC parameters -->
-    <key name="avc-preset" type="n">
+    <key name="avc-preset" type="i">
       <default>8</default>
       <summary>Encoding preset</summary>
       <description>Higher value means better compression but longer encoding time</description>
     </key>
     
-    <key name="avc-crf" type="n">
+    <key name="avc-crf" type="i">
       <default>23</default>
       <summary>CRF</summary>
       <description>Quality level. Lower values increase quality and bitrate</description>
@@ -181,7 +201,7 @@
       <description>Enables adaptive B-frames. Inserts as much B-frames as needed for better compression. </description>
     </key>
     
-    <key name="avc-tune" type="n">
+    <key name="avc-tune" type="i">
       <default>0</default>
       <summary>Tune</summary>
       <description>0 = film, 1 = animation, 2 = grain, 3 = stillimage</description>
