@@ -485,10 +485,14 @@ class DummyVideoElement : public VideoElement
 class DefaultsPage : public SettingsPage
 {
     public:
-        DefaultsPage(VideoElement * video);
+        DefaultsPage(DummyVideoElement * video);
         ~DefaultsPage();
         
+        bool get_nto_state();
+        
     protected:
+        OptionListBox defaults_desc_row;
+        Gtk::Label defaults_desc;
         SwitchRow next_to_original_switch;
     
         void save_archive_mode(VideoElement * element) override;
@@ -517,6 +521,7 @@ class PreferencesWindow
         Gtk::Button apply_defaults_button, 
                     reset_defaults_button;
         
+        void apply_defaults();
         void reset_defaults_dialog();
         void reset_defaults();
 };

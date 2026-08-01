@@ -27,7 +27,7 @@ Video::Video(string input_path)
 {
     // Načtení informací o vstupním videu
     if (input_path == "")
-        inputVideo.path = fs::path(getenv("HOME")) / "example_video.mp4";
+        inputVideo.path = string(getenv("HOME")) + "/example_video.mp4";
     else
         set_video_info(input_path);
 

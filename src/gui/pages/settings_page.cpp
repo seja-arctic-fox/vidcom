@@ -312,7 +312,6 @@ void SettingsPage::load_options_into_GUI(Video * video)
         {
             compress_row.set_state(true);
             mode_listbox.select_row(*mode_listbox.get_row_at_index(1));
-            target_size_row.set_value(video -> get_target_size());
             target_size_row.set_sensitive();
             res_row.set_sensitive();
             fps_row.set_sensitive();
@@ -364,6 +363,7 @@ void SettingsPage::load_options_into_GUI(Video * video)
     cut_widget.set_cut(video -> get_video_info().duration, video -> get_cut_info());
     
     // Rozlišení a fps
+    target_size_row.set_value(video -> get_target_size());
     res_row.set_value(video -> get_downscale_factor());
     fps_row.set_range(0, video -> get_video_info().framerate);
     fps_row.set_value(video -> get_output_framerate());
