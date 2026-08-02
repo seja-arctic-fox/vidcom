@@ -119,25 +119,22 @@ I will update the lists below from time to time;
 - [ ] At least try to make a Windows build
 - [ ] Implement translations (or ability to translate the app)
 - [x] About window/section
-- [ ] Add an ability to change default configuration/settings. save the configs in a file
+- [x] Add an ability to change default configuration/settings. save the configs in a file
 - [x] Change the current paned window split into the typical Adwaita side panel for queue and the main page
 - [x] "No video selected" page for the settings page
 - [x] Copy subtitles automatically when they are present in the original video
-- [ ] Be able to select multiple videos manually, not be limited to just selecting single or all the videos (when holding Shift or other key)
+- [x] Be able to select multiple videos manually, not be limited to just selecting single or all the videos (when holding Shift or other key)
 - [x] Make the runner (in the header bar) slimmer and simpler
 - [x] Show state of loading/encoding in the settings page space
-
-~~- Highlight the currently encoding video in the queue~~
-
 - [ ] Copy settings from one video to another with right click/shortcut/button
 - [ ] Keyboard shortcuts
-- [ ] "Open With" function/binding for VidCom
-- [ ] Replace popups with visible messages inside window and/or notification
+- [x] "Open With" function/binding for VidCom
+- [x] Replace popups with visible messages inside window and/or notification
 - [ ] Different behavior for cases when the output videos already exist - show conflicts
 - [ ] Better TAB behavior + accelerators
 
 ### Known Issues
-- [ ] Cut feature - change spinbuttons for something more manageable, specifically for time setting + make it less rigid
-- [ ] The button in the results page is not visible when more results are displayed (it's on the bottom), which might be confusing
+- [x] Cut feature - change spinbuttons for something more manageable, specifically for time setting + make it less rigid
+- [x] The button in the results page is not visible when more results are displayed (it's on the bottom), which might be confusing
 
 This project follows [GNOME's Code of Conduct](https://conduct.gnome.org/).
