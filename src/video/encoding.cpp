@@ -70,9 +70,17 @@ int Video::encode(fs::path output_path, string command, ProgressCallback progres
     char buffer[256];
 
     int pipe_fds[2];
+    int stderr_fds[2];
     
     if (pipe(pipe_fds) != 0)
     {
+        return -1;
+    }
+    
+    if (pipe(stderr_fds) != 0)
+    {
+        close(pipe_fds[0]);
+        close(pipe_fds[1]);
         return -1;
     }
 
@@ -82,9 +90,11 @@ int Video::encode(fs::path output_path, string command, ProgressCallback progres
     posix_spawn_file_actions_t file_actions;
     posix_spawn_file_actions_init(&file_actions);
     posix_spawn_file_actions_addclose(&file_actions, pipe_fds[0]);
+    posix_spawn_file_actions_addclose(&file_actions, stderr_fds[0]);
     posix_spawn_file_actions_adddup2(&file_actions, pipe_fds[1], STDOUT_FILENO);
-    posix_spawn_file_actions_adddup2(&file_actions, pipe_fds[1], STDERR_FILENO);
     posix_spawn_file_actions_addclose(&file_actions, pipe_fds[1]);
+    posix_spawn_file_actions_adddup2(&file_actions, stderr_fds[1], STDERR_FILENO);
+    posix_spawn_file_actions_addclose(&file_actions, stderr_fds[1]);
 
     // Uložit stav terminálu
     struct termios original_termios;
@@ -118,6 +128,7 @@ int Video::encode(fs::path output_path, string command, ProgressCallback progres
 
     // Uzavřít rouru pro zapisování, nechat jenom čtení
     close(pipe_fds[1]);
+    close(stderr_fds[1]);
 
     if (spawn_result != 0)
     {
@@ -193,6 +204,20 @@ int Video::encode(fs::path output_path, string command, ProgressCallback progres
     waitpid(encoding_pid, &child_status, 0);
     encoding_pid = -1;
     
+    FILE * error_pipe = fdopen(stderr_fds[0], "r");
+    string error_msg;
+    if (error_pipe)
+    {
+        char err_buffer[256];
+        while (fgets(err_buffer, sizeof(err_buffer), error_pipe) != NULL)
+            error_msg += err_buffer;
+        fclose(error_pipe);
+    }
+    else
+    {
+        close(stderr_fds[0]);
+    }
+    
     if (cancelling_encoding.load())
     {
         sigaction(SIGINT, &old_sa, nullptr);
@@ -203,6 +228,8 @@ int Video::encode(fs::path output_path, string command, ProgressCallback progres
     }
     
     int exit_status = WIFEXITED(child_status) ? WEXITSTATUS(child_status) : -1;
+    
+    if (exit_status != 0) this -> last_error_message = error_msg;
 
     // Obnovit přechozí SIGINT akci
     sigaction(SIGINT, &old_sa, nullptr);
@@ -262,7 +289,7 @@ string Video::make_options()
 {
     string command = "";        // Konečný příkaz
 
-    string command_prefix = "-v 0 -y -progress pipe:1 -stats_period 0.1 ";                                                              // Základní nastavení ffmpegu
+    string command_prefix = "-v 16 -y -progress pipe:1 -stats_period 0.1 ";                                                              // Základní nastavení ffmpegu
     string command_input = "-i '" + inputVideo.path.generic_string() + "' -map 0:v -map 0:a? -map 0:s? ";                                                            // Vstupní soubor
     string command_output = "'" + outputPath.generic_string() + "'";   // Výstupní soubor                                                                                                              // Nastavení použití NVENC
     string command_params = "";                                                                                                                // Nastavení bitratu a velikosti při kompresi
@@ -297,6 +324,7 @@ string Video::make_options()
     
     // Titulky
     if (!inputVideo.use_matroska) { command_params += "-c:s mov_text "; }
+    else                          { command_params += "-c:s copy "; }
 
     // Nastavení střihu
     if (EnableCut)
@@ -327,11 +355,11 @@ string Video::make_options()
     if (TwoPass && eCodec != AV1)
     {
         command =   "ffmpeg " + command_prefix + command_input + command_params + command_codec + "-pass 1 -an -f null /dev/null; "
-                    +"ffmpeg " + command_prefix + command_input + command_params + command_codec + "-pass 2 " + command_output + " 2>&1";
+                    +"ffmpeg " + command_prefix + command_input + command_params + command_codec + "-pass 2 " + command_output;
     }
     else
     {
-        command = "ffmpeg " + command_prefix + command_input + command_params + command_codec + command_output + " 2>&1";
+        command = "ffmpeg " + command_prefix + command_input + command_params + command_codec + command_output;
     }
     return command;
 }

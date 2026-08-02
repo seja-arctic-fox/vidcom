@@ -63,6 +63,7 @@ struct EncodingResult
     fs::path video_path;
     int exit_status;
     bool was_cancelled;
+    string error_msg;
 };
 
 // Prvek ve frontě kódování
@@ -376,12 +377,13 @@ class ResultRow : public Gtk::Box
     friend class ResultsPage;
     
     public:
-        ResultRow(fs::path video_path, int status);
+        ResultRow(fs::path video_path, int status, string error_msg);
         ~ResultRow();
         
     protected:
         fs::path video_path;
         int status;
+        string error_msg;
     
         Gtk::Label result_label, video_name, status_text;
         Gtk::Image status_icon;
