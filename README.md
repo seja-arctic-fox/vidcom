@@ -85,15 +85,23 @@ cd build/
 # COMPILING WITHOUT INSTALLATION
 meson devenv
 meson compile
-# OR
 meson install
+```
+
+---
+
+If you want to compile as a flatpak package, execute these commands in the root directory after cloning:
+```bash
+flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+# Dont forget to install flatpak-builder
+flatpak-builder --force-clean --user --install-deps-from=flathub --repo=repo --install flatpak_builddir ./data/*.yml
 ```
 
 ### Windows
 #### WSL
 Tested on WSL with Ubuntu and Arch Linux, worked great OOTB, but I need to test it more. 
 
-#### Other
+#### Other (WIP)
 Maybe I could do it with `msys2`, but it is not top priority. 
 I will make a Windows build only if it is not unecessary hard to do so. 
 
