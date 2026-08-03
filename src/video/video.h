@@ -115,12 +115,12 @@ class Video
         void validate_video_info();
 
         // make_options je souhrná metoda pro tyto (pod)metody
-        string make_options();      // poskládá argumenty podle zvolených nastavení
+        vector<string> make_options();      // poskládá argumenty podle zvolených nastavení
 
         // Metody pro jednotlivé kodeky
-        string encode_AV1();         // vytvoří příkaz pro kódování v AV1
-        string encode_HEVC();        // vytvoří příkaz pro kódování v HEVC
-        string encode_VP9();         // vytvoří příkaz pro kódování v VP9
+        vector<string> encode_AV1();         // vytvoří příkaz pro kódování v AV1
+        vector<string> encode_HEVC();        // vytvoří příkaz pro kódování v HEVC
+        vector<string> encode_VP9();         // vytvoří příkaz pro kódování v VP9
 
         // Sledování postupu
         void parse_progress(char * buffer, float duration, ProgressCallback callback);
@@ -164,7 +164,7 @@ class Video
         void set_two_pass(bool two_pass);                   // povolit/zakázat dvouprůchodové kódování
         void enable_cut(bool cut);                          // povolit/zakázat střih
 
-        int encode(fs::path output_path = "", string command = "", ProgressCallback progress_callback = nullptr); // metoda pro spuštění kódování
+        int encode(fs::path output_path = "", ProgressCallback progress_callback = nullptr); // metoda pro spuštění kódování
         void cancel_encoding();
         static void sigint_handler(int signum);
 
