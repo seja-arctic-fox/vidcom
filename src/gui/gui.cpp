@@ -1,7 +1,9 @@
 #include "headers/gui.h"
 #include "adwaita.h"
 #include "giomm/simpleaction.h"
+#include "glibmm/refptr.h"
 #include "gtk/gtk.h"
+#include "gtkmm/application.h"
 #include "sigc++/functors/mem_fun.h"
 #include "src/cli/cli.h"
 #include <iostream>
@@ -260,6 +262,21 @@ void MainWindow::start_encoding()
     }
 
     // Start kódování
+    auto app = GTK_APPLICATION(
+        Gtk::Application::get_default() -> gobj()
+    );
+    auto window = GTK_WINDOW(this -> gobj());
+    auto flags = static_cast<GtkApplicationInhibitFlags>(
+        GTK_APPLICATION_INHIBIT_LOGOUT |
+        GTK_APPLICATION_INHIBIT_SUSPEND
+    );
+    inhibition_cookie = gtk_application_inhibit(
+        app, 
+        window, 
+        flags, 
+        "Video encoding is in progess"
+    );
+    
     runner_panel.set_encoding_state(true);
     main_page_stack.set_visible_child("encoding_page");
     queue_lock = true;
@@ -392,6 +409,12 @@ void MainWindow::on_encoding_complete()
     {
         encoding_thread.join();
     }
+    
+    auto app = GTK_APPLICATION(
+        Gtk::Application::get_default() -> gobj()
+    );
+    gtk_application_uninhibit(app, inhibition_cookie);
+    inhibition_cookie = 0;
 }
 
 void MainWindow::show_results_dialog()
