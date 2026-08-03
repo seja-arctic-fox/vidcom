@@ -70,6 +70,10 @@ datadir = get_option('datadir')
 metainfodir = datadir / 'metainfo'
 desktopdir = datadir / 'applications'
 icondir = datadir / 'icons' / 'hicolor' / 'scalable' / 'apps'
+action_dir = datadir / 'icons' / 'hicolor' / 'scalable' / 'actions'
+action_icons = [
+    join_paths('data', 'icons', 'edit-select-none-symbolic.svg')
+]
 
 install_data (
   'data/io.github.seja_arctic_fox.vidcom.desktop',
@@ -84,4 +88,9 @@ install_data(
 install_data(
   'data/io.github.seja_arctic_fox.vidcom.svg',
   install_dir: icondir
+)
+
+install_data(
+  action_icons,
+  install_dir: join_paths(action_dir)
 )
