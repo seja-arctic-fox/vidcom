@@ -292,6 +292,27 @@ class VP9_Parameters : public CodecParametersPage
         void save_tune(VideoElement * element);
 };
 
+// Page for AVC
+class AVC_Parameters : public CodecParametersPage
+{
+    public:
+        AVC_Parameters();
+        void load(VideoElement * video_element);
+        
+    protected:
+        SwitchRow motion_estimation;
+        SwitchRow adaptive_quantisation;
+        SwitchRow adaptive_b_frames;
+        SpinButtonRow tune;
+        
+        void save_preset(VideoElement * element);
+        void save_crf(VideoElement * element);
+        void save_motion_estimation(VideoElement * element);
+        void save_adaptive_quantisation(VideoElement * element);
+        void save_adaptive_b_frames(VideoElement * element);
+        void save_tune(VideoElement * element);
+};
+
 // Stránka pro označené video ve frontě. Obsahuje základní nastavení pro každé video individuálně
 class SettingsPage : public Gtk::ScrolledWindow
 {
@@ -342,6 +363,7 @@ class SettingsPage : public Gtk::ScrolledWindow
         AV1_Parameters av1_page;
         HEVC_Parameters hevc_page;
         VP9_Parameters vp9_page;
+        AVC_Parameters avc_page;
 
         // Ukládací funkce
         void save_archive_mode(VideoElement * element);

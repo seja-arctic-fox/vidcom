@@ -28,6 +28,7 @@ gui = [
   './src/gui/pages/av1_page.cpp',
   './src/gui/pages/hevc_page.cpp',
   './src/gui/pages/vp9_page.cpp',
+  './src/gui/pages/avc_page.cpp',
   './src/gui/pages/results_page.cpp',
   './src/gui/widgets/result_row.cpp',
   './src/gui/widgets/time_setter.cpp',

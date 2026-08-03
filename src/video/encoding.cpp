@@ -1,5 +1,6 @@
 #include "video.h"
 #include "../cli/cli.h"
+#include <array>
 #include <csignal>
 #include <cstdio>
 #include <cstdlib>
@@ -8,6 +9,7 @@
 #include <stdexcept>
 #include <format>
 #include <spawn.h>
+#include <string>
 #include <sys/wait.h>
 #include <cstring>
 #include <unistd.h>
@@ -358,6 +360,10 @@ vector<string> Video::make_options()
     {
         command_codec = encode_VP9();
     }
+    if (eCodec == AVC)
+    {
+        command_codec = encode_AVC();
+    }
 
     // Konečný příkaz
     // U AV1 se mi ještě nepodařilo vytvořit úspěšný příkaz pro dvouprůchodové kódování
@@ -517,6 +523,50 @@ vector<string> Video::encode_VP9()
             "-noise-sensitivity", to_string(VP9_options.noise_sensitivity)
         });
 
+    return command_codec;
+}
+
+vector<string> Video::encode_AVC()
+{
+    vector<string> command_codec;
+    
+    if (Compress)
+        command_codec.insert(command_codec.end(), 
+            {"-pix_fmt", "yuv420p", "-c:a", "libopus"});
+    else
+        command_codec.insert(command_codec.end(), 
+            {"-crf", to_string(VP9_options.crf), "-c:a", "aac", "-q:a", "1"});
+    
+    // set the preset and codec
+    command_codec.insert(command_codec.end(), 
+        {"-c:v", "libx264", "-preset", to_string(AVC_options.preset)});
+    
+    array<string, 4> tunes = {"film", "animation", "grain", "stillimage"};
+    command_codec.insert(command_codec.end(), 
+        {"-tune", tunes[AVC_options.tune]});
+    
+    string params;
+    
+    if (AVC_options.motion_estimation)
+    {
+        params += "me=umh:subme=9:";
+    }
+    
+    if (AVC_options.adaptive_quantisation)
+    {
+        params += "aq-mode=2:";
+    }
+    
+    if (AVC_options.adaptive_b_frames)
+    {
+        params += "b-adapt=2:bframes=6:";
+    }
+    
+    params += "ref=4:no-fast-pskip=1:keyint=" 
+            + to_string(this -> outputFPS * 10);
+    command_codec.insert(command_codec.end(),
+        {"-x264-params", params});
+    
     return command_codec;
 }
 
