@@ -78,9 +78,6 @@ MainWindow::MainWindow()
     // Akce
     auto app = Gtk::Application::get_default();
     
-    // "Open With" functionality
-    app -> signal_open().connect(sigc::mem_fun(*this, &MainWindow::on_open_videos));
-    
     // O aplikaci
     auto about_action = Gio::SimpleAction::create("about");
     about_action -> signal_activate().connect(sigc::mem_fun(*this, &MainWindow::display_about_dialog));
