@@ -234,6 +234,74 @@ int CLI::set_codec_parameters(list<Video> &video_list, string params)
         }
 
     }
+    
+    if (codec == AVC)
+    {
+        AVC_options new_options;
+
+        for (string p : parameter_list)
+        {
+            string option = p.substr(0, p.find("="));
+            string value = p.substr(p.find("=") + 1, p.length());
+
+            if (option == "p")
+            {
+                new_options.preset = stoi(value);
+                continue;
+            }
+
+            if (option == "crf")
+            {
+                new_options.crf = stoi(value);
+                continue;
+            }
+
+            if (option == "tn")
+            {
+                new_options.tune = stoi(value);
+                continue;
+            }
+
+            if (option == "me")
+            {
+                new_options.motion_estimation = stob(value);
+                continue;
+            }
+
+            if (option == "aq")
+            {
+                new_options.adaptive_quantisation = stob(value);
+                continue;
+            }
+
+            if (option == "ab")
+            {
+                new_options.adaptive_b_frames = stob(value);
+                continue;
+            }
+
+            return 2;
+
+        }
+
+        valid = 
+            (0 <= new_options.preset            && new_options.preset           <=  9) ||
+            (0 <= new_options.crf               && new_options.crf              <= 51) ||
+            (0 <= new_options.tune              && new_options.tune             <= 3);
+
+        if (valid)
+        {
+            for (Video &video : video_list)
+            {
+                video.AVC_options = new_options;
+            }
+        }
+        else 
+        {
+            return 1;
+        }
+    }
+    
     return 0;
 }
 
@@ -314,9 +382,14 @@ int CLI::parse_arguments(int argc, char **argv)
                     {
                         set_codec(*video_list, HEVC);
                     }
+                    else if (command == "AVC" || command == "avc") 
+                    {
+                        set_codec(*video_list, AVC);
+                    }
                     else 
                     {
                         cerr << RED << "Invalid codec name. Please use -h to list avaiable codecs. " << RESET << endl;
+                        return 1;
                     }
 
                     continue;
@@ -328,7 +401,12 @@ int CLI::parse_arguments(int argc, char **argv)
                     a++;
                     command = argv[a];
 
-                    set_codec_parameters(*video_list, command);
+                    int param_state = set_codec_parameters(*video_list, command);
+                    if (param_state != 0) 
+                    {
+                        cerr << RED << "Invalid codec parameters. Please use -h to see correct parameter usage. " << RESET << endl;
+                        return param_state;
+                    }
                     continue;
                 }
 

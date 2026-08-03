@@ -28,6 +28,7 @@ gui = [
   './src/gui/pages/av1_page.cpp',
   './src/gui/pages/hevc_page.cpp',
   './src/gui/pages/vp9_page.cpp',
+  './src/gui/pages/avc_page.cpp',
   './src/gui/pages/results_page.cpp',
   './src/gui/widgets/result_row.cpp',
   './src/gui/widgets/time_setter.cpp',
@@ -70,6 +71,10 @@ datadir = get_option('datadir')
 metainfodir = datadir / 'metainfo'
 desktopdir = datadir / 'applications'
 icondir = datadir / 'icons' / 'hicolor' / 'scalable' / 'apps'
+action_dir = datadir / 'icons' / 'hicolor' / 'scalable' / 'actions'
+action_icons = [
+    join_paths('data', 'icons', 'edit-select-none-symbolic.svg')
+]
 
 install_data (
   'data/io.github.seja_arctic_fox.vidcom.desktop',
@@ -84,4 +89,9 @@ install_data(
 install_data(
   'data/io.github.seja_arctic_fox.vidcom.svg',
   install_dir: icondir
+)
+
+install_data(
+  action_icons,
+  install_dir: join_paths(action_dir)
 )

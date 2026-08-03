@@ -1,5 +1,6 @@
 #include "gdkmm/contentprovider.h"
 #include "gdkmm/drag.h"
+#include "gdkmm/enums.h"
 #include "giomm/asyncresult.h"
 #include "glibmm/dispatcher.h"
 #include "glibmm/refptr.h"
@@ -18,7 +19,6 @@
 #include "gtkmm/listboxrow.h"
 #include "gtkmm/progressbar.h"
 #include "gtkmm/scrolledwindow.h"
-#include "gtkmm/togglebutton.h"
 #include "gtkmm/widget.h"
 #include "gtkmm/window.h"
 #include <functional>
@@ -63,6 +63,7 @@ struct EncodingResult
     fs::path video_path;
     int exit_status;
     bool was_cancelled;
+    string error_msg;
 };
 
 // Prvek ve frontě kódování
@@ -153,7 +154,7 @@ class QueueFrame : public Gtk::Box
         void add_video(const std::string& input_path);
         std::vector<Video *> get_all_videos();
         sigc::signal<void(VideoElement *)> signal_video_selected;
-        sigc::signal<void(std::vector<VideoElement*>)> signal_all_videos_selected;
+        sigc::signal<void(std::vector<VideoElement*>)> signal_multiple_videos_selected;
         sigc::signal<void()> signal_nothing_selected;
         sigc::signal<void(bool)> signal_loading_videos;
         sigc::signal<void(int, int)> signal_loading_videos_count;
@@ -181,15 +182,21 @@ class QueueFrame : public Gtk::Box
         Gtk::Label clear_queue_text;
         Gtk::Label select_all_text;
         Gtk::Button clear_queue_button;
-        Gtk::ToggleButton select_all_button;
+        Gtk::Button select_all_button;
 
         // Drag and drop
         Glib::RefPtr<Gtk::DropTarget> drag_and_drop_target;
         sigc::connection idle_handler;
+        
+        // Shift pressed
+        bool select_multiple = false;
+        bool on_key_pressed(guint keyval, guint, Gdk::ModifierType);
+        void on_key_released(guint keyval, guint, Gdk::ModifierType);
 
         // Metody
         void on_clear_clicked();
         void on_select_all_clicked();
+        void change_select_all_status(bool action_all);
         bool on_drop(const Glib::ValueBase& value, double, double);
         void error_toast_not_a_video(string file);
         void on_row_selected(Gtk::ListBoxRow * row);
@@ -285,6 +292,27 @@ class VP9_Parameters : public CodecParametersPage
         void save_tune(VideoElement * element);
 };
 
+// Page for AVC
+class AVC_Parameters : public CodecParametersPage
+{
+    public:
+        AVC_Parameters();
+        void load(VideoElement * video_element);
+        
+    protected:
+        SwitchRow motion_estimation;
+        SwitchRow adaptive_quantisation;
+        SwitchRow adaptive_b_frames;
+        SpinButtonRow tune;
+        
+        void save_preset(VideoElement * element);
+        void save_crf(VideoElement * element);
+        void save_motion_estimation(VideoElement * element);
+        void save_adaptive_quantisation(VideoElement * element);
+        void save_adaptive_b_frames(VideoElement * element);
+        void save_tune(VideoElement * element);
+};
+
 // Stránka pro označené video ve frontě. Obsahuje základní nastavení pro každé video individuálně
 class SettingsPage : public Gtk::ScrolledWindow
 {
@@ -335,6 +363,7 @@ class SettingsPage : public Gtk::ScrolledWindow
         AV1_Parameters av1_page;
         HEVC_Parameters hevc_page;
         VP9_Parameters vp9_page;
+        AVC_Parameters avc_page;
 
         // Ukládací funkce
         void save_archive_mode(VideoElement * element);
@@ -376,12 +405,13 @@ class ResultRow : public Gtk::Box
     friend class ResultsPage;
     
     public:
-        ResultRow(fs::path video_path, int status);
+        ResultRow(fs::path video_path, int status, string error_msg);
         ~ResultRow();
         
     protected:
         fs::path video_path;
         int status;
+        string error_msg;
     
         Gtk::Label result_label, video_name, status_text;
         Gtk::Image status_icon;
@@ -441,6 +471,7 @@ class MainWindow : public Gtk::Window
         EncodingProgress current_progress;
         std::vector<EncodingResult> encoding_results;
         bool queue_lock = false;
+        guint inhibition_cookie = 0;
 
         // Kódování
         void start_encoding();

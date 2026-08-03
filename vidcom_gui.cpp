@@ -1,5 +1,7 @@
 #include "adwaita.h"
 #include "giomm/application.h"
+#include "gdk/gdk.h"
+#include "gtk/gtk.h"
 #include "gtkmm/application.h"
 #include "src/cli/cli.h"
 #include "src/gui/headers/gui.h"
@@ -39,6 +41,11 @@ int main(int argc, char **argv)
             window -> present();
         });
     
+        GtkIconTheme * theme = gtk_icon_theme_get_for_display(
+            gdk_display_get_default()
+        );
+        gtk_icon_theme_add_search_path(theme, "./data/icons");
+        
         int result = app -> run(argc, argv);
         delete window;
         return result;

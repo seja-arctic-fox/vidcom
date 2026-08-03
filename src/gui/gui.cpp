@@ -2,7 +2,9 @@
 #include "adwaita.h"
 #include "giomm/application.h"
 #include "giomm/simpleaction.h"
+#include "glibmm/refptr.h"
 #include "gtk/gtk.h"
+#include "gtkmm/application.h"
 #include "sigc++/functors/mem_fun.h"
 #include "src/cli/cli.h"
 #include <iostream>
@@ -128,7 +130,7 @@ MainWindow::MainWindow()
     
     // Signály pro změny názvu videa v runneru
     video_queue.signal_video_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_title));
-    video_queue.signal_all_videos_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_title_multiple));
+    video_queue.signal_multiple_videos_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_title_multiple));
     video_queue.signal_nothing_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::clear_title));
     
     // Přepínání stavů a (od)blokování tlačítka pro kódování
@@ -148,7 +150,7 @@ MainWindow::MainWindow()
     
     // Propojení signálů pro aktualizaci nastavení videa
     video_queue.signal_video_selected.connect(sigc::mem_fun(options_page, &SettingsPage::read_video_options));
-    video_queue.signal_all_videos_selected.connect(sigc::mem_fun(options_page, &SettingsPage::read_video_vector_options));
+    video_queue.signal_multiple_videos_selected.connect(sigc::mem_fun(options_page, &SettingsPage::read_video_vector_options));
 
     // Signály pro začátek a zastavení kódování, načítání videí do fronty
     runner_panel.signal_start_encoding.connect(sigc::mem_fun(*this, &MainWindow::start_encoding));
@@ -261,6 +263,21 @@ void MainWindow::start_encoding()
     }
 
     // Start kódování
+    auto app = GTK_APPLICATION(
+        Gtk::Application::get_default() -> gobj()
+    );
+    auto window = GTK_WINDOW(this -> gobj());
+    auto flags = static_cast<GtkApplicationInhibitFlags>(
+        GTK_APPLICATION_INHIBIT_LOGOUT |
+        GTK_APPLICATION_INHIBIT_SUSPEND
+    );
+    inhibition_cookie = gtk_application_inhibit(
+        app, 
+        window, 
+        flags, 
+        "Video encoding is in progess"
+    );
+    
     runner_panel.set_encoding_state(true);
     main_page_stack.set_visible_child("encoding_page");
     queue_lock = true;
@@ -332,7 +349,7 @@ void MainWindow::encoding_worker()
         };
 
         video -> test_commands();
-        int exit_code = video -> encode("", "", progress_callback);
+        int exit_code = video -> encode("", progress_callback);
         
         if (exit_code == -3)
         {
@@ -354,6 +371,7 @@ void MainWindow::encoding_worker()
         result.video_path = video -> get_output_path();
         result.exit_status = exit_code;
         result.was_cancelled = (exit_code == -2);
+        result.error_msg = video -> last_error_message;
 
         {
             std::lock_guard<std::mutex> lock(encoding_mutex);
@@ -392,6 +410,12 @@ void MainWindow::on_encoding_complete()
     {
         encoding_thread.join();
     }
+    
+    auto app = GTK_APPLICATION(
+        Gtk::Application::get_default() -> gobj()
+    );
+    gtk_application_uninhibit(app, inhibition_cookie);
+    inhibition_cookie = 0;
 }
 
 void MainWindow::show_results_dialog()
