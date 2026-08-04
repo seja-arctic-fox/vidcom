@@ -52,15 +52,15 @@ void ResultsPage::load_results(std::vector<EncodingResult> encoding_results)
         auto row = Gtk::make_managed<ResultRow>(result.video_path, result.exit_status, result.error_msg);
         results_listbox.append(*row);
         
-        if (result.exit_status != 0) failed = true;
+        if (result.exit_status != 0 && result.exit_status != -2) failed = true;
         if (result.was_cancelled) interrupted = true;
     }
     
-    if (interrupted) result_label.set_text(
-        "Encoding was interrupted by user. Some videos may not be playable. "
-    );
-    else if (failed) result_label.set_text(
+    if (failed) result_label.set_text(
         "Errors occured during compression. Some videos may not be playable. "
+    );
+    else if (interrupted) result_label.set_text(
+        "Encoding was interrupted by user. Some videos may not be playable. "
     );
     else result_label.set_text(
         "Your videos have been compressed. Click the items below to see them. "

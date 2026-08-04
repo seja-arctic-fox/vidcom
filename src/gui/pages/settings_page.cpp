@@ -260,6 +260,8 @@ void SettingsPage::save_cut(VideoElement * element)
             cut_widget.get_end()
         );
     }
+    
+    element -> video.set_bitrate_by_size(element -> video.get_target_size());
 }
 
 void SettingsPage::save_prefix(VideoElement * element)

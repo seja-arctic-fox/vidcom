@@ -1,9 +1,10 @@
 #include "headers/gui.h"
 #include "adwaita.h"
+#include "giomm/application.h"
 #include "giomm/simpleaction.h"
-#include "glib-object.h"
 #include "glibmm/refptr.h"
 #include "gtk/gtk.h"
+#include "gtkmm/application.h"
 #include "sigc++/functors/mem_fun.h"
 #include "src/cli/cli.h"
 #include <iostream>
@@ -136,7 +137,7 @@ MainWindow::MainWindow()
     
     // Signály pro změny názvu videa v runneru
     video_queue.signal_video_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_title));
-    video_queue.signal_all_videos_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_title_multiple));
+    video_queue.signal_multiple_videos_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_title_multiple));
     video_queue.signal_nothing_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::clear_title));
     
     // Přepínání stavů a (od)blokování tlačítka pro kódování
@@ -156,7 +157,7 @@ MainWindow::MainWindow()
     
     // Propojení signálů pro aktualizaci nastavení videa
     video_queue.signal_video_selected.connect(sigc::mem_fun(options_page, &SettingsPage::read_video_options));
-    video_queue.signal_all_videos_selected.connect(sigc::mem_fun(options_page, &SettingsPage::read_video_vector_options));
+    video_queue.signal_multiple_videos_selected.connect(sigc::mem_fun(options_page, &SettingsPage::read_video_vector_options));
 
     // Signály pro začátek a zastavení kódování, načítání videí do fronty
     runner_panel.signal_start_encoding.connect(sigc::mem_fun(*this, &MainWindow::start_encoding));
@@ -287,6 +288,21 @@ void MainWindow::start_encoding()
     }
 
     // Start kódování
+    auto app = GTK_APPLICATION(
+        Gtk::Application::get_default() -> gobj()
+    );
+    auto window = GTK_WINDOW(this -> gobj());
+    auto flags = static_cast<GtkApplicationInhibitFlags>(
+        GTK_APPLICATION_INHIBIT_LOGOUT |
+        GTK_APPLICATION_INHIBIT_SUSPEND
+    );
+    inhibition_cookie = gtk_application_inhibit(
+        app, 
+        window, 
+        flags, 
+        "Video encoding is in progess"
+    );
+    
     runner_panel.set_encoding_state(true);
     main_page_stack.set_visible_child("encoding_page");
     queue_lock = true;
@@ -419,6 +435,12 @@ void MainWindow::on_encoding_complete()
     {
         encoding_thread.join();
     }
+    
+    auto app = GTK_APPLICATION(
+        Gtk::Application::get_default() -> gobj()
+    );
+    gtk_application_uninhibit(app, inhibition_cookie);
+    inhibition_cookie = 0;
 }
 
 void MainWindow::show_results_dialog()
@@ -529,4 +551,48 @@ void MainWindow::file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& re
         show_toast("Error opening files with file picker!");
         video_queue.signal_loading_videos.emit(false);
     }
+}
+
+void MainWindow::on_open_videos(
+    const Gio::Application::type_vec_files& file_vector, 
+    const Glib::ustring
+)
+{
+    video_queue.signal_loading_videos(true);
+    auto state = std::make_shared<std::pair<std::vector<std::string>, size_t>>();
+    state -> second = 0;
+    
+    for (guint i = 0; i < file_vector.size(); i++)
+    {
+        auto file = file_vector.at(i);
+
+        if (file)
+        {
+            auto path = file -> get_path();
+
+            if (!path.empty())
+            {
+                state -> first.push_back(path);
+            }
+        }
+    }
+    
+    video_queue.signal_loading_videos_count.emit(0, (int) state -> first.size());
+    
+    Glib::signal_idle().connect([this, state]() -> bool
+    {
+        size_t& i = state -> second;
+        auto& paths = state -> first;
+        
+        if (i < paths.size())
+        {
+            video_queue.signal_loading_videos_count.emit((int) i + 1, (int) paths.size());
+            video_queue.add_video(paths[i]);
+            i++;
+            return true;
+        }
+        
+        video_queue.signal_loading_videos.emit(false);
+        return false;
+    });
 }

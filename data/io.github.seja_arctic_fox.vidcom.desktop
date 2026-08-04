@@ -1,9 +1,10 @@
 [Desktop Entry]
 Name=VidCom
-Exec=vidcom
+Exec=vidcom %U
 Icon=io.github.seja_arctic_fox.vidcom
 Type=Application
 Categories=Utility;AudioVideo;
 Keywords=video;compress;compression;archive
+MimeType=video/mp4;video/x-matroska;video/webm;
 Terminal=false
 StartupWMClass=vidcom
