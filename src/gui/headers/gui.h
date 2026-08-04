@@ -366,8 +366,8 @@ class SettingsPage : public Gtk::ScrolledWindow
         AVC_Parameters avc_page;
 
         // Ukládací funkce
-        void save_archive_mode(VideoElement * element);
-        void save_compress_mode(VideoElement * element);
+        virtual void save_archive_mode(VideoElement * element);
+        virtual void save_compress_mode(VideoElement * element);
         void save_target_size(VideoElement * element);
         void save_target_res(VideoElement * element);
         void save_target_fps(VideoElement * element);
@@ -457,6 +457,7 @@ class MainWindow : public Gtk::Window
         void on_window_resize(int width, int height);
         void on_import_video_clicked();
         void display_about_dialog(const Glib::VariantBase&);
+        void display_preferences(const Glib::VariantBase&);
         void file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& result, Glib::RefPtr<Gtk::FileDialog> file_picker);
         
         // Vlákno pro kódování videí, synchronizace
@@ -480,6 +481,57 @@ class MainWindow : public Gtk::Window
         void on_progress_update();
         void on_encoding_complete();
         void show_results_dialog();
+};
+
+class DummyVideoElement : public VideoElement
+{
+    public:
+        DummyVideoElement();
+        ~DummyVideoElement();
+};
+
+class DefaultsPage : public SettingsPage
+{
+    public:
+        DefaultsPage(DummyVideoElement * video);
+        ~DefaultsPage();
+        
+        bool get_nto_state();
+        
+    protected:
+        OptionListBox defaults_desc_row;
+        Gtk::Label defaults_desc;
+        SwitchRow next_to_original_switch;
+    
+        void save_archive_mode(VideoElement * element) override;
+        void save_compress_mode(VideoElement * element) override;
+        void on_nto_switched();
+};
+
+class PreferencesWindow
+{
+    public:
+        PreferencesWindow(MainWindow * root);
+        ~PreferencesWindow();
+        
+        AdwPreferencesDialog * dialog;
+    
+    protected:
+        MainWindow * root;
+        DummyVideoElement dummy;
+    
+        // Defaults page
+        AdwPreferencesPage * defaults_page;
+        AdwPreferencesGroup * defaults_group, 
+                            * reset_defaults_group;
+        DefaultsPage defaults_box;
+        Gtk::Box    set_defaults_box;
+        Gtk::Button apply_defaults_button, 
+                    reset_defaults_button;
+        
+        void apply_defaults();
+        void reset_defaults_dialog();
+        void reset_defaults();
 };
 
 #endif

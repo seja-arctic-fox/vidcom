@@ -30,6 +30,7 @@ gui = [
   './src/gui/pages/vp9_page.cpp',
   './src/gui/pages/avc_page.cpp',
   './src/gui/pages/results_page.cpp',
+  './src/gui/pages/preferences.cpp',
   './src/gui/widgets/result_row.cpp',
   './src/gui/widgets/time_setter.cpp',
   './src/gui/widgets/cut_widget.cpp',
@@ -66,7 +67,7 @@ exe = executable(
 
 test('basic', exe)
 
-
+subdir('data')
 datadir = get_option('datadir')
 metainfodir = datadir / 'metainfo'
 desktopdir = datadir / 'applications'
