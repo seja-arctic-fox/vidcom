@@ -24,7 +24,7 @@ MainWindow::MainWindow()
     set_default_size(960, 540);
     gtk_window_set_titlebar(GTK_WINDOW(gobj()), gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
     // Jen pro BETA verze: 
-    // add_css_class("devel");
+    add_css_class("devel");
     
     // Stránka pro prázdnou frontu
     add_videos_pill_button.add_css_class("pill");
@@ -183,7 +183,7 @@ void MainWindow::display_about_dialog(const Glib::VariantBase&)
     auto dialog = ADW_ABOUT_DIALOG(adw_about_dialog_new());
     
     adw_about_dialog_set_application_name(dialog, "VidCom");
-    adw_about_dialog_set_version(dialog, "0.82");
+    adw_about_dialog_set_version(dialog, "0.83");
     adw_about_dialog_set_developer_name(dialog, "seja-arctic-fox");
     adw_about_dialog_set_application_icon(dialog, "io.github.seja_arctic_fox.vidcom");
     adw_about_dialog_set_website(dialog, "https://seja-arctic-fox.github.io/");
