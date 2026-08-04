@@ -27,7 +27,7 @@ Video::Video(string input_path)
 {
     // Načtení informací o vstupním videu
     if (input_path == "")
-        inputVideo.path = string(getenv("HOME")) + "/example_video.mp4";
+        inputVideo.path = string(getenv("HOME")) + ".var/app/io.github.seja_arctic_fox.vidcom/example_video.mp4";
     else
         set_video_info(input_path);
 
@@ -36,9 +36,9 @@ Video::Video(string input_path)
     set_bitrate_by_size(SETTINGS -> get_double("target-size"));
     set_cut(0, inputVideo.duration);
     
-    bool next_to_original = SETTINGS -> get_boolean("output-next-to-original");
-    if (next_to_original)
-        set_output_path(inputVideo.path.parent_path());
+    if (SETTINGS -> get_string("output-path") == "")
+        set_output_path(string(getenv("HOME")) + 
+            "/.var/app/io.github.seja_arctic_fox.vidcom/");
     else
         set_output_path(SETTINGS -> get_string("output-path"));
 }

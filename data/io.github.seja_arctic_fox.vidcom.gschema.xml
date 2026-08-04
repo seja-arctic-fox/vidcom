@@ -29,12 +29,6 @@
       <description>How many times smaller is the output resolution</description>
     </key>
     
-    <key name="output-next-to-original" type="b">
-      <default>true</default>
-      <summary>Output next to original</summary>
-      <description>Video(s) will be created next to the original in a subfolder</description>
-    </key>
-    
     <key name="prefix" type="s">
       <default>'C'</default>
       <summary>File prefix</summary>

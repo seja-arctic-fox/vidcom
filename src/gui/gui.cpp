@@ -183,7 +183,7 @@ void MainWindow::display_about_dialog(const Glib::VariantBase&)
     auto dialog = ADW_ABOUT_DIALOG(adw_about_dialog_new());
     
     adw_about_dialog_set_application_name(dialog, "VidCom");
-    adw_about_dialog_set_version(dialog, "0.83");
+    adw_about_dialog_set_version(dialog, "0.83 Beta");
     adw_about_dialog_set_developer_name(dialog, "seja-arctic-fox");
     adw_about_dialog_set_application_icon(dialog, "io.github.seja_arctic_fox.vidcom");
     adw_about_dialog_set_website(dialog, "https://seja-arctic-fox.github.io/");

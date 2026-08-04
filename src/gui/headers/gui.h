@@ -495,17 +495,13 @@ class DefaultsPage : public SettingsPage
     public:
         DefaultsPage(DummyVideoElement * video);
         ~DefaultsPage();
-        
-        bool get_nto_state();
-        
+
     protected:
         OptionListBox defaults_desc_row;
         Gtk::Label defaults_desc;
-        SwitchRow next_to_original_switch;
     
         void save_archive_mode(VideoElement * element) override;
         void save_compress_mode(VideoElement * element) override;
-        void on_nto_switched();
 };
 
 class PreferencesWindow
