@@ -250,8 +250,8 @@ void PreferencesWindow::apply_defaults()
         "avc-tune", video -> AVC_options.tune
     );
     
-    adw_dialog_close(ADW_DIALOG(dialog));
     root -> show_toast("New defaults have been applied");
+    adw_dialog_close(ADW_DIALOG(dialog));
 }
 
 void PreferencesWindow::reset_defaults_dialog()
