@@ -134,6 +134,7 @@ SettingsPage::SettingsPage()
     adw_view_stack_add_titled(codec_pages, GTK_WIDGET(av1_page.gobj()), "codec_av1", "AV1");
     adw_view_stack_add_titled(codec_pages, GTK_WIDGET(hevc_page.gobj()), "codec_hevc", "HEVC");
     adw_view_stack_add_titled(codec_pages, GTK_WIDGET(vp9_page.gobj()), "codec_vp9", "VP9");
+    adw_view_stack_add_titled(codec_pages, GTK_WIDGET(avc_page.gobj()), "codec_avc", "AVC");
     adw_view_stack_set_vhomogeneous(codec_pages, false);
     adw_inline_view_switcher_set_stack(codec_switch, codec_pages);
     
@@ -259,6 +260,8 @@ void SettingsPage::save_cut(VideoElement * element)
             cut_widget.get_end()
         );
     }
+    
+    element -> video.set_bitrate_by_size(element -> video.get_target_size());
 }
 
 void SettingsPage::save_prefix(VideoElement * element)
@@ -280,6 +283,7 @@ void SettingsPage::save_codec(VideoElement * element)
     if (string(page_name) == "codec_av1") { element -> video.set_codec(AV1); }
     else if (string(page_name) == "codec_hevc") { element -> video.set_codec(HEVC); }
     else if (string(page_name) == "codec_vp9") { element -> video.set_codec(VP9); }
+    else if (string(page_name) == "codec_avc") { element -> video.set_codec(AVC); }
 }
 
 void SettingsPage::update(void (SettingsPage::*func)(VideoElement *))
@@ -310,7 +314,6 @@ void SettingsPage::load_options_into_GUI(Video * video)
         {
             compress_row.set_state(true);
             mode_listbox.select_row(*mode_listbox.get_row_at_index(1));
-            target_size_row.set_value(video -> get_target_size());
             target_size_row.set_sensitive();
             res_row.set_sensitive();
             fps_row.set_sensitive();
@@ -328,6 +331,7 @@ void SettingsPage::load_options_into_GUI(Video * video)
     av1_page.load(video_element);
     hevc_page.load(video_element);
     vp9_page.load(video_element);
+    avc_page.load(video_element);
     
     if (batch_settings)
     {
@@ -349,6 +353,10 @@ void SettingsPage::load_options_into_GUI(Video * video)
         case VP9:
             adw_view_stack_set_visible_child_name(codec_pages, "codec_vp9");
             break;
+            
+        case AVC:
+            adw_view_stack_set_visible_child_name(codec_pages, "codec_avc");
+            break;
     }
 
     // Střih
@@ -357,6 +365,7 @@ void SettingsPage::load_options_into_GUI(Video * video)
     cut_widget.set_cut(video -> get_video_info().duration, video -> get_cut_info());
     
     // Rozlišení a fps
+    target_size_row.set_value(video -> get_target_size());
     res_row.set_value(video -> get_downscale_factor());
     fps_row.set_range(0, video -> get_video_info().framerate);
     fps_row.set_value(video -> get_output_framerate());

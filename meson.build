@@ -1,7 +1,7 @@
 project(
   'vidcom-gui',
   'cpp',
-  version : '0.82',
+  version : '0.83',
   meson_version : '>= 1.3.0',
   default_options : ['warning_level=3', 'cpp_std=c++20'],
 )
@@ -28,7 +28,9 @@ gui = [
   './src/gui/pages/av1_page.cpp',
   './src/gui/pages/hevc_page.cpp',
   './src/gui/pages/vp9_page.cpp',
+  './src/gui/pages/avc_page.cpp',
   './src/gui/pages/results_page.cpp',
+  './src/gui/pages/preferences.cpp',
   './src/gui/widgets/result_row.cpp',
   './src/gui/widgets/time_setter.cpp',
   './src/gui/widgets/cut_widget.cpp',
@@ -65,11 +67,15 @@ exe = executable(
 
 test('basic', exe)
 
-
+subdir('data')
 datadir = get_option('datadir')
 metainfodir = datadir / 'metainfo'
 desktopdir = datadir / 'applications'
 icondir = datadir / 'icons' / 'hicolor' / 'scalable' / 'apps'
+action_dir = datadir / 'icons' / 'hicolor' / 'scalable' / 'actions'
+action_icons = [
+    join_paths('data', 'icons', 'edit-select-none-symbolic.svg')
+]
 
 install_data (
   'data/io.github.seja_arctic_fox.vidcom.desktop',
@@ -84,4 +90,9 @@ install_data(
 install_data(
   'data/io.github.seja_arctic_fox.vidcom.svg',
   install_dir: icondir
+)
+
+install_data(
+  action_icons,
+  install_dir: join_paths(action_dir)
 )

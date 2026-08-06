@@ -82,17 +82,26 @@ meson setup build
 
 ```bash
 cd build/
-
+# COMPILING WITHOUT INSTALLATION
+meson devenv
 meson compile
-# OR
 meson install
+```
+
+---
+
+If you want to compile as a flatpak package, execute these commands in the root directory after cloning:
+```bash
+flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+# Dont forget to install flatpak-builder
+flatpak-builder --force-clean --user --install-deps-from=flathub --repo=repo --install flatpak_builddir ./data/*.yml
 ```
 
 ### Windows
 #### WSL
 Tested on WSL with Ubuntu and Arch Linux, worked great OOTB, but I need to test it more. 
 
-#### Other
+#### Other (WIP)
 Maybe I could do it with `msys2`, but it is not top priority. 
 I will make a Windows build only if it is not unecessary hard to do so. 
 
@@ -110,21 +119,22 @@ I will update the lists below from time to time;
 - [ ] At least try to make a Windows build
 - [ ] Implement translations (or ability to translate the app)
 - [x] About window/section
-- [ ] Add an ability to change default configuration/settings. save the configs in a file
+- [x] Add an ability to change default configuration/settings. save the configs in a file
 - [x] Change the current paned window split into the typical Adwaita side panel for queue and the main page
 - [x] "No video selected" page for the settings page
 - [x] Copy subtitles automatically when they are present in the original video
-- [ ] Be able to select multiple videos manually, not be limited to just selecting single or all the videos (when holding Shift or other key)
+- [x] Be able to select multiple videos manually, not be limited to just selecting single or all the videos (when holding Shift or other key)
 - [x] Make the runner (in the header bar) slimmer and simpler
 - [x] Show state of loading/encoding in the settings page space
-
-~~- Highlight the currently encoding video in the queue~~
-
 - [ ] Copy settings from one video to another with right click/shortcut/button
 - [ ] Keyboard shortcuts
+- [x] "Open With" function/binding for VidCom
+- [x] Replace popups with visible messages inside window and/or notification
+- [ ] Different behavior for cases when the output videos already exist - show conflicts
+- [ ] Better TAB behavior + accelerators
 
 ### Known Issues
-- [ ] Cut feature - change spinbuttons for something more manageable, specifically for time setting + make it less rigid
-- [ ] The button in the results page is not visible when more results are displayed (it's on the bottom), which might be confusing
+- [x] Cut feature - change spinbuttons for something more manageable, specifically for time setting + make it less rigid
+- [x] The button in the results page is not visible when more results are displayed (it's on the bottom), which might be confusing
 
 This project follows [GNOME's Code of Conduct](https://conduct.gnome.org/).

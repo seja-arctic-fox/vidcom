@@ -11,15 +11,21 @@
 void Video::set_default_output_settings()
 {
     set_output_framerate(inputVideo.framerate);
-    set_prefix("C");
+    set_prefix(SETTINGS -> get_string("prefix"));
     enable_cut(false);
-    set_compress(false);
+    set_compress(SETTINGS -> get_boolean("encoding-mode"));
     set_two_pass(false);
-    set_bitrate_by_size(10);
+    set_bitrate_by_size(SETTINGS -> get_double("target-size"));
     set_cut(0, inputVideo.duration);
-    set_output_path(fs::path(getenv("HOME")) / fs::path(".var/app/io.github.seja_arctic_fox.vidcom/"));
-    set_codec(AV1);
-    set_downscale_factor(1);
+    if (SETTINGS -> get_string("output-path") == "")
+        set_output_path(
+            fs::path(getenv("HOME")) / 
+            fs::path(".var/app/io.github.seja_arctic_fox.vidcom/"))
+        ;
+    else
+        set_output_path(SETTINGS -> get_string("output-path"));
+    set_codec(Codec(SETTINGS -> get_enum("codec")));
+    set_downscale_factor(SETTINGS -> get_double("downscale-factor"));
 }
 
 void Video::set_output_path(string output_path)

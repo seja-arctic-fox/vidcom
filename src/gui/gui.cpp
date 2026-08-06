@@ -1,9 +1,10 @@
 #include "headers/gui.h"
 #include "adwaita.h"
+#include "giomm/application.h"
 #include "giomm/simpleaction.h"
-#include "glib-object.h"
-#include "glib.h"
+#include "glibmm/refptr.h"
 #include "gtk/gtk.h"
+#include "gtkmm/application.h"
 #include "sigc++/functors/mem_fun.h"
 #include "src/cli/cli.h"
 #include <iostream>
@@ -84,6 +85,13 @@ MainWindow::MainWindow()
     about_action -> signal_activate().connect(sigc::mem_fun(*this, &MainWindow::display_about_dialog));
     app -> add_action(about_action);
     
+    // Preferences
+    auto preferences_action = Gio::SimpleAction::create("preferences");
+    preferences_action -> signal_activate().connect(sigc::mem_fun(
+        *this, &MainWindow::display_preferences
+    ));
+    app -> add_action(preferences_action);
+    
     // Přidat video
     add_videos_button.set_icon_name("tab-new-symbolic");
     add_videos_button.set_tooltip_text("Add video(s)");
@@ -129,7 +137,7 @@ MainWindow::MainWindow()
     
     // Signály pro změny názvu videa v runneru
     video_queue.signal_video_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_title));
-    video_queue.signal_all_videos_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_title_multiple));
+    video_queue.signal_multiple_videos_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_title_multiple));
     video_queue.signal_nothing_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::clear_title));
     
     // Přepínání stavů a (od)blokování tlačítka pro kódování
@@ -149,7 +157,7 @@ MainWindow::MainWindow()
     
     // Propojení signálů pro aktualizaci nastavení videa
     video_queue.signal_video_selected.connect(sigc::mem_fun(options_page, &SettingsPage::read_video_options));
-    video_queue.signal_all_videos_selected.connect(sigc::mem_fun(options_page, &SettingsPage::read_video_vector_options));
+    video_queue.signal_multiple_videos_selected.connect(sigc::mem_fun(options_page, &SettingsPage::read_video_vector_options));
 
     // Signály pro začátek a zastavení kódování, načítání videí do fronty
     runner_panel.signal_start_encoding.connect(sigc::mem_fun(*this, &MainWindow::start_encoding));
@@ -175,31 +183,58 @@ void MainWindow::display_about_dialog(const Glib::VariantBase&)
     auto dialog = ADW_ABOUT_DIALOG(adw_about_dialog_new());
     
     adw_about_dialog_set_application_name(dialog, "VidCom");
-    adw_about_dialog_set_version(dialog, "0.82");
+    adw_about_dialog_set_version(dialog, "0.83");
     adw_about_dialog_set_developer_name(dialog, "seja-arctic-fox");
     adw_about_dialog_set_application_icon(dialog, "io.github.seja_arctic_fox.vidcom");
     adw_about_dialog_set_website(dialog, "https://seja-arctic-fox.github.io/");
     adw_about_dialog_set_issue_url(dialog, "https://github.com/seja-arctic-fox/vidcom/issues");
     adw_about_dialog_set_license_type(dialog, GTK_LICENSE_GPL_3_0);
-    adw_about_dialog_set_release_notes_version(dialog, "0.82");
+    adw_about_dialog_set_release_notes_version(dialog, "0.83");
     adw_about_dialog_set_release_notes(dialog, 
         "<ul>"
-            "<li>Multiple stream and subtitle support, switching between mp4 and mkv containers as needed</li>"
-            "<li>Faster seeking when Cut Feature is enabled</li>"
-            "<li>Fix to correctly compute bitrate when Cut Feature is enabled</li>"
-            "<li>Audio is now encoded in Archive mode as well. Previously it was just copied</li>"
-            "<li>New cut widget and time setters</li>"
-            "<li>UI rework to fit more into the GNOME ecosystem</li>"
-            "<li>Switch to GNOME 50 Runtime</li>"
-            "<li>Status pages for 'empty queue' and 'encoding' states</li>"
-            "<li>Improved page for viewing results, which does not create a popup window anymore</li>"
-            "<li>Popup messages changed to toasts</li>"
-            "<li>Small UI desing adjustments; rounded thumbnail corners, better info distribution, formatting bugs</li>"
-            "<li>UI refactor</li>"
+            "<li>Automatic logout/suspend is prevented while "
+            "video encoding is running. </li>"
+            "<li>Bug fix: When Matroska container is used, the original "
+            "subtitles will always be copied</li>"
+            "<li>The page with results, shown after the encoding is finished, "
+            "now reflects the results more accurately</li>"
+            "<li>If the video encoding fails, you can now display the error "
+            "log (<code>stderr</code>)</li>"
+            "<li>Bug fix for missing bitrate recalculation after "
+            "enabling and setting cut</li>"
+            "<li><code>ffmpeg</code>/<code>ffprobe</code> processes are now "
+            "called directly instead of calling through shell</li>"
+            "<li>You can now select multiple videos in the queue by holding "
+            "the Shift key</li>"
+            "<li>'Select all' button is no longer a toggle and can also "
+            "deselect videos</li>"
+            "<li>Added support for AVC (H264) encoding</li>"
+            "<li>You can now open videos with VidCom. It will automatically "
+            "import them into the queue upon doing so</li>"
+            "<li>Custom default options can be set, such as the target size, "
+            "export folder, all the exposed codec parameters and more</li>"
         "</ul>"
         );
     
     adw_dialog_present(ADW_DIALOG(dialog), GTK_WIDGET(gobj()));
+}
+
+void MainWindow::display_preferences(const Glib::VariantBase&)
+{
+    // Must be on heap, otherwise many things are not working properly
+    // Running from stack technically worked, but was problematic
+    PreferencesWindow * preferences = new PreferencesWindow(this);
+    adw_dialog_present(
+        ADW_DIALOG(preferences -> dialog), GTK_WIDGET(this -> gobj())
+    );
+    
+    // Free when closed!
+    g_signal_connect(
+        preferences -> dialog, "closed", 
+        G_CALLBACK(+[](AdwDialog *, gpointer data) 
+            { delete static_cast<PreferencesWindow *>(data); }), 
+        preferences
+    );
 }
 
 MainWindow::~MainWindow()
@@ -340,6 +375,21 @@ void MainWindow::start_encoding()
     }
 
     // Start kódování
+    auto app = GTK_APPLICATION(
+        Gtk::Application::get_default() -> gobj()
+    );
+    auto window = GTK_WINDOW(this -> gobj());
+    auto flags = static_cast<GtkApplicationInhibitFlags>(
+        GTK_APPLICATION_INHIBIT_LOGOUT |
+        GTK_APPLICATION_INHIBIT_SUSPEND
+    );
+    inhibition_cookie = gtk_application_inhibit(
+        app, 
+        window, 
+        flags, 
+        "Video encoding is in progess"
+    );
+    
     runner_panel.set_encoding_state(true);
     main_page_stack.set_visible_child("encoding_page");
     queue_lock = true;
@@ -411,7 +461,7 @@ void MainWindow::encoding_worker()
         };
 
         video -> test_commands();
-        int exit_code = video -> encode("", "", progress_callback);
+        int exit_code = video -> encode("", progress_callback);
         
         if (exit_code == -3)
         {
@@ -433,6 +483,7 @@ void MainWindow::encoding_worker()
         result.video_path = video -> get_output_path();
         result.exit_status = exit_code;
         result.was_cancelled = (exit_code == -2);
+        result.error_msg = video -> last_error_message;
 
         {
             std::lock_guard<std::mutex> lock(encoding_mutex);
@@ -471,6 +522,12 @@ void MainWindow::on_encoding_complete()
     {
         encoding_thread.join();
     }
+    
+    auto app = GTK_APPLICATION(
+        Gtk::Application::get_default() -> gobj()
+    );
+    gtk_application_uninhibit(app, inhibition_cookie);
+    inhibition_cookie = 0;
 }
 
 void MainWindow::show_results_dialog()
@@ -581,4 +638,48 @@ void MainWindow::file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& re
         show_toast("Error opening files with file picker!");
         video_queue.signal_loading_videos.emit(false);
     }
+}
+
+void MainWindow::on_open_videos(
+    const Gio::Application::type_vec_files& file_vector, 
+    const Glib::ustring
+)
+{
+    video_queue.signal_loading_videos(true);
+    auto state = std::make_shared<std::pair<std::vector<std::string>, size_t>>();
+    state -> second = 0;
+    
+    for (guint i = 0; i < file_vector.size(); i++)
+    {
+        auto file = file_vector.at(i);
+
+        if (file)
+        {
+            auto path = file -> get_path();
+
+            if (!path.empty())
+            {
+                state -> first.push_back(path);
+            }
+        }
+    }
+    
+    video_queue.signal_loading_videos_count.emit(0, (int) state -> first.size());
+    
+    Glib::signal_idle().connect([this, state]() -> bool
+    {
+        size_t& i = state -> second;
+        auto& paths = state -> first;
+        
+        if (i < paths.size())
+        {
+            video_queue.signal_loading_videos_count.emit((int) i + 1, (int) paths.size());
+            video_queue.add_video(paths[i]);
+            i++;
+            return true;
+        }
+        
+        video_queue.signal_loading_videos.emit(false);
+        return false;
+    });
 }

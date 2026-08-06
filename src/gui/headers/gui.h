@@ -1,5 +1,6 @@
 #include "gdkmm/contentprovider.h"
 #include "gdkmm/drag.h"
+#include "gdkmm/enums.h"
 #include "giomm/asyncresult.h"
 #include "glibmm/dispatcher.h"
 #include "glibmm/refptr.h"
@@ -18,7 +19,6 @@
 #include "gtkmm/listboxrow.h"
 #include "gtkmm/progressbar.h"
 #include "gtkmm/scrolledwindow.h"
-#include "gtkmm/togglebutton.h"
 #include "gtkmm/widget.h"
 #include "gtkmm/window.h"
 #include <functional>
@@ -63,6 +63,7 @@ struct EncodingResult
     fs::path video_path;
     int exit_status;
     bool was_cancelled;
+    string error_msg;
 };
 
 // Prvek ve frontě kódování
@@ -153,7 +154,7 @@ class QueueFrame : public Gtk::Box
         void add_video(const std::string& input_path);
         std::vector<Video *> get_all_videos();
         sigc::signal<void(VideoElement *)> signal_video_selected;
-        sigc::signal<void(std::vector<VideoElement*>)> signal_all_videos_selected;
+        sigc::signal<void(std::vector<VideoElement*>)> signal_multiple_videos_selected;
         sigc::signal<void()> signal_nothing_selected;
         sigc::signal<void(bool)> signal_loading_videos;
         sigc::signal<void(int, int)> signal_loading_videos_count;
@@ -181,15 +182,21 @@ class QueueFrame : public Gtk::Box
         Gtk::Label clear_queue_text;
         Gtk::Label select_all_text;
         Gtk::Button clear_queue_button;
-        Gtk::ToggleButton select_all_button;
+        Gtk::Button select_all_button;
 
         // Drag and drop
         Glib::RefPtr<Gtk::DropTarget> drag_and_drop_target;
         sigc::connection idle_handler;
+        
+        // Shift pressed
+        bool select_multiple = false;
+        bool on_key_pressed(guint keyval, guint, Gdk::ModifierType);
+        void on_key_released(guint keyval, guint, Gdk::ModifierType);
 
         // Metody
         void on_clear_clicked();
         void on_select_all_clicked();
+        void change_select_all_status(bool action_all);
         bool on_drop(const Glib::ValueBase& value, double, double);
         void error_toast_not_a_video(string file);
         void on_row_selected(Gtk::ListBoxRow * row);
@@ -285,6 +292,27 @@ class VP9_Parameters : public CodecParametersPage
         void save_tune(VideoElement * element);
 };
 
+// Page for AVC
+class AVC_Parameters : public CodecParametersPage
+{
+    public:
+        AVC_Parameters();
+        void load(VideoElement * video_element);
+        
+    protected:
+        SwitchRow motion_estimation;
+        SwitchRow adaptive_quantisation;
+        SwitchRow adaptive_b_frames;
+        SpinButtonRow tune;
+        
+        void save_preset(VideoElement * element);
+        void save_crf(VideoElement * element);
+        void save_motion_estimation(VideoElement * element);
+        void save_adaptive_quantisation(VideoElement * element);
+        void save_adaptive_b_frames(VideoElement * element);
+        void save_tune(VideoElement * element);
+};
+
 // Stránka pro označené video ve frontě. Obsahuje základní nastavení pro každé video individuálně
 class SettingsPage : public Gtk::ScrolledWindow
 {
@@ -335,10 +363,11 @@ class SettingsPage : public Gtk::ScrolledWindow
         AV1_Parameters av1_page;
         HEVC_Parameters hevc_page;
         VP9_Parameters vp9_page;
+        AVC_Parameters avc_page;
 
         // Ukládací funkce
-        void save_archive_mode(VideoElement * element);
-        void save_compress_mode(VideoElement * element);
+        virtual void save_archive_mode(VideoElement * element);
+        virtual void save_compress_mode(VideoElement * element);
         void save_target_size(VideoElement * element);
         void save_target_res(VideoElement * element);
         void save_target_fps(VideoElement * element);
@@ -376,12 +405,13 @@ class ResultRow : public Gtk::Box
     friend class ResultsPage;
     
     public:
-        ResultRow(fs::path video_path, int status);
+        ResultRow(fs::path video_path, int status, string error_msg);
         ~ResultRow();
         
     protected:
         fs::path video_path;
         int status;
+        string error_msg;
     
         Gtk::Label result_label, video_name, status_text;
         Gtk::Image status_icon;
@@ -401,6 +431,7 @@ class MainWindow : public Gtk::Window
         ~MainWindow();
         
         void show_toast(char const * message);
+        void on_open_videos(const Gio::Application::type_vec_files& file_vector, const Glib::ustring);
         void show_toast_grant_access(std::vector<std::string> file_paths);
 
     protected:
@@ -427,6 +458,7 @@ class MainWindow : public Gtk::Window
         void on_window_resize(int width, int height);
         void on_import_video_clicked();
         void display_about_dialog(const Glib::VariantBase&);
+        void display_preferences(const Glib::VariantBase&);
         void file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& result, Glib::RefPtr<Gtk::FileDialog> file_picker);
         void file_picker_grant_access(std::vector<std::string> file_paths);
         
@@ -442,6 +474,7 @@ class MainWindow : public Gtk::Window
         EncodingProgress current_progress;
         std::vector<EncodingResult> encoding_results;
         bool queue_lock = false;
+        guint inhibition_cookie = 0;
 
         // Kódování
         void start_encoding();
@@ -450,6 +483,53 @@ class MainWindow : public Gtk::Window
         void on_progress_update();
         void on_encoding_complete();
         void show_results_dialog();
+};
+
+class DummyVideoElement : public VideoElement
+{
+    public:
+        DummyVideoElement();
+        ~DummyVideoElement();
+};
+
+class DefaultsPage : public SettingsPage
+{
+    public:
+        DefaultsPage(DummyVideoElement * video);
+        ~DefaultsPage();
+
+    protected:
+        OptionListBox defaults_desc_row;
+        Gtk::Label defaults_desc;
+    
+        void save_archive_mode(VideoElement * element) override;
+        void save_compress_mode(VideoElement * element) override;
+};
+
+class PreferencesWindow
+{
+    public:
+        PreferencesWindow(MainWindow * root);
+        ~PreferencesWindow();
+        
+        AdwPreferencesDialog * dialog;
+    
+    protected:
+        MainWindow * root;
+        DummyVideoElement dummy;
+    
+        // Defaults page
+        AdwPreferencesPage * defaults_page;
+        AdwPreferencesGroup * defaults_group, 
+                            * reset_defaults_group;
+        DefaultsPage defaults_box;
+        Gtk::Box    set_defaults_box;
+        Gtk::Button apply_defaults_button, 
+                    reset_defaults_button;
+        
+        void apply_defaults();
+        void reset_defaults_dialog();
+        void reset_defaults();
 };
 
 #endif

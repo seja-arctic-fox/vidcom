@@ -95,6 +95,5 @@ modules:
   - name: vidcom
     buildsystem: meson
     sources:
-      - type: git
-        url: https://github.com/seja-arctic-fox/vidcom
-        commit: 582bb5686ed9521795777e16443dd1ea35cacd1c
+      - type: dir
+        path: ../

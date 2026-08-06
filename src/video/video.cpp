@@ -1,34 +1,46 @@
 #include "video.h"
 #include "../cli/cli.h"
 #include <cmath>
+#include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
 #include <json/reader.h>
 #include <json/value.h>
 #include <ostream>
+#include <spawn.h>
 #include <stdexcept>
 #include <string>
+#include <sys/wait.h>
+#include <unistd.h>
 
 // Konstruktor
 Video::Video(string input_path)
 :   
-    prefix("C"),
-    eCodec(AV1),
-    downscaleFactor(1),
-    Compress(false),
+    prefix(SETTINGS -> get_string("prefix")),
+    eCodec(Codec(SETTINGS -> get_enum("codec"))),
+    downscaleFactor(SETTINGS -> get_double("downscale-factor")),
+    Compress(SETTINGS -> get_boolean("encoding-mode")),
     TwoPass(false), 
     EnableCut(false),
     cancelling_encoding(false)
 {
     // Načtení informací o vstupním videu
-    set_video_info(input_path);
+    if (input_path == "")
+        inputVideo.path = string(getenv("HOME")) + ".var/app/io.github.seja_arctic_fox.vidcom/example_video.mp4";
+    else
+        set_video_info(input_path);
 
     // Nastavení výchozích možností
     set_output_framerate(inputVideo.framerate);
-    set_bitrate_by_size(10);
+    set_bitrate_by_size(SETTINGS -> get_double("target-size"));
     set_cut(0, inputVideo.duration);
-    set_output_path(fs::path(getenv("HOME")) / fs::path(".var/app/io.github.seja_arctic_fox.vidcom/"));
+    
+    if (SETTINGS -> get_string("output-path") == "")
+        set_output_path(string(getenv("HOME")) + 
+            "/.var/app/io.github.seja_arctic_fox.vidcom/");
+    else
+        set_output_path(SETTINGS -> get_string("output-path"));
 }
 
 // Destruktor
@@ -42,16 +54,48 @@ string Video::read_video_info(string input_path)
     // příkaz pro načtení a string proměnná pro uložení výstupu
     char buffer[128];
     string json_data = "";
-    string ffprobe_command = "ffprobe -v quiet -print_format json -show_format -show_streams '" + input_path + "'";
-
-    FILE * pipe = popen(ffprobe_command.c_str(), "r"); // otevřít rouru
+    vector<const char *> command = 
+        {
+            "ffprobe", "-v", "quiet", "-print_format", "json", 
+            "-show_format", "-show_streams", input_path.c_str(), nullptr
+        };
+    
+    int pipe_fds[2];
+    if (pipe(pipe_fds) != 0)
+    {
+        cout << RED << "Failed to execute ffprobe!" << RESET << endl;
+        return json_data;
+    }
+    
+    posix_spawn_file_actions_t file_actions;
+    posix_spawn_file_actions_init(&file_actions);
+    posix_spawn_file_actions_adddup2(&file_actions, pipe_fds[1], STDOUT_FILENO);
+    posix_spawn_file_actions_addclose(&file_actions, pipe_fds[0]);
+    posix_spawn_file_actions_addclose(&file_actions, pipe_fds[1]);
+    
+    pid_t ffprobe_pid;
+    int spawn_result = posix_spawnp(&ffprobe_pid, "ffprobe", &file_actions, nullptr, 
+                                    const_cast<char* const*>(command.data()), nullptr);
+    posix_spawn_file_actions_destroy(&file_actions);
+    close(pipe_fds[1]);
+    
+    if (spawn_result != 0)
+    {
+        close(pipe_fds[0]);
+        cout << RED << "Failed to execute ffprobe!" << RESET << endl;
+        return json_data;
+    }
+    
     cout << GREEN << "Reading information about input file: " << RESET << input_path << endl;
     
+    FILE * pipe = fdopen(pipe_fds[0], "r"); // otevřít rouru
     while (fgets(buffer, sizeof(buffer), pipe) != NULL)
     {
         json_data += buffer; // čtení dat
     }
-    pclose(pipe); // zavřít rouru
+    fclose(pipe); // zavřít rouru
+    int status;
+    waitpid(ffprobe_pid, &status, 0);
 
     return json_data;
 }

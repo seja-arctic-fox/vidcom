@@ -1,4 +1,5 @@
 #include "adwaita.h"
+#include "gdk/gdkkeysyms.h"
 #include "gio/gio.h"
 #include "glib-object.h"
 #include "glibmm/convert.h"
@@ -8,6 +9,7 @@
 #include "glibmm/value.h"
 #include "gtkmm/droptarget.h"
 #include "gtkmm/enums.h"
+#include "gtkmm/eventcontrollerkey.h"
 #include "gtkmm/object.h"
 #include "gtkmm/scrolledwindow.h"
 #include "../headers/gui.h"
@@ -47,7 +49,7 @@ QueueFrame::QueueFrame()
     clear_queue_button.add_css_class("flat");
 
     clear_queue_button.signal_clicked().connect(sigc::mem_fun(*this, &QueueFrame::on_clear_clicked));
-    select_all_button.signal_toggled().connect(sigc::mem_fun(*this, &QueueFrame::on_select_all_clicked));
+    select_all_button.signal_clicked().connect(sigc::mem_fun(*this, &QueueFrame::on_select_all_clicked));
 
     header_box.set_margin(10);
     header_box.set_spacing(0);
@@ -82,7 +84,13 @@ QueueFrame::QueueFrame()
     // Drag and drop
     drag_and_drop_target = Gtk::DropTarget::create(gdk_file_list_get_type(), Gdk::DragAction::COPY);
     drag_and_drop_target -> signal_drop().connect(sigc::mem_fun(*this, &QueueFrame::on_drop), false);
-
+    
+    // Shift pressed
+    auto key_controller = Gtk::EventControllerKey::create();
+    key_controller -> signal_key_pressed().connect(sigc::mem_fun(*this, &QueueFrame::on_key_pressed), false);
+    key_controller -> signal_key_released().connect(sigc::mem_fun(*this, &QueueFrame::on_key_released), false);
+    add_controller(key_controller);
+    
     // Přidat věci do boxu fronty
     append(header_box);
     append(scrolled_window);
@@ -92,6 +100,25 @@ QueueFrame::QueueFrame()
 
 QueueFrame::~QueueFrame()
 {}
+
+bool QueueFrame::on_key_pressed(guint keyval, guint, Gdk::ModifierType)
+{
+    if (keyval == GDK_KEY_Shift_L || keyval == GDK_KEY_Shift_R)
+    {
+        this -> select_multiple = true;
+        video_listbox.set_selection_mode(Gtk::SelectionMode::MULTIPLE);
+        return true;
+    }
+    return false;
+}
+
+void QueueFrame::on_key_released(guint keyval, guint, Gdk::ModifierType)
+{
+    if (keyval == GDK_KEY_Shift_L || keyval == GDK_KEY_Shift_R)
+    {
+        this -> select_multiple = false;
+    }
+}
 
 std::vector<Video *> QueueFrame::get_all_videos()
 {
@@ -114,23 +141,56 @@ std::vector<Video *> QueueFrame::get_all_videos()
     return all_elements;
 }
 
+void QueueFrame::change_select_all_status(bool action_all)
+{
+    if (action_all)
+    {
+        select_all_text.set_text("Select all");
+        select_all_icon.set_from_icon_name("edit-select-all-symbolic");
+    }
+    else
+    {
+        select_all_text.set_text("Deselect all");
+        select_all_icon.set_from_icon_name("edit-select-none-symbolic");
+    }
+}
+
 void QueueFrame::on_row_selected(Gtk::ListBoxRow * row)
 {
-    if (video_listbox.get_selection_mode() == Gtk::SelectionMode::SINGLE && select_all_button.get_active())
-    {
-        select_all_button.set_active(false);
-    }
-
     if (row)
     {
-        VideoElement * element = dynamic_cast<VideoElement *>(row -> get_child());
-
-        if (element)
+        if (this -> select_multiple)
         {
-            signal_video_selected.emit(element);
+            auto all_rows = video_listbox.get_selected_rows();
+            vector<VideoElement *> video_elements;
+        
+            for (auto row : all_rows)
+            {
+                VideoElement * element = dynamic_cast<VideoElement *>(row -> get_child());
+                if (element)
+                {
+                    video_elements.push_back(element);
+                }
+            }
+            
+            if (all_rows.size() == get_all_videos().size())
+                change_select_all_status(false);
+            
+            signal_multiple_videos_selected.emit(video_elements);
+        }
+        else 
+        {
+            video_listbox.set_selection_mode(Gtk::SelectionMode::SINGLE);
+            video_listbox.select_row(*row);
+            VideoElement * element = dynamic_cast<VideoElement *>(row -> get_child());
+    
+            if (element)
+            {
+                signal_video_selected.emit(element);
+            }
+            change_select_all_status(true);
         }
     }
-
 }
 
 void QueueFrame::error_toast_not_a_video(string file)
@@ -176,7 +236,6 @@ void QueueFrame::add_video(const std::string& input_path)
     signal_enable_encoding.emit();
     
     select_all_button.set_can_target();
-    select_all_button.set_active(false);
     clear_queue_button.set_can_target();
     select_all_button.remove_css_class("flat");
     clear_queue_button.remove_css_class("flat");
@@ -196,7 +255,6 @@ void QueueFrame::add_video(const std::string& input_path)
                 if (!video_listbox.get_row_at_index(0))
                 {
                     signal_nothing_selected.emit();
-                    select_all_button.set_active(false);
                     select_all_button.set_can_target(false);
                     clear_queue_button.set_can_target(false);
                     select_all_button.add_css_class("flat");
@@ -213,7 +271,6 @@ void QueueFrame::on_clear_clicked()
     while (auto * row = video_listbox.get_row_at_index(0))
         video_listbox.remove(*row);
     
-    select_all_button.set_active(false);
     select_all_button.set_can_target(false);
     clear_queue_button.set_can_target(false);
     select_all_button.add_css_class("flat");
@@ -226,32 +283,34 @@ void QueueFrame::on_clear_clicked()
 
 void QueueFrame::on_select_all_clicked()
 {
-    if (select_all_button.get_active())
+    if (video_listbox.get_selected_rows().size() == get_all_videos().size())
     {
-        video_listbox.set_selection_mode(Gtk::SelectionMode::MULTIPLE);
-        video_listbox.select_all();
-        vector<VideoElement *> all_video_elements;
-        auto all_rows = video_listbox.get_selected_rows();
-
-        for (auto row : all_rows)
-        {
-            VideoElement * element = dynamic_cast<VideoElement *>(row -> get_child());
-            if (element)
-            {
-                all_video_elements.push_back(element);
-            }
-        }
-
-        signal_all_videos_selected.emit(all_video_elements);
+        video_listbox.set_selection_mode(Gtk::SelectionMode::SINGLE);
+        on_row_selected(video_listbox.get_row_at_index(0));
+        change_select_all_status(true);
+        return;
     }
     else
+        change_select_all_status(false);
+    
+    video_listbox.set_selection_mode(Gtk::SelectionMode::MULTIPLE);
+    video_listbox.select_all();
+    vector<VideoElement *> all_video_elements;
+    auto all_rows = video_listbox.get_selected_rows();
+
+    for (auto row : all_rows)
     {
-        if (video_listbox.get_row_at_index(0))
+        VideoElement * element = dynamic_cast<VideoElement *>(row -> get_child());
+        if (element)
         {
-            video_listbox.set_selection_mode(Gtk::SelectionMode::SINGLE);
-            video_listbox.select_row(*video_listbox.get_row_at_index(0));
+            all_video_elements.push_back(element);
         }
     }
+    
+    if (all_video_elements.size() == 1)
+        signal_video_selected.emit(all_video_elements.at(0));
+    else
+        signal_multiple_videos_selected.emit(all_video_elements);
 }
 
 bool QueueFrame::on_drop(const Glib::ValueBase& value, double, double)
