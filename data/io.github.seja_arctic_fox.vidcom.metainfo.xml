@@ -111,6 +111,24 @@
 
   <content_rating type="oars-1.1" />
   <releases>
+    <release version="0.83" date="2026-08-06">
+        <url>https://github.com/seja-arctic-fox/vidcom/releases/tag/0.83</url>
+        <description>
+        <ul>
+            <li>Automatic logout/suspend is prevented while video encoding is running. </li>
+            <li>Bug fix: When Matroska container is used, the original subtitles will always be copied</li>
+            <li>The page with results, shown after the encoding is finished, now reflects the results more accurately</li>
+            <li>If the video encoding fails, you can now display the error log (<code>stderr</code>)</li>
+            <li>Bug fix for missing bitrate recalculation after enabling and setting cut</li>
+            <li><code>ffmpeg</code>/<code>ffprobe</code> processes are now called directly instead of calling through shell</li>
+            <li>You can now select multiple videos in the queue by holding the Shift key</li>
+            <li>'Select all' button is no longer a toggle and can also deselect videos</li>
+            <li>Added support for AVC (H264) encoding</li>
+            <li>You can now open videos with VidCom. It will automatically import them into the queue upon doing so</li>
+            <li>Custom default options can be set, such as the target size, export folder, all the exposed codec parameters and more</li>
+        </ul>
+        </description>
+        </release>
     <release version="0.82" date="2026-05-23">
         <url type="details">https://github.com/seja-arctic-fox/vidcom/releases/tag/0.82</url>
         <description>

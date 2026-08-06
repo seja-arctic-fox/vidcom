@@ -90,11 +90,18 @@ meson install
 
 ---
 
-If you want to compile as a flatpak package, execute these commands in the root directory after cloning:
+If you want to compile and install as a flatpak package, execute these commands in the root directory after cloning:
 ```bash
 flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 # Dont forget to install flatpak-builder
 flatpak-builder --force-clean --user --install-deps-from=flathub --repo=repo --install flatpak_builddir ./data/*.yml
+```
+
+---
+
+If you want to compile and install as an AUR package, execute this command in the root directory after cloning:
+```bash
+makepkg -si
 ```
 
 ### Windows

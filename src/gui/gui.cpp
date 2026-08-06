@@ -183,27 +183,36 @@ void MainWindow::display_about_dialog(const Glib::VariantBase&)
     auto dialog = ADW_ABOUT_DIALOG(adw_about_dialog_new());
     
     adw_about_dialog_set_application_name(dialog, "VidCom");
-    adw_about_dialog_set_version(dialog, "0.82");
+    adw_about_dialog_set_version(dialog, "0.83");
     adw_about_dialog_set_developer_name(dialog, "seja-arctic-fox");
     adw_about_dialog_set_application_icon(dialog, "io.github.seja_arctic_fox.vidcom");
     adw_about_dialog_set_website(dialog, "https://seja-arctic-fox.github.io/");
     adw_about_dialog_set_issue_url(dialog, "https://github.com/seja-arctic-fox/vidcom/issues");
     adw_about_dialog_set_license_type(dialog, GTK_LICENSE_GPL_3_0);
-    adw_about_dialog_set_release_notes_version(dialog, "0.82");
+    adw_about_dialog_set_release_notes_version(dialog, "0.83");
     adw_about_dialog_set_release_notes(dialog, 
         "<ul>"
-            "<li>Multiple stream and subtitle support, switching between mp4 and mkv containers as needed</li>"
-            "<li>Faster seeking when Cut Feature is enabled</li>"
-            "<li>Fix to correctly compute bitrate when Cut Feature is enabled</li>"
-            "<li>Audio is now encoded in Archive mode as well. Previously it was just copied</li>"
-            "<li>New cut widget and time setters</li>"
-            "<li>UI rework to fit more into the GNOME ecosystem</li>"
-            "<li>Switch to GNOME 50 Runtime</li>"
-            "<li>Status pages for 'empty queue' and 'encoding' states</li>"
-            "<li>Improved page for viewing results, which does not create a popup window anymore</li>"
-            "<li>Popup messages changed to toasts</li>"
-            "<li>Small UI desing adjustments; rounded thumbnail corners, better info distribution, formatting bugs</li>"
-            "<li>UI refactor</li>"
+            "<li>Automatic logout/suspend is prevented while "
+            "video encoding is running. </li>"
+            "<li>Bug fix: When Matroska container is used, the original "
+            "subtitles will always be copied</li>"
+            "<li>The page with results, shown after the encoding is finished, "
+            "now reflects the results more accurately</li>"
+            "<li>If the video encoding fails, you can now display the error "
+            "log (<code>stderr</code>)</li>"
+            "<li>Bug fix for missing bitrate recalculation after "
+            "enabling and setting cut</li>"
+            "<li><code>ffmpeg</code>/<code>ffprobe</code> processes are now "
+            "called directly instead of calling through shell</li>"
+            "<li>You can now select multiple videos in the queue by holding "
+            "the Shift key</li>"
+            "<li>'Select all' button is no longer a toggle and can also "
+            "deselect videos</li>"
+            "<li>Added support for AVC (H264) encoding</li>"
+            "<li>You can now open videos with VidCom. It will automatically "
+            "import them into the queue upon doing so</li>"
+            "<li>Custom default options can be set, such as the target size, "
+            "export folder, all the exposed codec parameters and more</li>"
         "</ul>"
         );
     
