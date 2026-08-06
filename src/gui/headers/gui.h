@@ -432,6 +432,7 @@ class MainWindow : public Gtk::Window
         
         void show_toast(char const * message);
         void on_open_videos(const Gio::Application::type_vec_files& file_vector, const Glib::ustring);
+        void show_toast_grant_access(std::vector<std::string> file_paths);
 
     protected:
         RunnerPanel runner_panel;
@@ -459,6 +460,7 @@ class MainWindow : public Gtk::Window
         void display_about_dialog(const Glib::VariantBase&);
         void display_preferences(const Glib::VariantBase&);
         void file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& result, Glib::RefPtr<Gtk::FileDialog> file_picker);
+        void file_picker_grant_access(std::vector<std::string> file_paths);
         
         // Vlákno pro kódování videí, synchronizace
         std::thread encoding_thread;

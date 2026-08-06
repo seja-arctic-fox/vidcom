@@ -1,4 +1,5 @@
 #include "video.h"
+#include <cstdlib>
 #include <filesystem>
 #include <iostream>
 #include <json/reader.h>
@@ -16,9 +17,11 @@ void Video::set_default_output_settings()
     set_two_pass(false);
     set_bitrate_by_size(SETTINGS -> get_double("target-size"));
     set_cut(0, inputVideo.duration);
-    bool next_to_original = SETTINGS -> get_boolean("output-next-to-original");
-    if (next_to_original)
-        set_output_path(inputVideo.path.parent_path());
+    if (SETTINGS -> get_string("output-path") == "")
+        set_output_path(
+            fs::path(getenv("HOME")) / 
+            fs::path(".var/app/io.github.seja_arctic_fox.vidcom/"))
+        ;
     else
         set_output_path(SETTINGS -> get_string("output-path"));
     set_codec(Codec(SETTINGS -> get_enum("codec")));

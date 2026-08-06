@@ -183,7 +183,7 @@ void MainWindow::display_about_dialog(const Glib::VariantBase&)
     auto dialog = ADW_ABOUT_DIALOG(adw_about_dialog_new());
     
     adw_about_dialog_set_application_name(dialog, "VidCom");
-    adw_about_dialog_set_version(dialog, "0.83 Beta");
+    adw_about_dialog_set_version(dialog, "0.83");
     adw_about_dialog_set_developer_name(dialog, "seja-arctic-fox");
     adw_about_dialog_set_application_icon(dialog, "io.github.seja_arctic_fox.vidcom");
     adw_about_dialog_set_website(dialog, "https://seja-arctic-fox.github.io/");
@@ -282,6 +282,84 @@ void MainWindow::show_toast(char const * message)
     AdwToast * toast = adw_toast_new(message);
     adw_toast_set_timeout(toast, 5);
     adw_toast_overlay_add_toast(toast_overlay, toast);
+}
+
+void MainWindow::show_toast_grant_access(std::vector<std::string> file_paths)
+{
+    auto grant_access_dnd = Gio::SimpleAction::create("grant_access_dnd");
+    grant_access_dnd -> signal_activate().connect([this, file_paths](const Glib::VariantBase&)
+        {
+            file_picker_grant_access(file_paths);
+        });
+    
+    auto app = Gtk::Application::get_default();
+    app -> remove_action("grant_access_dnd");
+    app -> add_action(grant_access_dnd);
+    
+    AdwToast * toast = adw_toast_new("Access to files needs to be granted");
+    adw_toast_set_timeout(toast, 15);
+    adw_toast_set_button_label(toast, "Give access");
+    adw_toast_set_priority(toast, ADW_TOAST_PRIORITY_HIGH);
+    adw_toast_set_action_name(toast, "app.grant_access_dnd");
+    
+    g_signal_connect(toast, "dismissed",
+        G_CALLBACK(+[](AdwToast *, gpointer data)
+            {
+                auto self = static_cast<MainWindow *>(data);
+                self -> video_queue.add_video("");
+                self -> video_queue.signal_loading_videos(false);
+            }), this);
+    
+    adw_toast_overlay_add_toast(toast_overlay, toast);
+}
+
+void MainWindow::file_picker_grant_access(std::vector<std::string> file_paths)
+{
+    // Pro každou složku zobrazit FileChooser
+    auto file_picker = Gtk::FileDialog::create();
+    file_picker -> set_title("Give access to the folder containing your video(s)");
+    file_picker -> set_accept_label("Give access");
+    file_picker -> set_modal();
+    
+    auto file = Gio::File::create_for_path(file_paths[0]);
+    auto initial_folder = file -> get_parent();
+    if (initial_folder)
+        file_picker -> set_initial_folder(initial_folder);
+    else
+        file_picker -> set_initial_folder(Gio::File::create_for_path(Glib::get_home_dir()));
+    
+    file_picker -> select_folder(*this, [this, file_picker, file_paths](Glib::RefPtr<Gio::AsyncResult>& result)
+    {
+        try
+            {
+                auto folder = file_picker -> select_folder_finish(result);
+                std::string folder_path = folder -> get_path();
+                
+                for (const auto& path : file_paths)
+                {
+                    fs::path portal_path = folder_path / fs::path(path).filename();
+                    video_queue.add_video(portal_path.string());
+                }
+                video_queue.signal_loading_videos.emit(false);
+            }
+        catch (const Gtk::DialogError& error) 
+        {
+            if (error.code() == Gtk::DialogError::DISMISSED)
+            {
+                cerr << YELLOW << "File picker cancelled by user. " << RESET << endl;
+            }
+            
+            video_queue.add_video("");
+            video_queue.signal_loading_videos.emit(false);
+        }
+        
+        catch (const Glib::Error& error)
+        {
+            cerr << RED << "Error opening files with file picker! " << error.what() << RESET << endl;
+            show_toast("Error opening files with file picker!");
+            video_queue.signal_loading_videos.emit(false);
+        }
+    });
 }
 
 void MainWindow::start_encoding()
