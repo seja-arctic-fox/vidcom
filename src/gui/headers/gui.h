@@ -73,6 +73,7 @@ class VideoElement : public Gtk::Box
         VideoElement(std::string input_path);
         ~VideoElement();
         void update_labels();
+        void update_progress(int percentage);
 
         Video video;
         VideoInfo video_info;
@@ -154,6 +155,13 @@ class QueueFrame : public Gtk::Box
 
         void add_video(const std::string& input_path);
         std::vector<Video *> get_all_videos();
+        
+        // Encoding progress shown for individual videos in the queue
+        void set_currently_encoded(int &index);
+        void set_encoding_progress(int &percentage);
+        void reset_encoding_progress();
+        
+        // Signals
         sigc::signal<void(VideoElement *)> signal_video_selected;
         sigc::signal<void(std::vector<VideoElement*>)> signal_multiple_videos_selected;
         sigc::signal<void()> signal_nothing_selected;
@@ -163,6 +171,8 @@ class QueueFrame : public Gtk::Box
         sigc::signal<void()> signal_enable_encoding;
     
     protected:
+        VideoElement * currently_encoded = nullptr;
+
         // Prostor pro prvky fronty a seznam prvků
         Gtk::ScrolledWindow scrolled_window;
         Gtk::ListBox video_listbox;

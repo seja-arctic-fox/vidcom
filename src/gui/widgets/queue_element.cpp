@@ -181,6 +181,9 @@ VideoElement::VideoElement(std::string input_path)
 VideoElement::~VideoElement()
 {}
 
+void VideoElement::update_progress(int percentage)
+{ encoding_progress.set_fraction(percentage / 100.0); }
+
 Glib::RefPtr<Gdk::ContentProvider> VideoElement::on_drag_prepare(double, double)
 {
     // Vytvořím hodnotu, inicializuju jí, nahraju do ní ten prvek a vrátím to

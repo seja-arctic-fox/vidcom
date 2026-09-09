@@ -162,6 +162,7 @@ MainWindow::MainWindow()
     results_page.signal_close_results.connect([this]()
         {
             main_page_stack.set_visible_child("options_page"); 
+            video_queue.reset_encoding_progress();
         });
 
     // Komunikace mezi vlákny
@@ -344,6 +345,7 @@ void MainWindow::encoding_worker()
 
     for (int i = 0; i < total_video_count && is_encoding.load(); i++)
     {
+        video_queue.set_currently_encoded(i);
         Video * video = all_videos[i];
 
         // Aktualizace postupu pro nové video
@@ -415,6 +417,7 @@ void MainWindow::encoding_worker()
 void MainWindow::on_progress_update()
 {
     std::lock_guard<std::mutex> lock(encoding_mutex);
+    video_queue.set_encoding_progress(current_progress.progress_percent);
     runner_panel.update_encoding_progress(current_progress);
     adw_status_page_set_description(
         encoding_page, current_progress.video_name.c_str()
