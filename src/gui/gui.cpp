@@ -161,9 +161,7 @@ MainWindow::MainWindow()
     // Signál pro přepnutí zpět z výsledkové stránky
     results_page.signal_close_results.connect([this]()
         {
-            main_page_stack.set_visible_child("options_page");
-            runner_panel.show_queue_button(true);
-            queue_lock = false;
+            main_page_stack.set_visible_child("options_page"); 
         });
 
     // Komunikace mezi vlákny
@@ -307,9 +305,6 @@ void MainWindow::start_encoding()
     
     runner_panel.set_encoding_state(true);
     main_page_stack.set_visible_child("encoding_page");
-    queue_lock = true;
-    adw_overlay_split_view_set_collapsed(split_view, true);
-    runner_panel.show_queue_button(false);
 
     is_encoding.store(true);
 
