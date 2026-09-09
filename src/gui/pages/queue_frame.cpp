@@ -21,7 +21,6 @@
 QueueFrame::QueueFrame()
 :   scrolled_window(),
     video_listbox(),
-    import_video_button("Add video(s)"),
     header_box(),
     clear_queue_box(Gtk::Orientation::HORIZONTAL),
     select_all_box(Gtk::Orientation::HORIZONTAL),
@@ -76,11 +75,6 @@ QueueFrame::QueueFrame()
     scrolled_window.set_policy(Gtk::PolicyType::NEVER, Gtk::PolicyType::AUTOMATIC);
     scrolled_window.set_expand();
 
-    // Spodní lišta
-    import_video_button.set_margin(10);
-    import_video_button.add_css_class("suggested-action");
-    footer_box.set_halign(Gtk::Align::CENTER);
-
     // Drag and drop
     drag_and_drop_target = Gtk::DropTarget::create(gdk_file_list_get_type(), Gdk::DragAction::COPY);
     drag_and_drop_target -> signal_drop().connect(sigc::mem_fun(*this, &QueueFrame::on_drop), false);
@@ -94,7 +88,6 @@ QueueFrame::QueueFrame()
     // Přidat věci do boxu fronty
     append(header_box);
     append(scrolled_window);
-    append(footer_box);
     add_controller(drag_and_drop_target);
 }
 

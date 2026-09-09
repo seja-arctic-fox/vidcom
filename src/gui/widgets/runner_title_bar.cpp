@@ -81,7 +81,7 @@ RunnerPanel::~RunnerPanel()
 
 void RunnerPanel::clear_title()
 {
-    WindowTitle.set_text("No video selected");
+    WindowTitle.set_text("");
 }
 
 void RunnerPanel::set_title(VideoElement * video_element)
@@ -166,6 +166,8 @@ void RunnerPanel::set_encoding_state(bool is_encoding)
         EncodingTextStatus.remove_css_class("success");
         EncodingTextStatus.add_css_class("warning");
         EncodingTextStatus.set_markup("<b>Encoding...</b>");
+        
+        WindowTitle.set_visible(false);
     }
     else
     {
@@ -184,6 +186,7 @@ void RunnerPanel::set_encoding_state(bool is_encoding)
         EncodingTextStatus.set_markup("<b>Ready</b>");
 
         EncodingProgressBar.set_fraction(0.0);
+        WindowTitle.set_visible(true);
     }
 }
 

@@ -64,7 +64,7 @@ VideoElement::VideoElement(std::string input_path)
     main_hbox(Gtk::Orientation::HORIZONTAL),
     label_vbox(Gtk::Orientation::VERTICAL)
 {
-    set_margin(5);
+    set_orientation(Gtk::Orientation::VERTICAL);
 
     // "Rukojeť" naznačující přesouvání
     drag_handle_icon.set_from_icon_name("list-drag-handle-symbolic");
@@ -155,7 +155,11 @@ VideoElement::VideoElement(std::string input_path)
     main_hbox.append(label_vbox);
     main_hbox.append(remove_element_button);
     main_hbox.set_margin(10);
-
+    
+    // Showing the encoding progress
+    encoding_progress.set_margin_top(5);
+    encoding_progress.add_css_class("osd");
+    
     // Změna pořadí prvků ve frontě
     // chycení
     drag_source = Gtk::DragSource::create();
@@ -167,11 +171,11 @@ VideoElement::VideoElement(std::string input_path)
     drop_target = Gtk::DropTarget::create(G_TYPE_POINTER, Gdk::DragAction::MOVE);
     drop_target -> signal_drop().connect(sigc::mem_fun(*this, &VideoElement::on_drop), false);
 
-    set_child(main_hbox);
+    append(main_hbox);
+    append(encoding_progress);
     add_controller(drag_source);
     add_controller(drop_target);
 
-    add_css_class("card");
 }
 
 VideoElement::~VideoElement()

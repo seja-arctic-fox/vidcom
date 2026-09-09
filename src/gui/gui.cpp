@@ -24,7 +24,7 @@ MainWindow::MainWindow()
     set_default_size(960, 540);
     gtk_window_set_titlebar(GTK_WINDOW(gobj()), gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
     // Jen pro BETA verze: 
-    // add_css_class("devel");
+    add_css_class("devel");
     
     // Stránka pro prázdnou frontu
     add_videos_pill_button.add_css_class("pill");
@@ -39,18 +39,11 @@ MainWindow::MainWindow()
     adw_status_page_set_description(queue_empty_page, "Start with importing videos into the queue");
     adw_status_page_set_child(queue_empty_page, GTK_WIDGET(add_videos_pill_button.gobj()));
     
-    // Stránka pro kódování
-    encoding_page_progress.add_css_class("chunky-progress");
-    encoding_page_progress.set_show_text(false);
-    encoding_page_progress.set_margin(20);
-    encoding_page_progress.set_valign(Gtk::Align::CENTER);
-    encoding_page_progress.set_fraction(0);
-    
+    // Page for encoding
     encoding_page = ADW_STATUS_PAGE(adw_status_page_new());
     adw_status_page_set_icon_name(encoding_page, "system-run-symbolic");
     adw_status_page_set_title(encoding_page, "Encoding videos...");
     adw_status_page_set_description(encoding_page, "");
-    adw_status_page_set_child(encoding_page, GTK_WIDGET(encoding_page_progress.gobj()));
     
     // Zásobník pro stránky na hlavní části
     main_page_stack.set_transition_type(Gtk::StackTransitionType::CROSSFADE);
@@ -428,17 +421,15 @@ void MainWindow::on_progress_update()
 {
     std::lock_guard<std::mutex> lock(encoding_mutex);
     runner_panel.update_encoding_progress(current_progress);
-    encoding_page_progress.set_fraction(current_progress.progress_percent / 100.0);
-    std::ostringstream new_text;
-    new_text << "Encoding: " << current_progress.video_name;
-    adw_status_page_set_description(encoding_page, new_text.str().c_str());
+    adw_status_page_set_description(
+        encoding_page, current_progress.video_name.c_str()
+    );
 }
 
 void MainWindow::on_encoding_complete()
 {
     runner_panel.set_encoding_state(false);
     runner_panel.block_encoding_button(false);
-    encoding_page_progress.set_fraction(0);
 
     if (encoding_thread.joinable())
     {

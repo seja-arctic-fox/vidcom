@@ -67,7 +67,7 @@ struct EncodingResult
 };
 
 // Prvek ve frontě kódování
-class VideoElement : public Gtk::Frame
+class VideoElement : public Gtk::Box
 {
     public:
         VideoElement(std::string input_path);
@@ -85,6 +85,7 @@ class VideoElement : public Gtk::Frame
             Gtk::Image drag_handle_icon, video_thumbnail;
             Gtk::Frame video_thumbnail_frame;
             Gtk::Label video_name_text, resolution_text, framerate_text, duration_text, mode_text, size_text;
+            Gtk::ProgressBar encoding_progress;
             RoundedImage css_rounded;
             
             // Tlačítko pro odstranění prvku z fronty
@@ -168,10 +169,6 @@ class QueueFrame : public Gtk::Box
 
         // Prázdná fronta
         AdwStatusPage * queue_empty_status;
-
-        // Spodní lišta
-        Gtk::Box footer_box;
-        Gtk::Button import_video_button;
 
         // Tlačítko na vymazání celé fronty a horní lišta
         Gtk::Box header_box;
@@ -440,7 +437,6 @@ class MainWindow : public Gtk::Window
         Gtk::Stack main_page_stack;
         AdwStatusPage * queue_empty_page;
         AdwStatusPage * encoding_page;
-        Gtk::ProgressBar encoding_page_progress;
         Gtk::Button add_videos_pill_button;
         ResultsPage results_page;
         
