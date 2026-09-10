@@ -181,6 +181,14 @@ VideoElement::VideoElement(std::string input_path)
 VideoElement::~VideoElement()
 {}
 
+void VideoElement::set_enabled(bool enabled)
+{
+    main_hbox.set_sensitive(enabled);
+    drag_handle_icon.set_visible(enabled);
+    if (enabled)    add_controller(drag_source);
+    else            remove_controller(drag_source);
+}
+
 void VideoElement::update_progress(int percentage)
 { encoding_progress.set_fraction(percentage / 100.0); }
 

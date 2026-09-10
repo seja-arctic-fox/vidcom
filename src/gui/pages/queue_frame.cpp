@@ -106,7 +106,8 @@ void QueueFrame::reset_encoding_progress()
         el -> update_progress(0);
         row -> set_activatable();
         row -> set_selectable();
-        row -> set_sensitive();
+        row -> set_can_focus();
+        el -> set_enabled();
         clear_queue_button.set_sensitive();
         select_all_button.set_sensitive();
         video_listbox.select_row(*video_listbox.get_row_at_index(0));
@@ -119,16 +120,18 @@ void QueueFrame::set_currently_encoded(int &index)
     this -> currently_encoded = dynamic_cast<VideoElement *>
         (video_listbox.get_row_at_index(index) -> get_child());
     
-    Gtk::ListBoxRow * prev_row = video_listbox.get_row_at_index(index);
-    prev_row -> set_activatable(false);
-    prev_row -> set_selectable(false);
-    prev_row -> set_sensitive(false);
+    Gtk::ListBoxRow * row = video_listbox.get_row_at_index(index);
+    VideoElement * el = dynamic_cast<VideoElement*>(row -> get_child());
+    row -> set_activatable(false);
+    row -> set_selectable(false);
+    row -> set_can_focus(false);
+    el -> set_enabled(false);
     clear_queue_button.set_sensitive(false);
     select_all_button.set_sensitive(false);
     change_select_all_status(true);
     
     if (video_listbox.get_selected_row())
-        if (prev_row == video_listbox.get_selected_row())
+        if (row == video_listbox.get_selected_row())
         {
             signal_nothing_selected.emit();
             video_listbox.set_selection_mode(Gtk::SelectionMode::NONE);

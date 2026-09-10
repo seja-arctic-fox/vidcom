@@ -74,6 +74,7 @@ class VideoElement : public Gtk::Box
         ~VideoElement();
         void update_labels();
         void update_progress(int percentage);
+        void set_enabled(bool enabled = true);
 
         Video video;
         VideoInfo video_info;
