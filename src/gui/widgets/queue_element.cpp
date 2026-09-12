@@ -185,8 +185,19 @@ void VideoElement::set_enabled(bool enabled)
 {
     main_hbox.set_sensitive(enabled);
     drag_handle_icon.set_visible(enabled);
-    if (enabled)    add_controller(drag_source);
-    else            remove_controller(drag_source);
+    
+    if (enabled)
+    {
+        if (drag_source -> get_widget() == NULL) 
+            add_controller(drag_source);
+        if (drop_target -> get_widget() == NULL) 
+            add_controller(drop_target);
+    }
+    else
+    {
+        remove_controller(drag_source);
+        remove_controller(drop_target);
+    }
 }
 
 void VideoElement::update_progress(int percentage)
