@@ -338,6 +338,7 @@ void SettingsPage::load_options_into_GUI(Video * video)
         av1_page.load_vector(video_queue);
         hevc_page.load_vector(video_queue);
         vp9_page.load_vector(video_queue);
+        avc_page.load_vector(video_queue);
     }
     
     switch(video_element -> video.get_codec())
