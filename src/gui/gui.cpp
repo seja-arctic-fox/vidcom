@@ -21,7 +21,10 @@ MainWindow::MainWindow()
     is_encoding(false)
 {
     set_title("VidCom");
-    set_default_size(960, 540);
+    set_default_size(
+        adw_length_unit_to_px(ADW_LENGTH_UNIT_SP, 1000, nullptr),
+        adw_length_unit_to_px(ADW_LENGTH_UNIT_SP, 600, nullptr)
+    );
     gtk_window_set_titlebar(GTK_WINDOW(gobj()), gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
     // Jen pro BETA verze: 
     add_css_class("devel");
