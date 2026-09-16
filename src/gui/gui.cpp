@@ -24,7 +24,7 @@ MainWindow::MainWindow()
     set_default_size(960, 540);
     gtk_window_set_titlebar(GTK_WINDOW(gobj()), gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
     // Jen pro BETA verze: 
-    // add_css_class("devel");
+    add_css_class("devel");
     
     // Stránka pro prázdnou frontu
     add_videos_pill_button.add_css_class("pill");
@@ -55,7 +55,6 @@ MainWindow::MainWindow()
     // Zásobník pro stránky na hlavní části
     main_page_stack.set_transition_type(Gtk::StackTransitionType::CROSSFADE);
     main_page_stack.set_transition_duration(250);
-    main_page_stack.set_hhomogeneous(false);
     
     main_page_stack.add(*Glib::wrap(GTK_WIDGET(queue_empty_page)), "queue_empty_page");
     main_page_stack.add(options_page, "options_page");
@@ -121,14 +120,59 @@ MainWindow::MainWindow()
     adw_overlay_split_view_set_sidebar_position(split_view, GTK_PACK_START);
     adw_overlay_split_view_set_min_sidebar_width(split_view, 250.0);
     
-    set_child(*Glib::wrap(GTK_WIDGET(split_view)));
-
-    signal_realize().connect([this]()
-        {
-            get_surface() -> signal_layout().connect(
-                sigc::mem_fun(*this, &MainWindow::on_window_resize)
-            );
-        }
+    // Window area, which is collapsable
+    root = ADW_BREAKPOINT_BIN(adw_breakpoint_bin_new());
+    adw_breakpoint_bin_set_child(root, GTK_WIDGET(split_view));
+    
+    // Breakpoint for controlling the queue collapsing
+    breakpoint = adw_breakpoint_new(
+        adw_breakpoint_condition_parse("max-width: 800sp")
+    );
+    adw_breakpoint_add_setters(
+        breakpoint,
+        G_OBJECT(split_view), "collapsed", TRUE,
+        G_OBJECT(split_view), "enable-show-gesture", TRUE,
+        G_OBJECT(split_view), "enable-hide-gesture", TRUE,
+        NULL
+    );
+    adw_breakpoint_bin_add_breakpoint(root, breakpoint);
+    
+    // Add the window content to the window
+    set_child(*Glib::wrap(GTK_WIDGET(root)));
+    
+    // Set the initial state for the button showing the queue and connect the 
+    // corresponding signal
+    static_cast<MainWindow *>(this) -> runner_panel.show_queue_button(
+        adw_overlay_split_view_get_collapsed(ADW_OVERLAY_SPLIT_VIEW(split_view))
+    );
+    
+    g_signal_connect(split_view, "notify::collapsed",
+        G_CALLBACK(+[](GObject * obj, GParamSpec *, gpointer data) 
+            {
+                static_cast<MainWindow *>(data) -> 
+                    runner_panel.show_queue_button(
+                        adw_overlay_split_view_get_collapsed
+                        (ADW_OVERLAY_SPLIT_VIEW(obj))
+                    );
+            }),
+    this);
+    
+    // Measure and set the minimal possible width and height, 
+    // because otherwise it is possible to scale the window to 0x0 px
+    int content_min_width = 0;
+    int content_min_height = 0;
+    
+    gtk_widget_measure(
+        GTK_WIDGET(content_view), GTK_ORIENTATION_HORIZONTAL, -1,
+        nullptr, &content_min_width, nullptr, nullptr
+    );
+    gtk_widget_measure(
+        GTK_WIDGET(content_view), GTK_ORIENTATION_VERTICAL, -1,
+        nullptr, &content_min_height, nullptr, nullptr
+    );
+    
+    gtk_widget_set_size_request(
+        GTK_WIDGET(root), content_min_width, content_min_height
     );
 
     // Signál pro zobrazení/skrývání fronty
@@ -243,37 +287,6 @@ MainWindow::~MainWindow()
     {
         is_encoding.store(false);
         encoding_thread.join();
-    }
-}
-
-void MainWindow::on_window_resize(int width, int)
-{
-    if (queue_lock) return;
-    
-    int content_min_width = 0;
-    double sidebar_min_width = adw_overlay_split_view_get_min_sidebar_width(split_view);
-    gtk_widget_measure(
-            GTK_WIDGET(content_view),
-            GTK_ORIENTATION_HORIZONTAL,
-            -1,
-            nullptr, &content_min_width, nullptr, nullptr
-        );
-    
-    int min_width = content_min_width + (int) sidebar_min_width;
-    
-    if (width < min_width && !adw_overlay_split_view_get_collapsed(split_view))
-    {
-        adw_overlay_split_view_set_collapsed(split_view, true);
-        adw_overlay_split_view_set_enable_hide_gesture(split_view, true);
-        adw_overlay_split_view_set_enable_show_gesture(split_view, true);
-        runner_panel.show_queue_button(true);
-    }
-    else if (width >= min_width)
-    {
-        adw_overlay_split_view_set_collapsed(split_view, false);
-        adw_overlay_split_view_set_enable_hide_gesture(split_view, false);
-        adw_overlay_split_view_set_enable_show_gesture(split_view, false);
-        runner_panel.show_queue_button(false);
     }
 }
 
