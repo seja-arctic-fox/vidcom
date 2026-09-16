@@ -117,26 +117,65 @@ void QueueFrame::reset_encoding_progress()
 
 void QueueFrame::set_currently_encoded(int &index)
 {
+    // Set the progress of the previous one to zero, to avoid visual noise
+    if (this -> currently_encoded)
+    {
+        this -> currently_encoded -> update_progress(0);
+        
+        // Finished videos should not be clickable anymore
+        Gtk::ListBoxRow * prev_row = 
+            dynamic_cast
+                <Gtk::ListBoxRow *>
+                (this -> currently_encoded -> get_parent());
+        prev_row -> set_activatable(false);
+        prev_row -> set_selectable(false);
+        prev_row -> set_can_focus(false);
+    }
+    
+    // Get the currently encoded video
     this -> currently_encoded = dynamic_cast<VideoElement *>
         (video_listbox.get_row_at_index(index) -> get_child());
     
     Gtk::ListBoxRow * row = video_listbox.get_row_at_index(index);
     VideoElement * el = dynamic_cast<VideoElement*>(row -> get_child());
-    row -> set_activatable(false);
-    row -> set_selectable(false);
-    row -> set_can_focus(false);
     el -> set_enabled(false);
     clear_queue_button.set_sensitive(false);
     select_all_button.set_sensitive(false);
     change_select_all_status(true);
     
     if (video_listbox.get_selected_row())
-        if (row == video_listbox.get_selected_row())
+        
+        /* 
+         * Deselecting will happen when the edited element starts to be encoded
+         * OR on general start of the encoding process 
+         * so the user notices the state change 
+         */
+        if (row == video_listbox.get_selected_row() || index == 0)
         {
             signal_nothing_selected.emit();
-            video_listbox.set_selection_mode(Gtk::SelectionMode::NONE);
-            video_listbox.set_selection_mode(Gtk::SelectionMode::MULTIPLE);
+            video_listbox.unselect_all();
         }
+}
+
+void QueueFrame::block_last_row()
+{
+    /* 
+     * set_currently_encoded() would not block the last row, so if the user
+     * clicks on it, they could get soft-locked on the encoding page
+     */
+    
+    if (this -> currently_encoded)
+    {
+        this -> currently_encoded -> update_progress(0);
+        
+        Gtk::ListBoxRow * row = 
+            dynamic_cast
+                <Gtk::ListBoxRow *>
+                (this -> currently_encoded -> get_parent());
+        row -> set_activatable(false);
+        row -> set_selectable(false);
+        row -> set_can_focus(false);
+    }
 }
 
 void QueueFrame::set_encoding_progress(int &percentage)
@@ -200,6 +239,17 @@ void QueueFrame::on_row_selected(Gtk::ListBoxRow * row)
 {
     if (row)
     {
+        // Currently encoded video will show the encoding page when selected
+        if (
+            dynamic_cast<VideoElement *>
+            (row -> get_child()) == currently_encoded
+        )
+        {
+            video_listbox.unselect_all();
+            signal_nothing_selected.emit();
+            return;
+        }
+        
         if (this -> select_multiple)
         {
             auto all_rows = video_listbox.get_selected_rows();

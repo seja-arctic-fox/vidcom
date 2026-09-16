@@ -159,6 +159,7 @@ class QueueFrame : public Gtk::Box
         
         // Encoding progress shown for individual videos in the queue
         void set_currently_encoded(int &index);
+        void block_last_row();
         void set_encoding_progress(int &percentage);
         void reset_encoding_progress();
         
@@ -478,7 +479,6 @@ class MainWindow : public Gtk::Window
 
         EncodingProgress current_progress;
         std::vector<EncodingResult> encoding_results;
-        bool queue_lock = false;
         guint inhibition_cookie = 0;
 
         // Kódování

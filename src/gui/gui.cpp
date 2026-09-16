@@ -3,6 +3,7 @@
 #include "giomm/application.h"
 #include "giomm/simpleaction.h"
 #include "glibmm/refptr.h"
+#include "glibmm/ustring.h"
 #include "gtk/gtk.h"
 #include "gtkmm/application.h"
 #include "sigc++/functors/mem_fun.h"
@@ -42,8 +43,11 @@ MainWindow::MainWindow()
     // Page for encoding
     encoding_page = ADW_STATUS_PAGE(adw_status_page_new());
     adw_status_page_set_icon_name(encoding_page, "system-run-symbolic");
-    adw_status_page_set_title(encoding_page, "Encoding videos...");
-    adw_status_page_set_description(encoding_page, "");
+    adw_status_page_set_title(encoding_page, "Encoding: ");
+    adw_status_page_set_description(
+        encoding_page, 
+        "You can still edit pending videos or add new ones in the queue."
+    );
     
     // Zásobník pro stránky na hlavní části
     main_page_stack.set_transition_type(Gtk::StackTransitionType::CROSSFADE);
@@ -131,7 +135,13 @@ MainWindow::MainWindow()
     // Signály pro změny názvu videa v runneru
     video_queue.signal_video_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_title));
     video_queue.signal_multiple_videos_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_title_multiple));
-    video_queue.signal_nothing_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::clear_title));
+    video_queue.signal_nothing_selected.connect(
+        sigc::mem_fun(runner_panel, &RunnerPanel::clear_title)
+    );
+    
+    video_queue.signal_nothing_selected.connect([this](){
+        main_page_stack.set_visible_child("encoding_page");
+    });
     
     // Přepínání stavů a (od)blokování tlačítka pro kódování
     video_queue.signal_enable_encoding.connect([this]() 
@@ -150,6 +160,12 @@ MainWindow::MainWindow()
     
     // Propojení signálů pro aktualizaci nastavení videa
     video_queue.signal_video_selected.connect(sigc::mem_fun(options_page, &SettingsPage::read_video_options));
+    video_queue.signal_video_selected.connect([this](VideoElement *){
+        Glib::ustring page = main_page_stack.get_visible_child_name();
+        if (page != "options_page" && page != "results_page")
+            main_page_stack.set_visible_child("options_page");
+    });
+    
     video_queue.signal_multiple_videos_selected.connect(sigc::mem_fun(options_page, &SettingsPage::read_video_vector_options));
 
     // Signály pro začátek a zastavení kódování, načítání videí do fronty
@@ -240,8 +256,6 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_window_resize(int width, int)
 {
-    if (queue_lock) return;
-    
     int content_min_width = 0;
     double sidebar_min_width = adw_overlay_split_view_get_min_sidebar_width(split_view);
     gtk_widget_measure(
@@ -305,7 +319,6 @@ void MainWindow::start_encoding()
     );
     
     runner_panel.set_encoding_state(true);
-    main_page_stack.set_visible_child("encoding_page");
 
     is_encoding.store(true);
 
@@ -419,8 +432,9 @@ void MainWindow::on_progress_update()
     std::lock_guard<std::mutex> lock(encoding_mutex);
     video_queue.set_encoding_progress(current_progress.progress_percent);
     runner_panel.update_encoding_progress(current_progress);
-    adw_status_page_set_description(
-        encoding_page, current_progress.video_name.c_str()
+    string encoding_title = "Encoding: " + current_progress.video_name;
+    adw_status_page_set_title(
+        encoding_page, encoding_title.c_str()
     );
 }
 
@@ -428,6 +442,7 @@ void MainWindow::on_encoding_complete()
 {
     runner_panel.set_encoding_state(false);
     runner_panel.block_encoding_button(false);
+    video_queue.block_last_row();
 
     if (encoding_thread.joinable())
     {
