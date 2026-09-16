@@ -452,7 +452,7 @@ class MainWindow : public Gtk::Window
         Gtk::Button add_videos_pill_button;
         ResultsPage results_page;
         
-        // Layout aplikace
+        // App layout
         Glib::RefPtr<Gio::Menu> main_menu;
         Gtk::MenuButton menu_button;
         Gtk::Button add_videos_button;
@@ -461,8 +461,9 @@ class MainWindow : public Gtk::Window
         AdwToolbarView * content_view;
         AdwToastOverlay * toast_overlay;
         AdwOverlaySplitView * split_view;
+        AdwBreakpointBin * root;
+        AdwBreakpoint * breakpoint;
         
-        void on_window_resize(int width, int height);
         void on_import_video_clicked();
         void display_about_dialog(const Glib::VariantBase&);
         void display_preferences(const Glib::VariantBase&);
