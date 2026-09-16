@@ -187,7 +187,8 @@ MainWindow::MainWindow()
     );
     
     video_queue.signal_nothing_selected.connect([this](){
-        main_page_stack.set_visible_child("encoding_page");
+        if (is_encoding.load())
+            main_page_stack.set_visible_child("encoding_page");
     });
     
     // Přepínání stavů a (od)blokování tlačítka pro kódování
