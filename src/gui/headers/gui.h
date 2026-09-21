@@ -17,6 +17,7 @@
 #include "gtkmm/label.h"
 #include "gtkmm/listbox.h"
 #include "gtkmm/listboxrow.h"
+#include "gtkmm/overlay.h"
 #include "gtkmm/progressbar.h"
 #include "gtkmm/scrolledwindow.h"
 #include "gtkmm/widget.h"
@@ -75,6 +76,8 @@ class VideoElement : public Gtk::Box
         void update_labels();
         void update_progress(int percentage);
         void set_enabled(bool enabled = true);
+        void set_status_encoding();
+        void set_status_finished();
 
         Video video;
         VideoInfo video_info;
@@ -84,8 +87,9 @@ class VideoElement : public Gtk::Box
         protected:
 
             // Popisky vlastností videa
-            Gtk::Image drag_handle_icon, video_thumbnail;
+            Gtk::Image drag_handle_icon, video_thumbnail, video_status_icon;
             Gtk::Frame video_thumbnail_frame;
+            Gtk::Overlay video_thumbnail_overlay;
             Gtk::Label video_name_text, resolution_text, framerate_text, duration_text, mode_text, size_text;
             Gtk::ProgressBar encoding_progress;
             RoundedImage css_rounded;
@@ -159,7 +163,7 @@ class QueueFrame : public Gtk::Box
         
         // Encoding progress shown for individual videos in the queue
         void set_currently_encoded(int &index);
-        void block_last_row();
+        void finish_status_last_row();
         void set_encoding_progress(int &percentage);
         void reset_encoding_progress();
         

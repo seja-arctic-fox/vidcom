@@ -72,10 +72,9 @@ VideoElement::VideoElement(std::string input_path)
     drag_handle_icon.set_margin_end(5);
     drag_handle_icon.add_css_class("dim-label");
     drag_handle_icon.set_pixel_size(16);
+    drag_handle_icon.set_cursor(Gdk::Cursor::create("grab"));
 
     // Obrázek videa
-    video_thumbnail.set_cursor(Gdk::Cursor::create("grab"));
-
     int icon_hash = (input_path.length() + (int) video.get_video_info().duration) * 7333 % 100;
     string icon_name = fs::path(input_path).stem().generic_string() + to_string(icon_hash) + ".jpg";
     fs::path thumbnail_path("/tmp/vidcom/thumbnail/thumb_" + icon_name);
@@ -105,12 +104,18 @@ VideoElement::VideoElement(std::string input_path)
     {
         video_thumbnail.set(thumbnail_path.generic_string());
     }
-
+    
+    video_status_icon.set_pixel_size(32);
+    video_status_icon.set_visible(false);
+    
+    video_thumbnail_overlay.set_child(video_thumbnail);
+    video_thumbnail_overlay.add_overlay(video_status_icon);
+    
     video_thumbnail.set_pixel_size(64);
     video_thumbnail_frame.add_css_class("rounded");
     video_thumbnail_frame.set_margin(10);
     video_thumbnail_frame.set_valign(Gtk::Align::CENTER);
-    video_thumbnail_frame.set_child(video_thumbnail);
+    video_thumbnail_frame.set_child(video_thumbnail_overlay);
 
     // Textíky - informace o videu
     video_name_text.set_ellipsize(Pango::EllipsizeMode::END);
@@ -181,10 +186,17 @@ VideoElement::VideoElement(std::string input_path)
 VideoElement::~VideoElement()
 {}
 
+void VideoElement::set_status_encoding()
+{ video_status_icon.set_from_icon_name("applications-system-symbolic"); }
+
+void VideoElement::set_status_finished()
+{ video_status_icon.set_from_icon_name("selection-mode-symbolic"); }
+
 void VideoElement::set_enabled(bool enabled)
 {
-    main_hbox.set_sensitive(enabled);
-    drag_handle_icon.set_visible(enabled);
+    remove_element_button.set_sensitive(enabled);
+    drag_handle_icon.set_opacity(enabled ? 1 : 0);
+    video_status_icon.set_visible(!enabled);
     
     if (enabled)
     {

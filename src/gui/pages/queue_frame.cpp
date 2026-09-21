@@ -97,6 +97,7 @@ QueueFrame::~QueueFrame()
 
 void QueueFrame::reset_encoding_progress()
 {
+    set_sensitive();
     int index = 0;
     this -> currently_encoded = nullptr;
     
@@ -104,10 +105,11 @@ void QueueFrame::reset_encoding_progress()
     {
         VideoElement * el = dynamic_cast<VideoElement*>(row -> get_child());
         el -> update_progress(0);
+        el -> set_enabled();
         row -> set_activatable();
         row -> set_selectable();
         row -> set_can_focus();
-        el -> set_enabled();
+        row -> set_sensitive();
         clear_queue_button.set_sensitive();
         select_all_button.set_sensitive();
         video_listbox.select_row(*video_listbox.get_row_at_index(0));
@@ -121,6 +123,7 @@ void QueueFrame::set_currently_encoded(int &index)
     if (this -> currently_encoded)
     {
         this -> currently_encoded -> update_progress(0);
+        this -> currently_encoded -> set_status_finished();
         
         // Finished videos should not be clickable anymore
         Gtk::ListBoxRow * prev_row = 
@@ -130,15 +133,15 @@ void QueueFrame::set_currently_encoded(int &index)
         prev_row -> set_activatable(false);
         prev_row -> set_selectable(false);
         prev_row -> set_can_focus(false);
+        prev_row -> set_sensitive(false);
     }
     
     // Get the currently encoded video
     this -> currently_encoded = dynamic_cast<VideoElement *>
         (video_listbox.get_row_at_index(index) -> get_child());
     
-    Gtk::ListBoxRow * row = video_listbox.get_row_at_index(index);
-    VideoElement * el = dynamic_cast<VideoElement*>(row -> get_child());
-    el -> set_enabled(false);
+    this -> currently_encoded -> set_enabled(false);
+    this -> currently_encoded -> set_status_encoding();
     clear_queue_button.set_sensitive(false);
     select_all_button.set_sensitive(false);
     change_select_all_status(true);
@@ -150,31 +153,21 @@ void QueueFrame::set_currently_encoded(int &index)
          * OR on general start of the encoding process 
          * so the user notices the state change 
          */
-        if (row == video_listbox.get_selected_row() || index == 0)
+        if (video_listbox.get_row_at_index(index) == video_listbox.get_selected_row() || index == 0)
         {
             signal_nothing_selected.emit();
             video_listbox.unselect_all();
         }
 }
 
-void QueueFrame::block_last_row()
+void QueueFrame::finish_status_last_row()
 {
-    /* 
-     * set_currently_encoded() would not block the last row, so if the user
-     * clicks on it, they could get soft-locked on the encoding page
-     */
+    // Visual change to the last element triggered at the end of encoding
     
     if (this -> currently_encoded)
     {
         this -> currently_encoded -> update_progress(0);
-        
-        Gtk::ListBoxRow * row = 
-            dynamic_cast
-                <Gtk::ListBoxRow *>
-                (this -> currently_encoded -> get_parent());
-        row -> set_activatable(false);
-        row -> set_selectable(false);
-        row -> set_can_focus(false);
+        this -> currently_encoded -> set_status_finished();
     }
 }
 

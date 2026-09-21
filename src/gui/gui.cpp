@@ -461,7 +461,8 @@ void MainWindow::on_encoding_complete()
 {
     runner_panel.set_encoding_state(false);
     runner_panel.block_encoding_button(false);
-    video_queue.block_last_row();
+    video_queue.finish_status_last_row();
+    video_queue.set_sensitive(false);
 
     if (encoding_thread.joinable())
     {
