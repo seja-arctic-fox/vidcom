@@ -372,20 +372,25 @@ void MainWindow::stop_encoding()
 
 void MainWindow::encoding_worker()
 {
-    std::vector<Video *> all_videos = video_queue.get_all_videos();
-    int total_video_count = all_videos.size();
-
-    for (int i = 0; i < total_video_count && is_encoding.load(); i++)
+    std::vector<Video *> all_videos;
+    int index = 0;
+    
+    while (is_encoding.load())
     {
-        video_queue.set_currently_encoded(i);
-        Video * video = all_videos[i];
+        all_videos = video_queue.get_all_videos();
+        int video_count = all_videos.size();
+        if (index >= int(all_videos.size()))
+            break;
+        
+        video_queue.set_currently_encoded(index);
+        Video * video = all_videos[index];
 
         // Aktualizace postupu pro nové video
         {
             std::lock_guard<std::mutex> lock(encoding_mutex);
             current_progress.video_name = video -> get_video_info().path.filename();
-            current_progress.current_index = i + 1;
-            current_progress.total_count = total_video_count;
+            current_progress.current_index = index + 1;
+            current_progress.total_count = video_count;
             current_progress.progress_percent = 0;
             current_progress.current_time = 0.0f;
         }
@@ -393,13 +398,13 @@ void MainWindow::encoding_worker()
         progress_dispatcher.emit();
     
         // Callback pro sledování postupu
-        auto progress_callback = [this, i, total_video_count](float current_time, int percent)
+        auto progress_callback = [this, index, video_count](float current_time, int percent)
         {
             std::lock_guard<std::mutex> lock(encoding_mutex);
             current_progress.current_time = current_time;
             current_progress.progress_percent = percent;
-            current_progress.current_index = i + 1;
-            current_progress.total_count = total_video_count;
+            current_progress.current_index = index + 1;
+            current_progress.total_count = video_count;
 
             progress_dispatcher.emit();
         };
@@ -434,11 +439,7 @@ void MainWindow::encoding_worker()
             encoding_results.push_back(result);
         }
 
-        // Přerušit cyklus, pokud bylo kódování přerušeno
-        if (!is_encoding.load())
-        {
-            break;
-        }
+        index++;
     }
 
     is_encoding.store(false);
