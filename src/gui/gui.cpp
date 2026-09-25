@@ -219,6 +219,15 @@ MainWindow::MainWindow()
     runner_panel.signal_start_encoding.connect(sigc::mem_fun(*this, &MainWindow::start_encoding));
     runner_panel.signal_stop_encoding.connect(sigc::mem_fun(*this, &MainWindow::stop_encoding));
     video_queue.signal_loading_videos.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_loading_state));
+    video_queue.signal_loading_videos.connect([this](bool loading)
+        {
+            if (!loading && is_encoding.load())
+            {
+                int new_count = video_queue.get_all_videos().size();
+                current_progress.total_count = new_count;
+                runner_panel.update_encoding_progress(current_progress);
+            }
+        });
     video_queue.signal_loading_videos_count.connect(sigc::mem_fun(runner_panel, &RunnerPanel::update_loading_progress));
     
     // Signál pro přepnutí zpět z výsledkové stránky
@@ -377,7 +386,6 @@ void MainWindow::encoding_worker()
     while (is_encoding.load())
     {
         all_videos = video_queue.get_all_videos();
-        int video_count = all_videos.size();
         if (index >= int(all_videos.size()))
             break;
         
@@ -389,7 +397,7 @@ void MainWindow::encoding_worker()
             std::lock_guard<std::mutex> lock(encoding_mutex);
             current_progress.video_name = video -> get_video_info().path.filename();
             current_progress.current_index = index + 1;
-            current_progress.total_count = video_count;
+            current_progress.total_count = all_videos.size();
             current_progress.progress_percent = 0;
             current_progress.current_time = 0.0f;
         }
@@ -397,13 +405,12 @@ void MainWindow::encoding_worker()
         progress_dispatcher.emit();
     
         // Callback pro sledování postupu
-        auto progress_callback = [this, index, video_count](float current_time, int percent)
+        auto progress_callback = [this, index](float current_time, int percent)
         {
             std::lock_guard<std::mutex> lock(encoding_mutex);
             current_progress.current_time = current_time;
             current_progress.progress_percent = percent;
             current_progress.current_index = index + 1;
-            current_progress.total_count = video_count;
 
             progress_dispatcher.emit();
         };
