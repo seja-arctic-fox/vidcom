@@ -123,7 +123,6 @@ class RunnerPanel : public Gtk::HeaderBar
         void update_encoding_progress(const EncodingProgress& progress);
         void set_encoding_state(bool is_encoding);
         void update_status(const std::string& status, const std::string& css_class = "");
-        void block_encoding_button(bool block = true);
         void set_loading_state(bool is_loading);
         void request_encoding_button_unblock(){ request_button_unblock = true; };
         void update_loading_progress(int video_index, int video_count);
@@ -484,6 +483,7 @@ class MainWindow : public Gtk::Window
 
         EncodingProgress current_progress;
         std::vector<EncodingResult> encoding_results;
+        int last_video_index = -1;
         guint inhibition_cookie = 0;
 
         // Kódování

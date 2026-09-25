@@ -61,7 +61,7 @@ RunnerPanel::RunnerPanel()
     // Spouštěcí tlačítko
     EncodingButton.set_expand(false);
     EncodingButton.set_icon_name("media-playback-start-symbolic");
-    block_encoding_button(true);
+    EncodingButton.set_sensitive(false);
     update_status("Queue Empty", "warning");
     EncodingButton.set_halign(Gtk::Align::START);
 
@@ -82,6 +82,12 @@ RunnerPanel::~RunnerPanel()
 void RunnerPanel::clear_title()
 {
     WindowTitle.set_text("");
+    if (!isEncoding)
+    {
+        EncodingButton.set_sensitive(false);
+        EncodingButton.remove_css_class("suggested-action");
+        EncodingButton.remove_css_class("destructive-action");
+    }
 }
 
 void RunnerPanel::set_title(VideoElement * video_element)
@@ -111,18 +117,25 @@ void RunnerPanel::set_loading_state(bool is_loading)
     { 
         update_status("Loading", "warning"); 
         EncodingIconStatus.set_from_icon_name("applications-system-symbolic");
-        block_encoding_button();
+        EncodingButton.set_sensitive(false);
     }
     else if (request_button_unblock)
     { 
-        update_status("Ready", "success");
-        block_encoding_button(false);
-        EncodingIconStatus.set_from_icon_name("selection-mode-symbolic");
+        if (!isEncoding)
+        {
+            update_status("Ready", "success");
+            EncodingIconStatus.set_from_icon_name("selection-mode-symbolic");
+        }
+        else
+        {
+            EncodingButton.add_css_class("destructive-action");
+        }
+        EncodingButton.set_sensitive();
         request_button_unblock = false;
     }
     else
     {
-        block_encoding_button();
+        EncodingButton.set_sensitive(false);
     }
     
     EncodingProgressBar.set_fraction(0);
@@ -151,6 +164,8 @@ void RunnerPanel::update_encoding_progress(const EncodingProgress& progress)
 
 void RunnerPanel::set_encoding_state(bool is_encoding)
 {
+    if (is_encoding == isEncoding) return;
+    
     if (is_encoding)
     {
         isEncoding = true;
@@ -170,6 +185,7 @@ void RunnerPanel::set_encoding_state(bool is_encoding)
     else
     {
         isEncoding = false;
+        EncodingButton.set_sensitive();
 
         EncodingButton.set_icon_name("media-playback-start-symbolic");
         EncodingButton.remove_css_class("destructive-action");
@@ -190,6 +206,8 @@ void RunnerPanel::set_encoding_state(bool is_encoding)
 void RunnerPanel::update_status(const std::string& status, const std::string& css_class)
 {
     EncodingTextStatus.set_markup("<b>" + status + "</b>");
+    if (status == "Finished")
+        EncodingButton.set_sensitive(false);
 
     if (!css_class.empty())
     {
@@ -202,23 +220,14 @@ void RunnerPanel::update_status(const std::string& status, const std::string& cs
         EncodingTextStatus.remove_css_class("success");
         EncodingTextStatus.remove_css_class("error");
         EncodingTextStatus.add_css_class(css_class);
+        
+        EncodingButton.remove_css_class("suggested-action");
+        EncodingButton.remove_css_class("destructive-action");
+        
+        if (css_class == "success") 
+            EncodingButton.add_css_class("suggested-action");
     }
     
     if (status == "Queue Empty")
         EncodingIconStatus.set_from_icon_name("radio-symbolic");
-}
-
-void RunnerPanel::block_encoding_button(bool block)
-{
-    EncodingButton.set_sensitive(!block);
-    
-    if (block)
-    {
-        EncodingButton.remove_css_class("suggested-action");
-        EncodingButton.remove_css_class("destructive-action");
-    }
-    else
-    {
-        EncodingButton.add_css_class("suggested-action");
-    }
 }

@@ -200,7 +200,6 @@ MainWindow::MainWindow()
     );
     video_queue.signal_queue_cleared.connect([this]() 
         {
-            runner_panel.block_encoding_button(); 
             runner_panel.update_status("Queue Empty", "warning");
             main_page_stack.set_visible_child("queue_empty_page");
         }
@@ -226,6 +225,7 @@ MainWindow::MainWindow()
     results_page.signal_close_results.connect([this]()
         {
             main_page_stack.set_visible_child("options_page"); 
+            runner_panel.set_encoding_state(false);
             video_queue.reset_encoding_progress();
         });
 
@@ -336,7 +336,7 @@ void MainWindow::start_encoding()
         flags, 
         "Video encoding is in progess"
     );
-    
+    this -> last_video_index = -1;
     runner_panel.set_encoding_state(true);
 
     is_encoding.store(true);
@@ -359,7 +359,6 @@ void MainWindow::stop_encoding()
     // Zastavit kódování
     is_encoding.store(false);
     runner_panel.update_status("Cancelling...");
-    runner_panel.block_encoding_button();
 
     // Zrušit kódování pro všechna videa
     std::vector<Video *> all_videos = video_queue.get_all_videos();
@@ -414,17 +413,14 @@ void MainWindow::encoding_worker()
         
         if (exit_code == -3)
         {
-            is_encoding.store(false);
-            completion_dispatcher.emit();
-            
             EncodingResult result;
             result.video_path = video -> get_output_path();
             result.exit_status = exit_code;
-            result.was_cancelled = (exit_code == -2);
+            result.was_cancelled = false;
             encoding_results.push_back(result);
             
-            show_toast("Error while creating output: Insufficient rights");
-            show_results_dialog();
+            is_encoding.store(false);
+            completion_dispatcher.emit();
             return;
         }
 
@@ -444,7 +440,6 @@ void MainWindow::encoding_worker()
 
     is_encoding.store(false);
     completion_dispatcher.emit();
-    show_results_dialog();
 }
 
 void MainWindow::on_progress_update()
@@ -452,23 +447,32 @@ void MainWindow::on_progress_update()
     std::lock_guard<std::mutex> lock(encoding_mutex);
     video_queue.set_encoding_progress(current_progress.progress_percent);
     runner_panel.update_encoding_progress(current_progress);
-    string encoding_title = "Encoding: " + current_progress.video_name;
-    adw_status_page_set_title(
-        encoding_page, encoding_title.c_str()
-    );
+    
+    if (current_progress.current_index != this -> last_video_index)
+    {
+        this -> last_video_index = current_progress.current_index;
+        string encoding_title = "Encoding: " + current_progress.video_name;
+        adw_status_page_set_title(
+            encoding_page, encoding_title.c_str()
+        );
+    }
 }
 
 void MainWindow::on_encoding_complete()
 {
-    runner_panel.set_encoding_state(false);
-    runner_panel.block_encoding_button(false);
-    video_queue.finish_status_last_row();
-    video_queue.set_sensitive(false);
-
     if (encoding_thread.joinable())
-    {
         encoding_thread.join();
-    }
+    
+    if (encoding_results[encoding_results.size() - 1].exit_status == -3)
+        show_toast("Error while creating output: Insufficient rights");
+    
+    if (!encoding_results[encoding_results.size() - 1].was_cancelled)
+        video_queue.finish_status_last_row();
+    
+    show_results_dialog();
+    runner_panel.clear_title();
+    runner_panel.update_status("Finished", "warning");
+    video_queue.set_sensitive(false);
     
     auto app = GTK_APPLICATION(
         Gtk::Application::get_default() -> gobj()
