@@ -228,6 +228,15 @@ MainWindow::MainWindow()
                 runner_panel.update_encoding_progress(current_progress);
             }
         });
+    video_queue.signal_video_removed.connect([this]()
+        {
+            if (is_encoding.load())
+            {
+                int new_count = video_queue.get_all_videos().size();
+                current_progress.total_count = new_count;
+                runner_panel.update_encoding_progress(current_progress);
+            }
+        });
     video_queue.signal_loading_videos_count.connect(sigc::mem_fun(runner_panel, &RunnerPanel::update_loading_progress));
     
     // Signál pro přepnutí zpět z výsledkové stránky

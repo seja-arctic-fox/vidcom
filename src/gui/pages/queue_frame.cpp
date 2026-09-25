@@ -335,6 +335,7 @@ void QueueFrame::add_video(const std::string& input_path)
             if (row)
             {
                 video_listbox.remove(* row);
+                signal_video_removed.emit();
 
                 if (!video_listbox.get_row_at_index(0))
                 {

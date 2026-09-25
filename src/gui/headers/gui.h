@@ -174,6 +174,7 @@ class QueueFrame : public Gtk::Box
         sigc::signal<void(int, int)> signal_loading_videos_count;
         sigc::signal<void()> signal_queue_cleared;
         sigc::signal<void()> signal_enable_encoding;
+        sigc::signal<void()> signal_video_removed;
     
     protected:
         VideoElement * currently_encoded = nullptr;
