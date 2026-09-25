@@ -196,6 +196,7 @@ void VideoElement::set_enabled(bool enabled)
 {
     remove_element_button.set_sensitive(enabled);
     drag_handle_icon.set_opacity(enabled ? 1 : 0);
+    video_thumbnail.set_opacity(enabled ? 1 : 0.5);
     video_status_icon.set_visible(!enabled);
     
     if (enabled)
