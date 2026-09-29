@@ -22,6 +22,7 @@
 #include "gtkmm/scrolledwindow.h"
 #include "gtkmm/widget.h"
 #include "gtkmm/window.h"
+#include <condition_variable>
 #include <functional>
 #include <gtkmm.h>
 #include <adwaita.h>
@@ -469,6 +470,7 @@ class MainWindow : public Gtk::Window
         AdwBreakpoint * breakpoint;
         
         void on_import_video_clicked();
+        void on_output_conflict();
         void display_about_dialog(const Glib::VariantBase&);
         void display_preferences(const Glib::VariantBase&);
         void file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& result, Glib::RefPtr<Gtk::FileDialog> file_picker);
@@ -479,6 +481,7 @@ class MainWindow : public Gtk::Window
         std::mutex encoding_mutex;
 
         // Dispatcher vláken
+        Glib::Dispatcher overwrite_dispatcher;
         Glib::Dispatcher progress_dispatcher;
         Glib::Dispatcher completion_dispatcher;
 
@@ -486,6 +489,12 @@ class MainWindow : public Gtk::Window
         std::vector<EncodingResult> encoding_results;
         int last_video_index = -1;
         guint inhibition_cookie = 0;
+        
+        // Values connected with the overwrite dialog
+        int allow_overwrite = 0;
+        condition_variable cv;
+        string conflict_file;
+        int num_owd_displayed = 0;
 
         // Kódování
         void start_encoding();

@@ -8,6 +8,7 @@
 #include "gtkmm/application.h"
 #include "sigc++/functors/mem_fun.h"
 #include "src/cli/cli.h"
+#include <filesystem>
 #include <iostream>
 #include <mutex>
 #include <thread>
@@ -247,9 +248,13 @@ MainWindow::MainWindow()
             video_queue.reset_encoding_progress();
         });
 
-    // Komunikace mezi vlákny
-    progress_dispatcher.connect(sigc::mem_fun(*this, &MainWindow::on_progress_update));
-    completion_dispatcher.connect(sigc::mem_fun(*this, &MainWindow::on_encoding_complete));
+    // Communication between threads
+    progress_dispatcher.connect(
+        sigc::mem_fun(*this, &MainWindow::on_progress_update));
+    completion_dispatcher.connect(
+        sigc::mem_fun(*this, &MainWindow::on_encoding_complete));
+    overwrite_dispatcher.connect(
+        sigc::mem_fun(*this, &MainWindow::on_output_conflict));
 }
 
 void MainWindow::display_about_dialog(const Glib::VariantBase&)
@@ -327,6 +332,64 @@ void MainWindow::show_toast(char const * message)
     adw_toast_overlay_add_toast(toast_overlay, toast);
 }
 
+void MainWindow::on_output_conflict()
+{
+    std::lock_guard<std::mutex> lock(encoding_mutex);
+    this -> num_owd_displayed++;
+    
+    AdwAlertDialog *dialog;
+    dialog = ADW_ALERT_DIALOG(adw_alert_dialog_new ("Overwrite video?", NULL));
+    
+    string body = 
+        "A video named “%s” already exists in the output folder. "
+        "\nDo you want to overwrite it?";
+    
+    if (this -> num_owd_displayed >= 3)
+    {
+        body += 
+            "\n\n<b>Hint:</b> you can set VidCom to automatically overwrite files "
+            "in the preferences.";
+    }
+    adw_alert_dialog_format_body (dialog,
+                                  body.c_str(),
+                                  this -> conflict_file.c_str());
+    adw_alert_dialog_set_body_use_markup(dialog, true);
+    
+    adw_alert_dialog_add_responses (dialog,
+                                    "cancel",  "Cancel",
+                                    "overwrite", "Overwrite",
+                                    NULL);
+    
+    adw_alert_dialog_set_response_appearance (dialog,
+                                              "overwrite",
+                                              ADW_RESPONSE_DESTRUCTIVE);
+    
+    adw_alert_dialog_set_default_response (dialog, "cancel");
+    adw_alert_dialog_set_close_response (dialog, "cancel");
+    
+    g_signal_connect (
+        dialog, 
+        "response::cancel", 
+        G_CALLBACK (+[](AdwAlertDialog *, GParamSpec *, gpointer data)
+            { 
+                static_cast<MainWindow *>(data) -> allow_overwrite = 1; static_cast<MainWindow *>(data) -> cv.notify_one(); 
+            }), 
+        this
+    );
+    
+    g_signal_connect (
+        dialog, 
+        "response::overwrite", 
+        G_CALLBACK (+[](AdwAlertDialog *, GParamSpec *, gpointer data)
+            { 
+                static_cast<MainWindow *>(data) -> allow_overwrite = 2; static_cast<MainWindow *>(data) -> cv.notify_one();
+            }), 
+        this
+    );
+    
+    adw_dialog_present (ADW_DIALOG(dialog), GTK_WIDGET(this -> gobj()));
+}
+
 void MainWindow::start_encoding()
 {
     if (is_encoding.load())
@@ -400,6 +463,16 @@ void MainWindow::encoding_worker()
         
         video_queue.set_currently_encoded(index);
         Video * video = all_videos[index];
+        
+        // Check for conflict
+        if (filesystem::exists(video -> get_output_path()))
+        {
+            std::unique_lock<std::mutex> lock(encoding_mutex);
+            this -> conflict_file = 
+                fs::path(video -> get_output_path()).filename();
+            overwrite_dispatcher.emit();
+            cv.wait(lock, [this]() { return (this -> allow_overwrite != 0); });
+        }
 
         // Aktualizace postupu pro nové video
         {
@@ -425,7 +498,12 @@ void MainWindow::encoding_worker()
         };
 
         video -> test_commands();
-        int exit_code = video -> encode("", progress_callback);
+        
+        int exit_code;
+        if (allow_overwrite == 1)
+            exit_code = -2;
+        else
+            exit_code = video -> encode("", progress_callback);
         
         if (exit_code == -3)
         {
@@ -452,6 +530,7 @@ void MainWindow::encoding_worker()
         }
 
         index++;
+        this -> allow_overwrite = 0;
     }
 
     is_encoding.store(false);
