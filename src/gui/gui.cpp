@@ -465,7 +465,8 @@ void MainWindow::encoding_worker()
         Video * video = all_videos[index];
         
         // Check for conflict
-        if (filesystem::exists(video -> get_output_path()))
+        if (!SETTINGS -> get_boolean("always-overwrite") &&
+            filesystem::exists(video -> get_output_path()))
         {
             std::unique_lock<std::mutex> lock(encoding_mutex);
             this -> conflict_file = 

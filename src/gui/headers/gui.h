@@ -519,11 +519,13 @@ class DefaultsPage : public SettingsPage
         ~DefaultsPage();
         
         bool get_nto_state();
+        bool get_aow_state();
         
     protected:
         OptionListBox defaults_desc_row;
         Gtk::Label defaults_desc;
         SwitchRow next_to_original_switch;
+        SwitchRow always_overwrite_switch;
     
         void save_archive_mode(VideoElement * element) override;
         void save_compress_mode(VideoElement * element) override;
