@@ -17,10 +17,12 @@
 #include "gtkmm/label.h"
 #include "gtkmm/listbox.h"
 #include "gtkmm/listboxrow.h"
+#include "gtkmm/overlay.h"
 #include "gtkmm/progressbar.h"
 #include "gtkmm/scrolledwindow.h"
 #include "gtkmm/widget.h"
 #include "gtkmm/window.h"
+#include <condition_variable>
 #include <functional>
 #include <gtkmm.h>
 #include <adwaita.h>
@@ -67,12 +69,16 @@ struct EncodingResult
 };
 
 // Prvek ve frontě kódování
-class VideoElement : public Gtk::Frame
+class VideoElement : public Gtk::Box
 {
     public:
         VideoElement(std::string input_path);
         ~VideoElement();
         void update_labels();
+        void update_progress(int percentage);
+        void set_enabled(bool enabled = true);
+        void set_status_encoding();
+        void set_status_finished();
 
         Video video;
         VideoInfo video_info;
@@ -82,9 +88,11 @@ class VideoElement : public Gtk::Frame
         protected:
 
             // Popisky vlastností videa
-            Gtk::Image drag_handle_icon, video_thumbnail;
+            Gtk::Image drag_handle_icon, video_thumbnail, video_status_icon;
             Gtk::Frame video_thumbnail_frame;
+            Gtk::Overlay video_thumbnail_overlay;
             Gtk::Label video_name_text, resolution_text, framerate_text, duration_text, mode_text, size_text;
+            Gtk::ProgressBar encoding_progress;
             RoundedImage css_rounded;
             
             // Tlačítko pro odstranění prvku z fronty
@@ -116,7 +124,6 @@ class RunnerPanel : public Gtk::HeaderBar
         void update_encoding_progress(const EncodingProgress& progress);
         void set_encoding_state(bool is_encoding);
         void update_status(const std::string& status, const std::string& css_class = "");
-        void block_encoding_button(bool block = true);
         void set_loading_state(bool is_loading);
         void request_encoding_button_unblock(){ request_button_unblock = true; };
         void update_loading_progress(int video_index, int video_count);
@@ -153,6 +160,14 @@ class QueueFrame : public Gtk::Box
 
         void add_video(const std::string& input_path);
         std::vector<Video *> get_all_videos();
+        
+        // Encoding progress shown for individual videos in the queue
+        void set_currently_encoded(int &index);
+        void finish_status_last_row();
+        void set_encoding_progress(int &percentage);
+        void reset_encoding_progress();
+        
+        // Signals
         sigc::signal<void(VideoElement *)> signal_video_selected;
         sigc::signal<void(std::vector<VideoElement*>)> signal_multiple_videos_selected;
         sigc::signal<void()> signal_nothing_selected;
@@ -160,18 +175,17 @@ class QueueFrame : public Gtk::Box
         sigc::signal<void(int, int)> signal_loading_videos_count;
         sigc::signal<void()> signal_queue_cleared;
         sigc::signal<void()> signal_enable_encoding;
+        sigc::signal<void()> signal_video_removed;
     
     protected:
+        VideoElement * currently_encoded = nullptr;
+
         // Prostor pro prvky fronty a seznam prvků
         Gtk::ScrolledWindow scrolled_window;
         Gtk::ListBox video_listbox;
 
         // Prázdná fronta
         AdwStatusPage * queue_empty_status;
-
-        // Spodní lišta
-        Gtk::Box footer_box;
-        Gtk::Button import_video_button;
 
         // Tlačítko na vymazání celé fronty a horní lišta
         Gtk::Box header_box;
@@ -440,11 +454,10 @@ class MainWindow : public Gtk::Window
         Gtk::Stack main_page_stack;
         AdwStatusPage * queue_empty_page;
         AdwStatusPage * encoding_page;
-        Gtk::ProgressBar encoding_page_progress;
         Gtk::Button add_videos_pill_button;
         ResultsPage results_page;
         
-        // Layout aplikace
+        // App layout
         Glib::RefPtr<Gio::Menu> main_menu;
         Gtk::MenuButton menu_button;
         Gtk::Button add_videos_button;
@@ -453,9 +466,11 @@ class MainWindow : public Gtk::Window
         AdwToolbarView * content_view;
         AdwToastOverlay * toast_overlay;
         AdwOverlaySplitView * split_view;
+        AdwBreakpointBin * root;
+        AdwBreakpoint * breakpoint;
         
-        void on_window_resize(int width, int height);
         void on_import_video_clicked();
+        void on_output_conflict();
         void display_about_dialog(const Glib::VariantBase&);
         void display_preferences(const Glib::VariantBase&);
         void file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& result, Glib::RefPtr<Gtk::FileDialog> file_picker);
@@ -466,13 +481,20 @@ class MainWindow : public Gtk::Window
         std::mutex encoding_mutex;
 
         // Dispatcher vláken
+        Glib::Dispatcher overwrite_dispatcher;
         Glib::Dispatcher progress_dispatcher;
         Glib::Dispatcher completion_dispatcher;
 
         EncodingProgress current_progress;
         std::vector<EncodingResult> encoding_results;
-        bool queue_lock = false;
+        int last_video_index = -1;
         guint inhibition_cookie = 0;
+        
+        // Values connected with the overwrite dialog
+        int allow_overwrite = 0;
+        condition_variable cv;
+        string conflict_file;
+        int num_owd_displayed = 0;
 
         // Kódování
         void start_encoding();
@@ -497,11 +519,13 @@ class DefaultsPage : public SettingsPage
         ~DefaultsPage();
         
         bool get_nto_state();
+        bool get_aow_state();
         
     protected:
         OptionListBox defaults_desc_row;
         Gtk::Label defaults_desc;
         SwitchRow next_to_original_switch;
+        SwitchRow always_overwrite_switch;
     
         void save_archive_mode(VideoElement * element) override;
         void save_compress_mode(VideoElement * element) override;

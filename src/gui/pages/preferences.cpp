@@ -22,6 +22,10 @@ DefaultsPage::DefaultsPage(DummyVideoElement * video)
     next_to_original_switch(
         "Save next to original",
         "Save video(s) next to original file(s)"
+    ),
+    always_overwrite_switch(
+        "Always overwrite videos",
+        "Automatically overwrite videos on conflict and skip the confirmation dialog"
     )
 {
     // Load dummy video
@@ -62,6 +66,11 @@ DefaultsPage::DefaultsPage(DummyVideoElement * video)
     next_to_original_switch.signal_toggled.connect(sigc::mem_fun(
         *this, &DefaultsPage::on_nto_switched
     ));
+    
+    // Extra switch for auto-overwriting files
+    bool always_overwrite_state = SETTINGS -> get_boolean("always-overwrite");
+    always_overwrite_switch.set_state(always_overwrite_state);
+    output_listbox.insert(always_overwrite_switch, 3);
 }
 
 DefaultsPage::~DefaultsPage()
@@ -69,6 +78,9 @@ DefaultsPage::~DefaultsPage()
 
 bool DefaultsPage::get_nto_state()
 { return next_to_original_switch.get_state(); }
+
+bool DefaultsPage::get_aow_state()
+{ return always_overwrite_switch.get_state(); }
 
 void DefaultsPage::on_nto_switched()
 { output_row.set_sensitive(!next_to_original_switch.get_state()); }
@@ -154,6 +166,9 @@ void PreferencesWindow::apply_defaults()
     );
     SETTINGS -> set_boolean(
         "output-next-to-original", defaults_box.get_nto_state()
+    );
+    SETTINGS -> set_boolean(
+        "always-overwrite", defaults_box.get_aow_state()
     );
     SETTINGS -> set_string(
         "prefix", video -> get_prefix()

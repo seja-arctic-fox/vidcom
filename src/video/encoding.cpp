@@ -58,10 +58,6 @@ int Video::encode(fs::path output_path, ProgressCallback progress_callback)
         {
             cout << GREEN << "Creating the output folder: " << output_path.parent_path() << RESET << endl;
         } 
-        else 
-        {
-            cerr << YELLOW << "WARNING: Output folder " << output_path.parent_path() << " already exists! Some files might be overwritten. " << RESET << endl;
-        }
     }
     catch (std::filesystem::filesystem_error &e)
     {
