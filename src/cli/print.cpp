@@ -71,7 +71,7 @@ void CLI::print_exception(exception error)
 
 void CLI::print_help()
 {
-    cout << GREEN << "VidCom 0.8 help page" << RESET << endl;
+    cout << GREEN << "VidCom 0.84 help page" << RESET << endl;
     cout << "Automatic utility for compressing and archiving videos. This is a CLI interface. You can run the GUI by executing 'vidcom'. \n"
          << "The script features two MODES. COMPRESS compresses the video to a target size and other settings, while ARCHIVE mode (default) makes the video as small as possible without quality sacrifices. \n";
     cout << "____________________" << endl;
