@@ -16,7 +16,7 @@
 
   <description>
     <p>
-    VidCom (short for Video Compression) is a simple utility for archiving videos. It offers both GUI and CLI interface and utilises `ffmpeg` for the video encoding. 
+    VidCom (short for Video Compression) is a simple utility for archiving videos. It offers both GUI and CLI interfaces and utilises <code>ffmpeg</code> for the video encoding. 
     </p>
 
     <p>
@@ -62,7 +62,7 @@
             Uses ffmpeg for encoding
         </li>
         <li>
-            Avaiable codecs are AV1, HEVC, VP9
+            Avaiable codecs are AV1, HEVC, VP9, AVC
         </li>
         <li>
             Written in C++
@@ -111,6 +111,17 @@
 
   <content_rating type="oars-1.1" />
   <releases>
+  <release version="0.84" date="2026-10-12"> 
+  <!-- Temporary!!! -->
+      <url>https://github.com/seja-arctic-fox/vidcom/releases/tag/0.83</url>
+      <description>
+      <ul>
+          <li></li>
+          <li></li>
+          <li></li>
+      </ul>
+      </description>
+      </release>
     <release version="0.83" date="2026-08-06">
         <url>https://github.com/seja-arctic-fox/vidcom/releases/tag/0.83</url>
         <description>
