@@ -1,6 +1,6 @@
 # VidCom
 
-VidCom (short for Video Compression) is a simple utility for archiving videos. It offers both GUI and CLI interface and utilises `ffmpeg` for the video encoding. 
+VidCom (short for Video Compression) is a simple utility for archiving videos. It offers both GUI and CLI interfaces and utilises `ffmpeg` for the video encoding. 
 
 For screenshots and basic information, visit the [project website](https://seja-arctic-fox.github.io). 
 
@@ -20,7 +20,7 @@ Whether you want your memories to take up less space or just share a funny video
 - Archiving videos
 - Compressing videos to target sizes
 - Simple and clean GTK4 + Adwaita user interface
-	* Adjustable video queue  
+	* Adjustable video queue
 	* Simple way of setting the basics and advanced options for single or multiple videos
 	* Start encoding with a single button
 - CLI for automation
@@ -28,11 +28,12 @@ Whether you want your memories to take up less space or just share a funny video
 - Avaiable codecs are: 
     * AV1 `libsvtav1`
     * HEVC `libx265`
-    * VP9 ` libvpx-vp9`
+    * VP9 `libvpx-vp9`
+    * AVC `libx264`
 - Written in C++
 
 ### CLI
-When you run the command `vidcom`, it start the GUI by default. To use the CLI interface, you have to specify at least one input file. To see the avaiable commands and some example usage of the CLI, execute the following: 
+When you run the command `vidcom`, it start the GUI by default. To use the CLI interface, you have to specify the `-cli` argument and at least one input file. To see the available commands and some example usage of the CLI, execute the following: 
 
 ```bash
 vidcom -h
@@ -82,9 +83,12 @@ meson setup build
 
 ```bash
 cd build/
+
 # COMPILING WITHOUT INSTALLATION
 meson devenv
 meson compile
+
+# COMPILE AND INSTALL ON YOUR SYSTEM
 meson install
 ```
 
@@ -99,16 +103,12 @@ flatpak-builder --force-clean --user --install-deps-from=flathub --repo=repo --i
 
 ---
 
-If you want to compile and install as an AUR package, execute this command in the root directory after cloning:
+If you want to compile and install as an Pacman package, execute this command in the root directory after cloning:
 ```bash
 makepkg -si
 ```
 
 ### Windows
-#### WSL
-Tested on WSL with Ubuntu and Arch Linux, worked great OOTB, but I need to test it more. 
-
-#### Other (WIP)
 Maybe I could do it with `msys2`, but it is not top priority. 
 I will make a Windows build only if it is not unecessary hard to do so. 
 
@@ -116,7 +116,7 @@ I will make a Windows build only if it is not unecessary hard to do so.
 
 I will continue to maintain this project/add new features as new codecs become avaiable. 
 
-There's still a lot of improvements/changes to be made. The app will probably be restructured as it moves towards 1.0 release. The ultimate goal is to join the **GNOME Circle**. 
+There's still a lot of improvements/changes to be made. The app will probably be restructured as it moves towards 1.0 release. 
 
 If you have a suggestion or you found a bug, feel free to report it in the [Issues](https://github.com/seja-arctic-fox/vidcom/issues) page. Check the list below or the issues to see if it has been reported before. 
 
@@ -125,23 +125,14 @@ I will update the lists below from time to time;
 ### Planned features / suggestions
 - [ ] At least try to make a Windows build
 - [ ] Implement translations (or ability to translate the app)
-- [x] About window/section
-- [x] Add an ability to change default configuration/settings. save the configs in a file
-- [x] Change the current paned window split into the typical Adwaita side panel for queue and the main page
-- [x] "No video selected" page for the settings page
-- [x] Copy subtitles automatically when they are present in the original video
-- [x] Be able to select multiple videos manually, not be limited to just selecting single or all the videos (when holding Shift or other key)
-- [x] Make the runner (in the header bar) slimmer and simpler
-- [x] Show state of loading/encoding in the settings page space
 - [ ] Copy settings from one video to another with right click/shortcut/button
 - [ ] Keyboard shortcuts
-- [x] "Open With" function/binding for VidCom
-- [x] Replace popups with visible messages inside window and/or notification
-- [ ] Different behavior for cases when the output videos already exist - show conflicts
+- [x] Different behavior for cases when the output videos already exist - show conflicts
 - [ ] Better TAB behavior + accelerators
+- [ ] Implement functional 2-pass encoding for all codecs
+- [ ] Think about a settings page which could be easier to use and understand
 
 ### Known Issues
-- [x] Cut feature - change spinbuttons for something more manageable, specifically for time setting + make it less rigid
-- [x] The button in the results page is not visible when more results are displayed (it's on the bottom), which might be confusing
+- [ ] Encoding can fail when using specific parameters for certain codecs, potentially missing UI restrictions
 
 This project follows [GNOME's Code of Conduct](https://conduct.gnome.org/).
