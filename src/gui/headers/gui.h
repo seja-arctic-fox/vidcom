@@ -11,6 +11,7 @@
 #include "gtkmm/dragsource.h"
 #include "gtkmm/droptarget.h"
 #include "gtkmm/filedialog.h"
+#include "gtkmm/filelauncher.h"
 #include "gtkmm/frame.h"
 #include "gtkmm/headerbar.h"
 #include "gtkmm/image.h"
@@ -419,7 +420,9 @@ class ResultRow : public Gtk::Box
         Gtk::Box box_right;
         
         void open_video();
-        void on_video_folder_open();
+        void on_video_folder_open(
+            const Glib::RefPtr<Gio::AsyncResult>& result, 
+            Glib::RefPtr<Gtk::FileLauncher> file_launcher);
         void set_status();
         void set_output_folder_button();
 };

@@ -1,11 +1,15 @@
+#include "giomm/error.h"
+#include "glibmm/refptr.h"
 #include "gtkmm/button.h"
 #include "gtkmm/enums.h"
 #include "../headers/gui.h"
 #include "../../cli/cli.h"
+#include "gtkmm/filelauncher.h"
 #include "gtkmm/label.h"
 #include "gtkmm/object.h"
 #include "gtkmm/popover.h"
 #include "gtkmm/scrolledwindow.h"
+#include "sigc++/functors/mem_fun.h"
 #include <iostream>
 
 ResultRow::ResultRow(fs::path video_path, int status, string error_msg)
@@ -116,18 +120,55 @@ void ResultRow::set_output_folder_button()
     
     output_folder_button.signal_clicked().connect(([this]() 
         {
-            try
-            {
-                auto file = Gio::File::create_for_path(filesystem::path(video_path).parent_path().generic_string());
-                Gio::AppInfo::launch_default_for_uri(file -> get_uri());
-            }
-            catch (const Glib::Error& ex)
-            {
-                std::cerr << RED << "Error opening folder (" << ex.what() << ")" << RESET << std::endl;
-                dynamic_cast<MainWindow *>(get_root()) -> show_toast("Error: Cannot open folder!");
-            }
+            Glib::RefPtr<Gio::File> file = 
+                Gio::File::create_for_path(video_path);
+            Glib::RefPtr<Gtk::FileLauncher> file_launcher = 
+                Gtk::FileLauncher::create();
+
+            file_launcher -> set_file(file);
+            file_launcher -> open_containing_folder(
+                * dynamic_cast<MainWindow *>(get_root()), 
+                sigc::bind(
+                    sigc::mem_fun(
+                        *this, 
+                        &ResultRow::on_video_folder_open), 
+                file_launcher));
         }
     ));
+}
+
+void ResultRow::on_video_folder_open(const Glib::RefPtr<Gio::AsyncResult> &result, Glib::RefPtr<Gtk::FileLauncher> file_launcher)
+{
+    try 
+    { file_launcher -> open_containing_folder_finish(result); }
+    
+    catch (const Gtk::DialogError& error) 
+    {
+        if (error.code() == Gtk::DialogError::FAILED)
+        {
+            cerr    << RED 
+                    << "Error: Failed to open folder containing the video (" 
+                    << error.what() 
+                    << ")" 
+                    << RESET 
+                    << endl;
+
+            dynamic_cast<MainWindow *>(get_root()) 
+                -> show_toast("Failed to open folder containing the video");
+        }
+    }
+    catch (const Gio::Error& error)
+    {
+        cerr    << RED 
+                << "Error: Failed to open folder containing the video (" 
+                << error.what() 
+                << ")" 
+                << RESET 
+                << endl;
+
+        dynamic_cast<MainWindow *>(get_root()) 
+            -> show_toast("Failed to open folder containing the video");
+    }
 }
 
 void ResultRow::open_video()
