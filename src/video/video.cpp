@@ -1,5 +1,8 @@
 #include "video.h"
 #include "../cli/cli.h"
+#include "giomm/datainputstream.h"
+#include "giomm/subprocess.h"
+#include "glibmm/refptr.h"
 #include <cmath>
 #include <cstddef>
 #include <cstdio>
@@ -8,10 +11,8 @@
 #include <json/reader.h>
 #include <json/value.h>
 #include <ostream>
-#include <spawn.h>
 #include <stdexcept>
 #include <string>
-#include <sys/wait.h>
 #include <unistd.h>
 
 // Konstruktor
@@ -51,52 +52,44 @@ Video::~Video()
 
 string Video::read_video_info(string input_path)
 {
-    // příkaz pro načtení a string proměnná pro uložení výstupu
-    char buffer[128];
-    string json_data = "";
-    vector<const char *> command = 
+    string json_data = ""; 
+    
+    // command for getting information about a video
+    vector<string> command_str =
         {
-            "ffprobe", "-v", "quiet", "-print_format", "json", 
-            "-show_format", "-show_streams", input_path.c_str(), nullptr
+            "ffprobe", "-v", "quiet", "-print_format", "json",
+            "-show_format", "-show_streams", input_path.c_str()
         };
-    
-    int pipe_fds[2];
-    if (pipe(pipe_fds) != 0)
-    {
-        cout << RED << "Failed to execute ffprobe!" << RESET << endl;
-        return json_data;
-    }
-    
-    posix_spawn_file_actions_t file_actions;
-    posix_spawn_file_actions_init(&file_actions);
-    posix_spawn_file_actions_adddup2(&file_actions, pipe_fds[1], STDOUT_FILENO);
-    posix_spawn_file_actions_addclose(&file_actions, pipe_fds[0]);
-    posix_spawn_file_actions_addclose(&file_actions, pipe_fds[1]);
-    
-    pid_t ffprobe_pid;
-    int spawn_result = posix_spawnp(&ffprobe_pid, "ffprobe", &file_actions, nullptr, 
-                                    const_cast<char* const*>(command.data()), nullptr);
-    posix_spawn_file_actions_destroy(&file_actions);
-    close(pipe_fds[1]);
-    
-    if (spawn_result != 0)
-    {
-        close(pipe_fds[0]);
-        cout << RED << "Failed to execute ffprobe!" << RESET << endl;
-        return json_data;
-    }
-    
-    cout << GREEN << "Reading information about input file: " << RESET << input_path << endl;
-    
-    FILE * pipe = fdopen(pipe_fds[0], "r"); // otevřít rouru
-    while (fgets(buffer, sizeof(buffer), pipe) != NULL)
-    {
-        json_data += buffer; // čtení dat
-    }
-    fclose(pipe); // zavřít rouru
-    int status;
-    waitpid(ffprobe_pid, &status, 0);
 
+    cout << GREEN
+         << "Reading information about input file: " 
+         << RESET << input_path << endl;
+    
+    string buffer;
+    Glib::RefPtr<Gio::Subprocess> process;
+    
+    try 
+    {
+        process = Gio::Subprocess::create(
+            command_str, 
+            Gio::Subprocess::Flags::STDOUT_PIPE
+        );
+    }
+    catch (const Glib::Error &e)
+    {
+        cerr << RED << "Failed to create ffprobe process!\n" 
+             << e.what()
+             << RESET << endl;
+        return json_data;
+    }
+    
+    Glib::RefPtr<Gio::DataInputStream> output = Gio::DataInputStream::create
+        (process -> get_stdout_pipe());
+    
+    while (output -> read_line(buffer)) { json_data += buffer; }
+    process -> wait();
+    output -> close();
+    
     return json_data;
 }
 
