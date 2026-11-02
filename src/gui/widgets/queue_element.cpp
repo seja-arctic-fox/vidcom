@@ -15,9 +15,7 @@
 #include "src/video/video.h"
 #include <filesystem>
 #include <iostream>
-#include <spawn.h>
 #include <string>
-#include <sys/wait.h>
 
 // Pomocná funkce pro formátování času
 string format_time(float video_duration_s)
@@ -83,21 +81,16 @@ VideoElement::VideoElement(std::string input_path)
 
     if (!filesystem::exists(thumbnail_path))
     {
-        pid_t thumbnailer_pid;
-        vector<const char *> argv = {
-            "ffmpeg", "-v", "0", "-y", "-i", input_path.c_str(), "-ss", "1", "-vframes", "1", "-s", "64x64",
-            thumbnail_path.c_str(), nullptr
+        vector<string> argv = {
+            "ffmpeg", "-v", "0", "-y", "-i", input_path.c_str(), "-ss", "1", 
+            "-vframes", "1", "-s", "64x64", thumbnail_path.c_str()
         };
-        int spawn_result = posix_spawnp(&thumbnailer_pid, "ffmpeg", nullptr, nullptr, 
-                                        const_cast<char* const*>(argv.data()), nullptr);
-        if (spawn_result == 0)
-        {
-            int status;
-            waitpid(thumbnailer_pid, &status, 0);
-            
-            if (status == 0) video_thumbnail.set(thumbnail_path.generic_string());
-            else video_thumbnail.set_from_icon_name("video-x-generic-symbolic"); 
-        }
+        Glib::RefPtr<Gio::Subprocess> process = Gio::Subprocess::create(argv);
+        
+        process -> wait();
+        int status = process -> get_exit_status();
+        
+        if (status == 0) video_thumbnail.set(thumbnail_path.generic_string());
         else video_thumbnail.set_from_icon_name("video-x-generic-symbolic"); 
     }
     else
