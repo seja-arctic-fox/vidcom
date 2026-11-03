@@ -394,7 +394,7 @@ void SettingsPage::read_video_vector_options(std::vector<VideoElement *> video_v
         // Volba videa pro načtení do GUI: 
         //  Najde se video s nejkratší délkou (kvůli funkci střihu) a podle něho se načtou nastavení do GUI
         //  To bude užitečné například v případech, kdy má uživatel několik stejně dlouhých videí a chce překódovat prvních pár minut každého videa
-        float min_duration = MAXFLOAT;
+        float min_duration = G_MAXFLOAT;
         int video_index = -1;
         
         for (unsigned long i = 0; i < video_queue.size(); i++)
