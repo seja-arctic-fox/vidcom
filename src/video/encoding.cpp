@@ -18,6 +18,7 @@
 Video * Video::current_instance = nullptr;
 
 // Ctrl + C by mělo ukončit všechny ffmpeg procesy, které program spustil
+#ifndef _WIN32
 void Video::sigint_handler(int)
 {
     if (current_instance)
@@ -29,6 +30,7 @@ void Video::sigint_handler(int)
         current_instance -> cancel_encoding();
     }
 }
+#endif
 
 void Video::terminate_encoding()
 {
@@ -87,9 +89,9 @@ int Video::encode(fs::path output_path, ProgressCallback progress_callback)
         (encoding_process -> get_stderr_pipe());
 
     // Connect Ctrl + C to sigkill, so ffmpeg ends with this parent process
-    current_instance = this;
     
     #ifndef _WIN32
+    current_instance = this;
     struct sigaction sa;
     struct sigaction old_sa;
     sa.sa_handler = &Video::sigint_handler;
@@ -117,8 +119,10 @@ int Video::encode(fs::path output_path, ProgressCallback progress_callback)
             std_error -> close();
             
             // Revert the previous SIGINT action
+            #ifndef _WIN32
             sigaction(SIGINT, &old_sa, nullptr);
             current_instance = nullptr;
+            #endif
 
             return -2;
         }
@@ -149,8 +153,10 @@ int Video::encode(fs::path output_path, ProgressCallback progress_callback)
     
     if (cancelling_encoding.load())
     {
+        #ifndef _WIN32
         sigaction(SIGINT, &old_sa, nullptr);
         current_instance = nullptr;
+        #endif
         return -2;
     }
     
@@ -160,8 +166,10 @@ int Video::encode(fs::path output_path, ProgressCallback progress_callback)
     if (exit_status != 0) this -> last_error_message = error_msg;
 
     // Obnovit přechozí SIGINT akci
+    #ifndef _WIN32
     sigaction(SIGINT, &old_sa, nullptr);
     current_instance = nullptr;
+    #endif
 
     cout << YELLOW << "ffmpeg finished with code " 
          << exit_status << RESET << endl;
