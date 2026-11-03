@@ -175,7 +175,7 @@ void ResultRow::open_video()
 {
     try
     {
-        auto file = Gio::File::create_for_path(video_path);
+        auto file = Gio::File::create_for_path(video_path.string());
         Gio::AppInfo::launch_default_for_uri(file -> get_uri());
     }
     catch (const Glib::Error& ex)
