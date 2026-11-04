@@ -63,6 +63,7 @@ exe = executable(
   gui, video, cli,
   install : true,
   dependencies : dependencies,
+  win_subsystem: 'windows'
 )
 
 test('basic', exe)
