@@ -139,10 +139,13 @@ SettingsPage::SettingsPage()
     adw_inline_view_switcher_set_stack(codec_switch, codec_pages);
     
     gtk_widget_add_css_class(GTK_WIDGET(codec_switch), "round");
+    gtk_widget_set_margin_bottom(GTK_WIDGET(codec_switch), 20);
     codec_listbox.append(*Glib::wrap(GTK_WIDGET(codec_switch)));
     codec_listbox.append(*Glib::wrap(GTK_WIDGET(codec_pages)));
     codec_listbox.set_row_active(0, false);
     codec_listbox.set_row_active(1, false);
+    codec_listbox.remove_css_class("card");
+    codec_listbox.add_css_class("navigation-sidebar");
 
     // Složení obsahu okna
     window_content.append(mode_heading);
