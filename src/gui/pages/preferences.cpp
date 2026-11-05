@@ -34,15 +34,16 @@ DefaultsPage::DefaultsPage(DummyVideoElement * video)
     window_content.set_margin_top(0);
     
     // Prepend title explaining the section
-    defaults_desc.set_text(
+    defaults_desc.set_markup(
         "You can set default values for all listed parameters on this page.\n"
-        "Don't forget to apply the preferences by the 'Apply defaults' "
-        "button below.\n"
+        "Don't forget to apply the preferences by the <b>Apply defaults</b> "
+        "button below.\n\n"
         "You can also revert the preferences to their original state by the "
-        "'Restore original defaults' button. "
+        "<b>Restore original defaults</b> button. "
     );
     defaults_desc.set_wrap();
     defaults_desc.set_justify(Gtk::Justification::FILL);
+    defaults_desc.set_margin(10);
     defaults_desc_row.append(defaults_desc);
     defaults_desc_row.set_row_active(0, false);
     window_content.prepend(defaults_desc_row);
