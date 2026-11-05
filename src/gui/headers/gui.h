@@ -289,7 +289,7 @@ class VP9_Parameters : public CodecParametersPage
 {
     public: 
         VP9_Parameters();
-        void load(VideoElement * video_element);
+        void load(VideoElement * video_element) override;
         
     protected:
         SpinButtonRow cpu_usage;
@@ -310,7 +310,7 @@ class AVC_Parameters : public CodecParametersPage
 {
     public:
         AVC_Parameters();
-        void load(VideoElement * video_element);
+        void load(VideoElement * video_element) override;
         
     protected:
         SwitchRow motion_estimation;
