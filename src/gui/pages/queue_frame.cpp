@@ -10,6 +10,7 @@
 #include "gtkmm/droptarget.h"
 #include "gtkmm/enums.h"
 #include "gtkmm/eventcontrollerkey.h"
+#include "gtkmm/listboxrow.h"
 #include "gtkmm/object.h"
 #include "gtkmm/scrolledwindow.h"
 #include "../headers/gui.h"
@@ -21,7 +22,6 @@
 QueueFrame::QueueFrame()
 :   scrolled_window(),
     video_listbox(),
-    import_video_button("Add video(s)"),
     header_box(),
     clear_queue_box(Gtk::Orientation::HORIZONTAL),
     select_all_box(Gtk::Orientation::HORIZONTAL),
@@ -76,11 +76,6 @@ QueueFrame::QueueFrame()
     scrolled_window.set_policy(Gtk::PolicyType::NEVER, Gtk::PolicyType::AUTOMATIC);
     scrolled_window.set_expand();
 
-    // Spodní lišta
-    import_video_button.set_margin(10);
-    import_video_button.add_css_class("suggested-action");
-    footer_box.set_halign(Gtk::Align::CENTER);
-
     // Drag and drop
     drag_and_drop_target = Gtk::DropTarget::create(gdk_file_list_get_type(), Gdk::DragAction::COPY);
     drag_and_drop_target -> signal_drop().connect(sigc::mem_fun(*this, &QueueFrame::on_drop), false);
@@ -94,12 +89,90 @@ QueueFrame::QueueFrame()
     // Přidat věci do boxu fronty
     append(header_box);
     append(scrolled_window);
-    append(footer_box);
     add_controller(drag_and_drop_target);
 }
 
 QueueFrame::~QueueFrame()
 {}
+
+void QueueFrame::reset_encoding_progress()
+{
+    set_sensitive();
+    int index = 0;
+    this -> currently_encoded = nullptr;
+    
+    while (auto row = video_listbox.get_row_at_index(index))
+    {
+        VideoElement * el = dynamic_cast<VideoElement*>(row -> get_child());
+        el -> update_progress(0);
+        el -> set_enabled();
+        row -> set_activatable();
+        row -> set_selectable();
+        row -> set_can_focus();
+        row -> set_sensitive();
+        clear_queue_button.set_sensitive();
+        select_all_button.set_sensitive();
+        video_listbox.select_row(*video_listbox.get_row_at_index(0));
+        index++;
+    }
+}
+
+void QueueFrame::set_currently_encoded(int &index)
+{
+    // Set the progress of the previous one to zero, to avoid visual noise
+    if (this -> currently_encoded)
+    {
+        this -> currently_encoded -> update_progress(0);
+        this -> currently_encoded -> set_status_finished();
+        
+        // Finished videos should not be clickable anymore
+        Gtk::ListBoxRow * prev_row = 
+            dynamic_cast
+                <Gtk::ListBoxRow *>
+                (this -> currently_encoded -> get_parent());
+        prev_row -> set_activatable(false);
+        prev_row -> set_selectable(false);
+        prev_row -> set_can_focus(false);
+        prev_row -> set_sensitive(false);
+    }
+    
+    // Get the currently encoded video
+    this -> currently_encoded = dynamic_cast<VideoElement *>
+        (video_listbox.get_row_at_index(index) -> get_child());
+    
+    this -> currently_encoded -> set_enabled(false);
+    this -> currently_encoded -> set_status_encoding();
+    clear_queue_button.set_sensitive(false);
+    select_all_button.set_sensitive(false);
+    change_select_all_status(true);
+    
+    if (video_listbox.get_selected_row())
+        
+        /* 
+         * Deselecting will happen when the edited element starts to be encoded
+         * OR on general start of the encoding process 
+         * so the user notices the state change 
+         */
+        if (video_listbox.get_row_at_index(index) == video_listbox.get_selected_row() || index == 0)
+        {
+            signal_nothing_selected.emit();
+            video_listbox.unselect_all();
+        }
+}
+
+void QueueFrame::finish_status_last_row()
+{
+    // Visual change to the last element triggered at the end of encoding
+    
+    if (this -> currently_encoded)
+    {
+        this -> currently_encoded -> update_progress(0);
+        this -> currently_encoded -> set_status_finished();
+    }
+}
+
+void QueueFrame::set_encoding_progress(int &percentage)
+{ this -> currently_encoded -> update_progress(percentage); }
 
 bool QueueFrame::on_key_pressed(guint keyval, guint, Gdk::ModifierType)
 {
@@ -159,6 +232,17 @@ void QueueFrame::on_row_selected(Gtk::ListBoxRow * row)
 {
     if (row)
     {
+        // Currently encoded video will show the encoding page when selected
+        if (
+            dynamic_cast<VideoElement *>
+            (row -> get_child()) == currently_encoded
+        )
+        {
+            video_listbox.unselect_all();
+            signal_nothing_selected.emit();
+            return;
+        }
+        
         if (this -> select_multiple)
         {
             auto all_rows = video_listbox.get_selected_rows();
@@ -251,6 +335,7 @@ void QueueFrame::add_video(const std::string& input_path)
             if (row)
             {
                 video_listbox.remove(* row);
+                signal_video_removed.emit();
 
                 if (!video_listbox.get_row_at_index(0))
                 {

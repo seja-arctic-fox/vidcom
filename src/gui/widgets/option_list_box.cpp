@@ -4,7 +4,6 @@
 
 OptionListBox::OptionListBox()
 {
-    add_css_class("navigation-sidebar");
     add_css_class("card");
     set_margin_bottom(20);
     set_selection_mode(Gtk::SelectionMode::NONE);

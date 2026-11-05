@@ -3,6 +3,7 @@
 #include "giomm/application.h"
 #include "giomm/simpleaction.h"
 #include "glibmm/refptr.h"
+#include "glibmm/ustring.h"
 #include "gtk/gtk.h"
 #include "gtkmm/application.h"
 #include "sigc++/functors/mem_fun.h"
@@ -42,18 +43,14 @@ MainWindow::MainWindow()
     adw_status_page_set_description(queue_empty_page, "Start with importing videos into the queue");
     adw_status_page_set_child(queue_empty_page, GTK_WIDGET(add_videos_pill_button.gobj()));
     
-    // Stránka pro kódování
-    encoding_page_progress.add_css_class("chunky-progress");
-    encoding_page_progress.set_show_text(false);
-    encoding_page_progress.set_margin(20);
-    encoding_page_progress.set_valign(Gtk::Align::CENTER);
-    encoding_page_progress.set_fraction(0);
-    
+    // Page for encoding
     encoding_page = ADW_STATUS_PAGE(adw_status_page_new());
     adw_status_page_set_icon_name(encoding_page, "system-run-symbolic");
-    adw_status_page_set_title(encoding_page, "Encoding videos...");
-    adw_status_page_set_description(encoding_page, "");
-    adw_status_page_set_child(encoding_page, GTK_WIDGET(encoding_page_progress.gobj()));
+    adw_status_page_set_title(encoding_page, "Encoding: ");
+    adw_status_page_set_description(
+        encoding_page, 
+        "You can still edit pending videos or add new ones in the queue."
+    );
     
     // Zásobník pro stránky na hlavní části
     main_page_stack.set_transition_type(Gtk::StackTransitionType::CROSSFADE);
@@ -185,7 +182,14 @@ MainWindow::MainWindow()
     // Signály pro změny názvu videa v runneru
     video_queue.signal_video_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_title));
     video_queue.signal_multiple_videos_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_title_multiple));
-    video_queue.signal_nothing_selected.connect(sigc::mem_fun(runner_panel, &RunnerPanel::clear_title));
+    video_queue.signal_nothing_selected.connect(
+        sigc::mem_fun(runner_panel, &RunnerPanel::clear_title)
+    );
+    
+    video_queue.signal_nothing_selected.connect([this](){
+        if (is_encoding.load())
+            main_page_stack.set_visible_child("encoding_page");
+    });
     
     // Přepínání stavů a (od)blokování tlačítka pro kódování
     video_queue.signal_enable_encoding.connect([this]() 
@@ -196,7 +200,6 @@ MainWindow::MainWindow()
     );
     video_queue.signal_queue_cleared.connect([this]() 
         {
-            runner_panel.block_encoding_button(); 
             runner_panel.update_status("Queue Empty", "warning");
             main_page_stack.set_visible_child("queue_empty_page");
         }
@@ -204,20 +207,44 @@ MainWindow::MainWindow()
     
     // Propojení signálů pro aktualizaci nastavení videa
     video_queue.signal_video_selected.connect(sigc::mem_fun(options_page, &SettingsPage::read_video_options));
+    video_queue.signal_video_selected.connect([this](VideoElement *){
+        Glib::ustring page = main_page_stack.get_visible_child_name();
+        if (page != "options_page" && page != "results_page")
+            main_page_stack.set_visible_child("options_page");
+    });
+    
     video_queue.signal_multiple_videos_selected.connect(sigc::mem_fun(options_page, &SettingsPage::read_video_vector_options));
 
     // Signály pro začátek a zastavení kódování, načítání videí do fronty
     runner_panel.signal_start_encoding.connect(sigc::mem_fun(*this, &MainWindow::start_encoding));
     runner_panel.signal_stop_encoding.connect(sigc::mem_fun(*this, &MainWindow::stop_encoding));
     video_queue.signal_loading_videos.connect(sigc::mem_fun(runner_panel, &RunnerPanel::set_loading_state));
+    video_queue.signal_loading_videos.connect([this](bool loading)
+        {
+            if (!loading && is_encoding.load())
+            {
+                int new_count = video_queue.get_all_videos().size();
+                current_progress.total_count = new_count;
+                runner_panel.update_encoding_progress(current_progress);
+            }
+        });
+    video_queue.signal_video_removed.connect([this]()
+        {
+            if (is_encoding.load())
+            {
+                int new_count = video_queue.get_all_videos().size();
+                current_progress.total_count = new_count;
+                runner_panel.update_encoding_progress(current_progress);
+            }
+        });
     video_queue.signal_loading_videos_count.connect(sigc::mem_fun(runner_panel, &RunnerPanel::update_loading_progress));
     
     // Signál pro přepnutí zpět z výsledkové stránky
     results_page.signal_close_results.connect([this]()
         {
-            main_page_stack.set_visible_child("options_page");
-            runner_panel.show_queue_button(true);
-            queue_lock = false;
+            main_page_stack.set_visible_child("options_page"); 
+            runner_panel.set_encoding_state(false);
+            video_queue.reset_encoding_progress();
         });
 
     // Komunikace mezi vlákny
@@ -327,12 +354,8 @@ void MainWindow::start_encoding()
         flags, 
         "Video encoding is in progess"
     );
-    
+    this -> last_video_index = -1;
     runner_panel.set_encoding_state(true);
-    main_page_stack.set_visible_child("encoding_page");
-    queue_lock = true;
-    adw_overlay_split_view_set_collapsed(split_view, true);
-    runner_panel.show_queue_button(false);
 
     is_encoding.store(true);
 
@@ -354,7 +377,6 @@ void MainWindow::stop_encoding()
     // Zastavit kódování
     is_encoding.store(false);
     runner_panel.update_status("Cancelling...");
-    runner_panel.block_encoding_button();
 
     // Zrušit kódování pro všechna videa
     std::vector<Video *> all_videos = video_queue.get_all_videos();
@@ -367,19 +389,24 @@ void MainWindow::stop_encoding()
 
 void MainWindow::encoding_worker()
 {
-    std::vector<Video *> all_videos = video_queue.get_all_videos();
-    int total_video_count = all_videos.size();
-
-    for (int i = 0; i < total_video_count && is_encoding.load(); i++)
+    std::vector<Video *> all_videos;
+    int index = 0;
+    
+    while (is_encoding.load())
     {
-        Video * video = all_videos[i];
+        all_videos = video_queue.get_all_videos();
+        if (index >= int(all_videos.size()))
+            break;
+        
+        video_queue.set_currently_encoded(index);
+        Video * video = all_videos[index];
 
         // Aktualizace postupu pro nové video
         {
             std::lock_guard<std::mutex> lock(encoding_mutex);
             current_progress.video_name = video -> get_video_info().path.filename();
-            current_progress.current_index = i + 1;
-            current_progress.total_count = total_video_count;
+            current_progress.current_index = index + 1;
+            current_progress.total_count = all_videos.size();
             current_progress.progress_percent = 0;
             current_progress.current_time = 0.0f;
         }
@@ -387,13 +414,12 @@ void MainWindow::encoding_worker()
         progress_dispatcher.emit();
     
         // Callback pro sledování postupu
-        auto progress_callback = [this, i, total_video_count](float current_time, int percent)
+        auto progress_callback = [this, index](float current_time, int percent)
         {
             std::lock_guard<std::mutex> lock(encoding_mutex);
             current_progress.current_time = current_time;
             current_progress.progress_percent = percent;
-            current_progress.current_index = i + 1;
-            current_progress.total_count = total_video_count;
+            current_progress.current_index = index + 1;
 
             progress_dispatcher.emit();
         };
@@ -403,17 +429,14 @@ void MainWindow::encoding_worker()
         
         if (exit_code == -3)
         {
-            is_encoding.store(false);
-            completion_dispatcher.emit();
-            
             EncodingResult result;
             result.video_path = video -> get_output_path();
             result.exit_status = exit_code;
-            result.was_cancelled = (exit_code == -2);
+            result.was_cancelled = false;
             encoding_results.push_back(result);
             
-            show_toast("Error while creating output: Insufficient rights");
-            show_results_dialog();
+            is_encoding.store(false);
+            completion_dispatcher.emit();
             return;
         }
 
@@ -428,38 +451,44 @@ void MainWindow::encoding_worker()
             encoding_results.push_back(result);
         }
 
-        // Přerušit cyklus, pokud bylo kódování přerušeno
-        if (!is_encoding.load())
-        {
-            break;
-        }
+        index++;
     }
 
     is_encoding.store(false);
     completion_dispatcher.emit();
-    show_results_dialog();
 }
 
 void MainWindow::on_progress_update()
 {
     std::lock_guard<std::mutex> lock(encoding_mutex);
+    video_queue.set_encoding_progress(current_progress.progress_percent);
     runner_panel.update_encoding_progress(current_progress);
-    encoding_page_progress.set_fraction(current_progress.progress_percent / 100.0);
-    std::ostringstream new_text;
-    new_text << "Encoding: " << current_progress.video_name;
-    adw_status_page_set_description(encoding_page, new_text.str().c_str());
+    
+    if (current_progress.current_index != this -> last_video_index)
+    {
+        this -> last_video_index = current_progress.current_index;
+        string encoding_title = "Encoding: " + current_progress.video_name;
+        adw_status_page_set_title(
+            encoding_page, encoding_title.c_str()
+        );
+    }
 }
 
 void MainWindow::on_encoding_complete()
 {
-    runner_panel.set_encoding_state(false);
-    runner_panel.block_encoding_button(false);
-    encoding_page_progress.set_fraction(0);
-
     if (encoding_thread.joinable())
-    {
         encoding_thread.join();
-    }
+    
+    if (encoding_results[encoding_results.size() - 1].exit_status == -3)
+        show_toast("Error while creating output: Insufficient rights");
+    
+    if (!encoding_results[encoding_results.size() - 1].was_cancelled)
+        video_queue.finish_status_last_row();
+    
+    show_results_dialog();
+    runner_panel.clear_title();
+    runner_panel.update_status("Finished", "warning");
+    video_queue.set_sensitive(false);
     
     auto app = GTK_APPLICATION(
         Gtk::Application::get_default() -> gobj()
