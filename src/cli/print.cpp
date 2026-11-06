@@ -91,6 +91,7 @@ void CLI::print_help()
          << "\t-o OUTPUT_PATH \t Sets the output folder where videos are saved. If the path does not end with '/', the last part is used as a prefix for new videos. Default behavior is to save each video in a subfolder created in the parent folder of the video. \n"
          << "\t-pr PREFIX \t Sets the prefix of output videos. Format: PREFIX_ORIGINAL_NAME.mp4. Default is 'C'\n"
          << "\t-d \t\t Prints the ffmpeg command that is being executed. Disables encoding. For debugging purposes. \n"
+         << "\t-y \t\t Always overwrite files, if it's not set already in GSettings. \n"
          << "\nAvaiable codecs: AV1, HEVC, VP9\n"
          << "\tAV1 (libsvtav1) parameters\n"
          << "\t\tp\tint: \t0......13\tEncoding preset. Lower means better compression but longer encoding time. Default: 3\n"

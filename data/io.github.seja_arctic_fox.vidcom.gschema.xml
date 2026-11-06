@@ -35,6 +35,12 @@
       <description>Video(s) will be created next to the original in a subfolder</description>
     </key>
     
+    <key name="always-overwrite" type="b">
+      <default>false</default>
+      <summary>Always overwrite videos</summary>
+      <description>Automatically overwrite videos on conflict and skip the confirmation dialog</description>
+    </key>
+    
     <key name="prefix" type="s">
       <default>'C'</default>
       <summary>File prefix</summary>
