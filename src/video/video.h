@@ -2,6 +2,7 @@
 #define VIDEO_ITEM_H
 
 #include "giomm/settings.h"
+#include "giomm/subprocess.h"
 #include "glibmm/refptr.h"
 #include <json/value.h>
 #include <string>
@@ -140,8 +141,10 @@ class Video
 
         // Přerušení kódování
         std::atomic<bool> cancelling_encoding;
-        pid_t encoding_pid;
+        std::atomic<int> encoding_pid{-1};
+        Glib::RefPtr<Gio::Subprocess> encoding_process;
         static Video * current_instance;
+        void terminate_encoding();
 
         // Metody
         void set_video_info(string input_path);                                         // načte informace o vstupním videu
@@ -163,7 +166,7 @@ class Video
         vector<string> encode_AVC();         // constructs a command for encoding to AVC
 
         // Sledování postupu
-        void parse_progress(char * buffer, float duration, ProgressCallback callback);
+        void parse_progress(string buffer, float duration, ProgressCallback callback);
 
     public:
         Video(string input_path);

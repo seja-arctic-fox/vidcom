@@ -1,19 +1,17 @@
+#include "giomm/datainputstream.h"
+#include "giomm/subprocess.h"
+#include "glibmm/refptr.h"
 #include "video.h"
 #include "../cli/cli.h"
 #include <array>
 #include <csignal>
-#include <cstdio>
-#include <cstdlib>
 #include <filesystem>
 #include <iostream>
 #include <stdexcept>
 #include <format>
-#include <spawn.h>
 #include <string>
-#include <sys/wait.h>
-#include <cstring>
 #include <unistd.h>
-#include <termios.h>
+#include <vector>
 
 // hlavní metody
 
@@ -24,207 +22,140 @@ void Video::sigint_handler(int)
 {
     if (current_instance)
     {
-        pid_t pid = current_instance -> encoding_pid;
+        pid_t pid = current_instance -> encoding_pid.load();
         if (pid != -1)
-        {
-            kill (-pid, SIGKILL);
-        }
+            kill (pid, SIGKILL);
         
         current_instance -> cancel_encoding();
+    }
+}
+
+void Video::terminate_encoding()
+{
+    if (encoding_process)
+    {
+        encoding_process -> force_exit();
+        encoding_process -> wait();
     }
 }
 
 int Video::encode(fs::path output_path, ProgressCallback progress_callback)
 {
     cancelling_encoding.store(false);
-    encoding_pid = -1;
     float duration;
+    string buffer;
     vector<string> command = make_options();
-    vector<const char *> argv = {"ffmpeg"};
-    
-    for (const auto& arg : command)
-        argv.push_back(arg.c_str());
-    argv.push_back(nullptr);
 
-    if (output_path == "")
-    {
-        output_path = outputPath;
-    }
+    if (output_path == "") { output_path = outputPath; }
 
     // vytvořit výstupní složku
     try
     {
         if (fs::create_directory(output_path.parent_path()))
         {
-            cout << GREEN << "Creating the output folder: " << output_path.parent_path() << RESET << endl;
+            cout << GREEN << "Creating the output folder: " 
+                 << output_path.parent_path() << RESET << endl;
         } 
     }
     catch (std::filesystem::filesystem_error &e)
     {
-        cerr << RED << "ERROR: Cannot write to specified output location! Exiting. " << RESET << endl;
+        cerr << RED 
+             << "ERROR: Cannot write to specified output location! Exiting. " 
+             << RESET << endl;
         return -3;      // Znamená, že se nepodařilo složku vytvořit
     }
 
-    // Spuštění příkazu
-    char buffer[256];
-
-    int pipe_fds[2];
-    int stderr_fds[2];
+    // Spawning the encoding process
     
-    if (pipe(pipe_fds) != 0)
+    try {
+        encoding_process = Gio::Subprocess::create(
+            command, 
+            Gio::Subprocess::Flags::STDOUT_PIPE | 
+            Gio::Subprocess::Flags::STDERR_PIPE
+        );
+    }
+    catch (const Glib::Error& e)
     {
+        last_error_message = e.what();
+        cerr << RED << "Failed to create encoding process!" << RESET << endl;
         return -1;
     }
-    
-    if (pipe(stderr_fds) != 0)
-    {
-        close(pipe_fds[0]);
-        close(pipe_fds[1]);
-        return -1;
-    }
+    encoding_pid = stoi(encoding_process -> get_identifier());
+    Glib::RefPtr<Gio::DataInputStream> std_output = Gio::DataInputStream::create
+        (encoding_process -> get_stdout_pipe());
+    Glib::RefPtr<Gio::DataInputStream> std_error = Gio::DataInputStream::create
+        (encoding_process -> get_stderr_pipe());
 
-    // Přesměrování výstupu na pipe_fds[1]
-    posix_spawn_file_actions_t file_actions;
-    posix_spawn_file_actions_init(&file_actions);
-    posix_spawn_file_actions_addclose(&file_actions, pipe_fds[0]);
-    posix_spawn_file_actions_addclose(&file_actions, stderr_fds[0]);
-    posix_spawn_file_actions_adddup2(&file_actions, pipe_fds[1], STDOUT_FILENO);
-    posix_spawn_file_actions_addclose(&file_actions, pipe_fds[1]);
-    posix_spawn_file_actions_adddup2(&file_actions, stderr_fds[1], STDERR_FILENO);
-    posix_spawn_file_actions_addclose(&file_actions, stderr_fds[1]);
-
-    // Uložit stav terminálu
-    struct termios original_termios;
-    bool termios_saved = (tcgetattr(STDIN_FILENO, &original_termios) == 0);
-
-    // Po vytvoření procesu se ten proces automaticky pozastaví pomocí SIGSTOP
-    // Musíme to ignorovat
-    struct sigaction old_tstp, old_ttin, old_ttou;
-    struct sigaction ignore_sa;
-    ignore_sa.sa_handler = SIG_IGN;
-    sigemptyset(&ignore_sa.sa_mask);
-    ignore_sa.sa_flags = 0;
-    sigaction(SIGTSTP, &ignore_sa, &old_tstp);
-    sigaction(SIGTTIN, &ignore_sa, &old_ttin);
-    sigaction(SIGTTOU, &ignore_sa, &old_ttou);
-
-    // Spuštění potomků do skupiny, aby se dali ukončit najednou
-    posix_spawnattr_t attr;
-    posix_spawnattr_init(&attr);
-    posix_spawnattr_setflags(&attr, POSIX_SPAWN_SETPGROUP);
-    posix_spawnattr_setpgroup(&attr, 0);
-
-    // Vytvořit proces
-    int spawn_result = posix_spawnp(&encoding_pid, "ffmpeg", &file_actions, &attr, const_cast<char* const*>(argv.data()), nullptr);
-    posix_spawnattr_destroy(&attr);
-    posix_spawn_file_actions_destroy(&file_actions);
-
-    sigaction(SIGTSTP, &old_tstp, nullptr);
-    sigaction(SIGTTIN, &old_ttin, nullptr);
-    sigaction(SIGTTOU, &old_ttou, nullptr);
-
-    // Uzavřít rouru pro zapisování, nechat jenom čtení
-    close(pipe_fds[1]);
-    close(stderr_fds[1]);
-
-    if (spawn_result != 0)
-    {
-        close(pipe_fds[0]);
-        return -1;
-    }
-
-    // Napojit Ctrl + C na kill, takže ffmpeg skončí s tímto procesem
+    // Connect Ctrl + C to sigkill, so ffmpeg ends with this parent process
     current_instance = this;
+    
+    #ifndef _WIN32
     struct sigaction sa;
     struct sigaction old_sa;
     sa.sa_handler = &Video::sigint_handler;
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = 0;
     sigaction(SIGINT, &sa, &old_sa);
+    #endif
 
-    cout << GREEN << "Starting encoding of " << inputVideo.path.filename() << "\n" << RESET << endl;
-
-    // Vytvořit soubor pro výstup roury
-    FILE * encoding_pipe = fdopen(pipe_fds[0], "r");
+    cout << GREEN 
+         << "Starting encoding of " 
+         << inputVideo.path.filename() 
+         << "\n" << RESET << endl;
     
-    while (fgets(buffer, sizeof(buffer), encoding_pipe) != NULL)
+    while (std_output -> read_line(buffer))
     {
         if (cancelling_encoding.load())
         {
             cout << YELLOW << "\nEncoding cancelled. " << RESET << endl;
 
-            if (encoding_pid != -1)
-            {
-                kill(-encoding_pid, SIGKILL); // - znamená, že zabijeme celou skupinu, ne jenom ten jeden proces
-                waitpid(encoding_pid, nullptr, 0); // sbírá zombie procesy
-            }
+            if (encoding_process)
+                terminate_encoding();
 
-            fclose(encoding_pipe);
-            encoding_pid = -1;
+            encoding_pid = -1; 
+            std_output -> close();
+            std_error -> close();
             
-            // Obnovit přechozí SIGINT akci
+            // Revert the previous SIGINT action
             sigaction(SIGINT, &old_sa, nullptr);
             current_instance = nullptr;
-            
-            // Obnovit stav terminálu
-            if (termios_saved)
-            {
-                tcsetattr(STDIN_FILENO, TCSANOW, &original_termios);
-            }
 
             return -2;
         }
 
         if (is_cutting_enabled())
-        {
-            duration = cut.endTime - cut.startTime;
-        }
+        { duration = cut.endTime - cut.startTime; }
         else
-        {
-            duration = inputVideo.duration;
-        }
+        {  duration = inputVideo.duration; }
 
         if (progress_callback)
-        {
-            parse_progress(buffer, duration, progress_callback);
-        }
+        {  parse_progress(buffer, duration, progress_callback); }
         else
-        {
-            CLI::print_encoding_progress(buffer, duration);
-        }
+        { CLI::print_encoding_progress(buffer, duration);  }
     }
 
     cout << endl;
-    fclose(encoding_pipe);
 
-    int child_status = 0;
-    waitpid(encoding_pid, &child_status, 0);
+    encoding_process -> wait();
+    std_output -> close();
     encoding_pid = -1;
     
-    FILE * error_pipe = fdopen(stderr_fds[0], "r");
     string error_msg;
-    if (error_pipe)
-    {
-        char err_buffer[256];
-        while (fgets(err_buffer, sizeof(err_buffer), error_pipe) != NULL)
-            error_msg += err_buffer;
-        fclose(error_pipe);
-    }
-    else
-    {
-        close(stderr_fds[0]);
-    }
+
+    string err_buffer;
+    while (std_error -> read_line(err_buffer))
+        error_msg += err_buffer;
+    std_error -> close();
     
     if (cancelling_encoding.load())
     {
         sigaction(SIGINT, &old_sa, nullptr);
         current_instance = nullptr;
-        if (termios_saved)
-            tcsetattr(STDIN_FILENO, TCSANOW, &original_termios);
         return -2;
     }
     
-    int exit_status = WIFEXITED(child_status) ? WEXITSTATUS(child_status) : -1;
+    int exit_status = encoding_process -> get_if_exited() ?
+                      encoding_process -> get_exit_status() : -1;
     
     if (exit_status != 0) this -> last_error_message = error_msg;
 
@@ -232,31 +163,29 @@ int Video::encode(fs::path output_path, ProgressCallback progress_callback)
     sigaction(SIGINT, &old_sa, nullptr);
     current_instance = nullptr;
 
-    // Obnovit stav terminálu
-    if (termios_saved)
-    {
-        tcsetattr(STDIN_FILENO, TCSANOW, &original_termios);
-    }
-
-    cout << YELLOW << "ffmpeg finished with code " << exit_status << RESET << endl;
-    cout << GREEN << "Output was saved to: " << outputPath.generic_string() << RESET << endl;
+    cout << YELLOW << "ffmpeg finished with code " 
+         << exit_status << RESET << endl;
+    cout << GREEN << "Output was saved to: " << outputPath.generic_string() 
+         << RESET << endl;
 
     return exit_status;     // Pro debugging a pro hlášky programu o chybách
 }
 
-void Video::parse_progress(char * buffer, float duration, ProgressCallback callback)
+void Video::parse_progress(
+    string buffer, 
+    float duration, 
+    ProgressCallback callback
+)
 {
-    string row(buffer);
-
     // Když nic nenajde, končí se
-    if (row.find("out_time_ms") == string::npos)
+    if (buffer.find("out_time_ms") == string::npos)
     {
         return;
     }
 
     int progress_percent = -1;
     float current_time = 0.0f;
-    string value_time = row.substr(12); // Vytáhnout část stringu s číslem, 12 je délka názvu proměnné + =
+    string value_time = buffer.substr(12); 
 
     try
     {
@@ -289,7 +218,8 @@ vector<string> Video::make_options()
 
     // Základní nastavení ffmpegu
     vector<string> command_prefix = 
-        {"-v", "16", "-y", "-progress", "pipe:1", "-stats_period", "0.1"};
+        {"ffmpeg", "-nostdin",
+         "-v", "16", "-y", "-progress", "pipe:1", "-stats_period", "0.1"};
     // Vstupní soubor
     vector<string> command_input = 
         {"-i", inputVideo.path.string(), "-map", "0:v", "-map", "0:a?", "-map", "0:s?"};
@@ -574,5 +504,5 @@ void Video::test_commands()
     for (auto c : make_options())
         command += c + " ";
         
-    cout << "ffmpeg " << command << "\n" << endl;
+    cout << command << "\n" << endl;
 }
