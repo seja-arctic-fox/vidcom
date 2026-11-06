@@ -1,5 +1,6 @@
 #include "cli.h"
 #include <cstddef>
+#include <filesystem>
 #include <iostream>
 
 bool stob(string s)
@@ -308,6 +309,7 @@ int CLI::set_codec_parameters(list<Video> &video_list, string params)
 int CLI::parse_arguments(int argc, char **argv)
 {
     bool debug = false;
+    bool overwrite = SETTINGS -> get_boolean("always-overwrite");
     list<Video> * video_list = new list<Video>; // Seznam video objektů ke zpracování
     
     for (int a = 1; a < argc; a++)
@@ -325,6 +327,13 @@ int CLI::parse_arguments(int argc, char **argv)
                 print_help();
                 delete video_list;
                 return 0;
+            }
+            
+            // Automatically overwrite
+            if (command == "-y")
+            {
+                overwrite = true;
+                continue;
             }
 
             // Pro operace na nastavení kódování
@@ -541,6 +550,20 @@ int CLI::parse_arguments(int argc, char **argv)
         }
         else
         {
+            if (!overwrite)
+                if (fs::exists(video.get_output_path()))
+                {
+                    cout << "A file named " 
+                         << fs::path(video.get_output_path()).filename()
+                         << " already exists in the output folder "
+                         << fs::path(video.get_output_path()).parent_path() 
+                         << "\nDo you want to overwrite it? [y/N] ";
+                    char answer[1] = "";
+                    cin.getline(answer, 2);
+                    
+                    if (!(*answer == 'y' || *answer == 'Y')) continue;
+                }
+            
             int exit_code = video.encode();
             if (exit_code == -2)
             {
