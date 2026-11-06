@@ -3,7 +3,12 @@
 RadioButtonRow::RadioButtonRow(const Glib::ustring& option_title, const Glib::ustring& option_caption)
 :
     OptionRow(option_title, option_caption)
-{ set_widget(radio_widget); }
+{
+    set_widget(radio_widget);
+    radio_widget.signal_toggled().connect([this]()
+        { signal_toggled.emit(); }
+    );
+}
 
 void RadioButtonRow::set_group(RadioButtonRow& row)
 { radio_widget.set_group(row.radio_widget); }

@@ -11,6 +11,7 @@
 #include "gtkmm/dragsource.h"
 #include "gtkmm/droptarget.h"
 #include "gtkmm/filedialog.h"
+#include "gtkmm/filelauncher.h"
 #include "gtkmm/frame.h"
 #include "gtkmm/headerbar.h"
 #include "gtkmm/image.h"
@@ -290,7 +291,7 @@ class VP9_Parameters : public CodecParametersPage
 {
     public: 
         VP9_Parameters();
-        void load(VideoElement * video_element);
+        void load(VideoElement * video_element) override;
         
     protected:
         SpinButtonRow cpu_usage;
@@ -311,7 +312,7 @@ class AVC_Parameters : public CodecParametersPage
 {
     public:
         AVC_Parameters();
-        void load(VideoElement * video_element);
+        void load(VideoElement * video_element) override;
         
     protected:
         SwitchRow motion_estimation;
@@ -433,7 +434,9 @@ class ResultRow : public Gtk::Box
         Gtk::Box box_right;
         
         void open_video();
-        void on_video_folder_open();
+        void on_video_folder_open(
+            const Glib::RefPtr<Gio::AsyncResult>& result, 
+            Glib::RefPtr<Gtk::FileLauncher> file_launcher);
         void set_status();
         void set_output_folder_button();
 };
