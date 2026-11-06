@@ -74,7 +74,7 @@ VideoElement::VideoElement(std::string input_path)
 
     // Obrázek videa
     int icon_hash = (input_path.length() + (int) video.get_video_info().duration) * 7333 % 100;
-    string icon_name = fs::path(input_path).stem().generic_string() + to_string(icon_hash) + ".jpg";
+    string icon_name = fs::path(input_path).stem().string() + to_string(icon_hash) + ".jpg";
     fs::path thumbnail_path("/tmp/vidcom/thumbnail/thumb_" + icon_name);
 
     if (!filesystem::exists(thumbnail_path.parent_path())) filesystem::create_directories(thumbnail_path.parent_path());
@@ -83,19 +83,19 @@ VideoElement::VideoElement(std::string input_path)
     {
         vector<string> argv = {
             "ffmpeg", "-v", "0", "-y", "-i", input_path.c_str(), "-ss", "1", 
-            "-vframes", "1", "-s", "64x64", thumbnail_path.c_str()
+            "-vframes", "1", "-s", "64x64", thumbnail_path.string()
         };
         Glib::RefPtr<Gio::Subprocess> process = Gio::Subprocess::create(argv);
         
         process -> wait();
         int status = process -> get_exit_status();
         
-        if (status == 0) video_thumbnail.set(thumbnail_path.generic_string());
+        if (status == 0) video_thumbnail.set(thumbnail_path.string());
         else video_thumbnail.set_from_icon_name("video-x-generic-symbolic"); 
     }
     else
     {
-        video_thumbnail.set(thumbnail_path.generic_string());
+        video_thumbnail.set(thumbnail_path.string());
     }
     
     video_status_icon.set_pixel_size(32);
@@ -116,7 +116,7 @@ VideoElement::VideoElement(std::string input_path)
     update_labels();
 
     video_name_text.set_halign(Gtk::Align::START);
-    video_name_text.set_tooltip_text(video_info.path.filename().generic_string());
+    video_name_text.set_tooltip_text(video_info.path.filename().string());
     resolution_text.set_halign(Gtk::Align::START);
     duration_text.set_halign(Gtk::Align::START);
     framerate_text.set_halign(Gtk::Align::START);
@@ -287,7 +287,7 @@ bool VideoElement::on_drop(const Glib::ValueBase& value, double, double)
 
 void VideoElement::update_labels()
 {
-    video_name_text.set_markup("<b>" + video_info.path.filename().generic_string() + "</b>");
+    video_name_text.set_markup("<b>" + video_info.path.filename().string() + "</b>");
 
     if (video.get_downscale_factor() == 1.0 || !video.is_compress_enabled())
     {

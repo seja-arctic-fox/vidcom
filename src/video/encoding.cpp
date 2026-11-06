@@ -165,7 +165,7 @@ int Video::encode(fs::path output_path, ProgressCallback progress_callback)
 
     cout << YELLOW << "ffmpeg finished with code " 
          << exit_status << RESET << endl;
-    cout << GREEN << "Output was saved to: " << outputPath.generic_string() 
+    cout << GREEN << "Output was saved to: " << outputPath.string() 
          << RESET << endl;
 
     return exit_status;     // Pro debugging a pro hlášky programu o chybách

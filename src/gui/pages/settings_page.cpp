@@ -408,7 +408,7 @@ void SettingsPage::read_video_vector_options(std::vector<VideoElement *> video_v
         
         Video * video = &(video_queue.at(video_index) -> video);
         output_path = video -> get_output_path();
-        output_path = filesystem::path(output_path).parent_path().generic_string().substr(0, output_path.find("encoded_videos/"));
+        output_path = filesystem::path(output_path).parent_path().string().substr(0, output_path.find("encoded_videos/"));
         load_options_into_GUI(video);
     }
 }
@@ -418,7 +418,7 @@ void SettingsPage::read_video_options(VideoElement * video_element)
     this -> video_element = video_element;
     Video * video = &(video_element -> video);
     output_path = video -> get_output_path();
-    output_path = filesystem::path(output_path).parent_path().generic_string().substr(0, output_path.find("encoded_videos/"));
+    output_path = filesystem::path(output_path).parent_path().string().substr(0, output_path.find("encoded_videos/"));
     
     if (batch_settings)
     {

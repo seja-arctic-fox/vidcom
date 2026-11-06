@@ -308,7 +308,7 @@ void QueueFrame::add_video(const std::string& input_path)
 
     if (duration == -1)
     {
-        error_toast_not_a_video(fs::path(input_path).filename().generic_string());
+        error_toast_not_a_video(fs::path(input_path).filename().string());
         if (clear_queue_button.get_can_target())
             signal_enable_encoding.emit();
         else

@@ -121,7 +121,7 @@ void ResultRow::set_output_folder_button()
     output_folder_button.signal_clicked().connect(([this]() 
         {
             Glib::RefPtr<Gio::File> file = 
-                Gio::File::create_for_path(video_path);
+                Gio::File::create_for_path(video_path.string());
             Glib::RefPtr<Gtk::FileLauncher> file_launcher = 
                 Gtk::FileLauncher::create();
 

@@ -39,7 +39,7 @@ Video::Video(string input_path)
     
     bool next_to_original = SETTINGS -> get_boolean("output-next-to-original");
     if (next_to_original)
-        set_output_path(inputVideo.path.parent_path());
+        set_output_path(inputVideo.path.parent_path().string());
     else
         set_output_path(SETTINGS -> get_string("output-path"));
 }
