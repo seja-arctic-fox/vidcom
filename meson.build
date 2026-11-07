@@ -67,6 +67,18 @@ exe = executable(
   win_subsystem: 'windows'
 )
 
+if host_machine.system() == 'windows'
+  executable(
+    'vidcom-cli',
+    'vidcom_gui.cpp',
+    './src/gui/hide_console.cpp',
+    gui, video, cli,
+    install : true,
+    dependencies : dependencies,
+    win_subsystem: 'console'
+  )
+endif
+
 test('basic', exe)
 
 subdir('data')

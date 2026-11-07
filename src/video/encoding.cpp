@@ -18,19 +18,25 @@
 Video * Video::current_instance = nullptr;
 
 // Ctrl + C by mělo ukončit všechny ffmpeg procesy, které program spustil
-#ifndef _WIN32
 void Video::sigint_handler(int)
 {
     if (current_instance)
     {
+        #ifdef _WIN32
+        
+        current_instance -> terminate_encoding();
+        
+        #else
+        
         pid_t pid = current_instance -> encoding_pid.load();
         if (pid != -1)
             kill (pid, SIGKILL);
         
+        #endif
+        
         current_instance -> cancel_encoding();
     }
 }
-#endif
 
 void Video::terminate_encoding()
 {
@@ -89,16 +95,8 @@ int Video::encode(fs::path output_path, ProgressCallback progress_callback)
         (encoding_process -> get_stderr_pipe());
 
     // Connect Ctrl + C to sigkill, so ffmpeg ends with this parent process
-    
-    #ifndef _WIN32
     current_instance = this;
-    struct sigaction sa;
-    struct sigaction old_sa;
-    sa.sa_handler = &Video::sigint_handler;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = 0;
-    sigaction(SIGINT, &sa, &old_sa);
-    #endif
+    auto previous_sigint_handler = signal(SIGINT, &Video::sigint_handler);
 
     cout << GREEN 
          << "Starting encoding of " 
@@ -117,13 +115,8 @@ int Video::encode(fs::path output_path, ProgressCallback progress_callback)
             encoding_pid = -1; 
             std_output -> close();
             std_error -> close();
-            
-            // Revert the previous SIGINT action
-            #ifndef _WIN32
-            sigaction(SIGINT, &old_sa, nullptr);
+            signal(SIGINT, previous_sigint_handler);
             current_instance = nullptr;
-            #endif
-
             return -2;
         }
 
@@ -153,10 +146,8 @@ int Video::encode(fs::path output_path, ProgressCallback progress_callback)
     
     if (cancelling_encoding.load())
     {
-        #ifndef _WIN32
-        sigaction(SIGINT, &old_sa, nullptr);
+        signal(SIGINT, previous_sigint_handler);
         current_instance = nullptr;
-        #endif
         return -2;
     }
     
@@ -165,11 +156,8 @@ int Video::encode(fs::path output_path, ProgressCallback progress_callback)
     
     if (exit_status != 0) this -> last_error_message = error_msg;
 
-    // Obnovit přechozí SIGINT akci
-    #ifndef _WIN32
-    sigaction(SIGINT, &old_sa, nullptr);
+    signal(SIGINT, previous_sigint_handler);
     current_instance = nullptr;
-    #endif
 
     cout << YELLOW << "ffmpeg finished with code " 
          << exit_status << RESET << endl;

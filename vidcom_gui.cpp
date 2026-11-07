@@ -23,7 +23,14 @@ int main(int argc, char **argv)
         "io.github.seja_arctic_fox.vidcom"
     );
     
-    if (argc > 1 && (string(argv[1]) == "-cli" || string(argv[1]) == "-h"))
+    if (
+        argc > 1 && 
+        (
+            #ifndef _WIN32
+            string(argv[1]) == "-cli" || 
+            #endif
+            string(argv[1]) == "-h"
+        ))
         return CLI::parse_arguments(argc, argv);
     else
     {
