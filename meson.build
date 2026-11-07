@@ -60,6 +60,7 @@ cli = [
 exe = executable(
   'vidcom',
   'vidcom_gui.cpp',
+  './src/gui/hide_console.cpp',
   gui, video, cli,
   install : true,
   dependencies : dependencies,
