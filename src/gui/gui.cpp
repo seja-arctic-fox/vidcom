@@ -470,7 +470,7 @@ void MainWindow::encoding_worker()
         {
             std::unique_lock<std::mutex> lock(encoding_mutex);
             this -> conflict_file = 
-                fs::path(video -> get_output_path()).filename();
+                fs::path(video -> get_output_path()).filename().string();
             overwrite_dispatcher.emit();
             cv.wait(lock, [this]() { return (this -> allow_overwrite != 0); });
         }
