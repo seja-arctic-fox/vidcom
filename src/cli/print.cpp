@@ -22,7 +22,7 @@ void CLI::print_input_video_info(VideoInfo video_info)
             << endl;
 }
 
-void CLI::print_encoding_progress(char *stdout_buffer, float duration)
+void CLI::print_encoding_progress(string stdout_buffer, float duration)
 {
     // Vstupní řádek převedeme na string
     string row(stdout_buffer);

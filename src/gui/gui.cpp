@@ -470,7 +470,7 @@ void MainWindow::encoding_worker()
         {
             std::unique_lock<std::mutex> lock(encoding_mutex);
             this -> conflict_file = 
-                fs::path(video -> get_output_path()).filename();
+                fs::path(video -> get_output_path()).filename().string();
             overwrite_dispatcher.emit();
             cv.wait(lock, [this]() { return (this -> allow_overwrite != 0); });
         }
@@ -478,7 +478,8 @@ void MainWindow::encoding_worker()
         // Aktualizace postupu pro nové video
         {
             std::lock_guard<std::mutex> lock(encoding_mutex);
-            current_progress.video_name = video -> get_video_info().path.filename();
+            current_progress.video_name = video -> get_video_info()
+                                                .path.filename().string();
             current_progress.current_index = index + 1;
             current_progress.total_count = all_videos.size();
             current_progress.progress_percent = 0;

@@ -18,7 +18,7 @@ void Video::set_default_output_settings()
     set_cut(0, inputVideo.duration);
     bool next_to_original = SETTINGS -> get_boolean("output-next-to-original");
     if (next_to_original)
-        set_output_path(inputVideo.path.parent_path());
+        set_output_path(inputVideo.path.parent_path().string());
     else
         set_output_path(SETTINGS -> get_string("output-path"));
     set_codec(Codec(SETTINGS -> get_enum("codec")));
@@ -30,8 +30,8 @@ void Video::set_output_path(string output_path)
     if (!filesystem::is_directory(output_path))
     {
         fs::path directory(output_path);
-        prefix = directory.stem();
-        output_path = directory.parent_path();
+        prefix = directory.stem().string();
+        output_path = directory.parent_path().string();
     }
     outputPath = output_path;
     outputPath /= "encoded_videos/";
@@ -66,7 +66,7 @@ void Video::set_prefix(string prefix)
     if (inputVideo.use_matroska) { extension = ".mkv"; }
     else                         { extension = ".mp4"; }
     
-    outputPath = (outputPath.parent_path() / (prefix + separator + inputVideo.path.stem().generic_string() + extension));
+    outputPath = (outputPath.parent_path() / (prefix + separator + inputVideo.path.stem().string() + extension));
 }
 
 void Video::set_output_framerate(unsigned int fps)
