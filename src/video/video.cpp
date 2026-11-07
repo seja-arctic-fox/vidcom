@@ -2,6 +2,7 @@
 #include "../cli/cli.h"
 #include "giomm/datainputstream.h"
 #include "giomm/subprocess.h"
+#include "glibmm/miscutils.h"
 #include "glibmm/refptr.h"
 #include <cmath>
 #include <cstddef>
@@ -28,18 +29,7 @@ Video::Video(string input_path)
 {
     // Načtení informací o vstupním videu
     if (input_path == "")
-    {
-        // for Linux systems
-        
-        #ifndef _WIN32
-        inputVideo.path = string(getenv("HOME")) + "/example_video.mp4";
-        #endif
-        
-        // for Windows
-        #ifdef _WIN32
-        inputVideo.path = string(getenv("UserProfile")) + "/example_video.mp4";
-        #endif
-    }
+        inputVideo.path = fs::path(Glib::get_home_dir()) / "example_video.mp4";
     else
         set_video_info(input_path);
 

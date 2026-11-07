@@ -2,6 +2,7 @@
 #include "gdkmm/enums.h"
 #include "glib-object.h"
 #include "glib.h"
+#include "glibmm/miscutils.h"
 #include "gtk/gtk.h"
 #include "gtkmm/dragsource.h"
 #include "gtkmm/droptarget.h"
@@ -75,7 +76,8 @@ VideoElement::VideoElement(std::string input_path)
     // Obrázek videa
     int icon_hash = (input_path.length() + (int) video.get_video_info().duration) * 7333 % 100;
     string icon_name = fs::path(input_path).stem().string() + to_string(icon_hash) + ".jpg";
-    fs::path thumbnail_path("/tmp/vidcom/thumbnail/thumb_" + icon_name);
+    fs::path thumbnail_path(Glib::get_user_config_dir() + 
+        "/vidcom/thumbnail/thumb_" + icon_name);
 
     if (!filesystem::exists(thumbnail_path.parent_path())) filesystem::create_directories(thumbnail_path.parent_path());
 
