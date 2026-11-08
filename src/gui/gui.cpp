@@ -45,8 +45,8 @@ MainWindow::MainWindow()
         adw_length_unit_to_px(ADW_LENGTH_UNIT_SP, 600, nullptr)
     );
     gtk_window_set_titlebar(GTK_WINDOW(gobj()), gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
-    // Jen pro BETA verze: 
-    add_css_class("devel");
+    // Development versions only! 
+    // add_css_class("devel");
     
     // Stránka pro prázdnou frontu
     add_videos_pill_button.add_css_class("pill");
@@ -284,13 +284,22 @@ void MainWindow::display_about_dialog(const Glib::VariantBase&)
     adw_about_dialog_set_application_icon(dialog, "io.github.seja_arctic_fox.vidcom");
     adw_about_dialog_set_website(dialog, "https://seja-arctic-fox.github.io/");
     adw_about_dialog_set_issue_url(dialog, "https://github.com/seja-arctic-fox/vidcom/issues");
+    adw_about_dialog_set_copyright(dialog, 
+        "VidCom  Copyright (C) 2026  seja-arctic-fox");
     adw_about_dialog_set_license_type(dialog, GTK_LICENSE_GPL_3_0);
     adw_about_dialog_set_release_notes_version(dialog, "0.84");
     adw_about_dialog_set_release_notes(dialog, 
         "<ul>"
-            "<li></li>"
-            "<li></li>"
-            "<li></li>"
+            "<li>Better solution for automatic side panel collapsing and window default size</li>"
+            "<li>Various UI changes</li>"
+            "<li>Queue is visible and can be interacted with during encoding. This allows the user to add, remove or shuffle videos in the queue while the encoding is in progress. </li>"
+            "<li>Bug fixes adressing app stability, threading, encoding and GUI</li>"
+            "<li>Fix for AVC codec options not working in batch settings</li>"
+            "<li>Fix for radio buttons not registering clicks in some cases</li>"
+            "<li>Better method of opening output folders</li>"
+            "<li>Added confirmation dialog for overwriting existing files</li>"
+            "<li>Added an option to always overwrite files on conflict</li>"
+            "<li>VidCom now works on Windows as well</li>"
         "</ul>"
         );
     
