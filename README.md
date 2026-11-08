@@ -115,7 +115,7 @@ makepkg -si
 ```
 
 ### Windows
-Windows builds are available since the release of version `0.84` in the releases as a portable ZIP archive. 
+Windows builds are available since the release of version `0.84` in the releases as a portable ZIP archive. They are intended specifically for **Windows 11.** 
 
 Before using the program, make sure you have `ffmpeg` installed in `%PATH%` or the executable is included next to `vidcom.exe`. The easiest way of installing `ffmpeg` is using `winget`:
 
