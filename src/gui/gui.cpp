@@ -1,3 +1,20 @@
+/*
+    VidCom, an utility for video archival and compression
+    Copyright (C) 2026  seja-arctic-fox <seja.czstudio@gmail.com>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
 #include "headers/gui.h"
 #include "adwaita.h"
 #include "giomm/application.h"
@@ -28,8 +45,8 @@ MainWindow::MainWindow()
         adw_length_unit_to_px(ADW_LENGTH_UNIT_SP, 600, nullptr)
     );
     gtk_window_set_titlebar(GTK_WINDOW(gobj()), gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
-    // Jen pro BETA verze: 
-    add_css_class("devel");
+    // Development versions only! 
+    // add_css_class("devel");
     
     // Stránka pro prázdnou frontu
     add_videos_pill_button.add_css_class("pill");
@@ -262,36 +279,27 @@ void MainWindow::display_about_dialog(const Glib::VariantBase&)
     auto dialog = ADW_ABOUT_DIALOG(adw_about_dialog_new());
     
     adw_about_dialog_set_application_name(dialog, "VidCom");
-    adw_about_dialog_set_version(dialog, "0.83");
+    adw_about_dialog_set_version(dialog, "0.84");
     adw_about_dialog_set_developer_name(dialog, "seja-arctic-fox");
     adw_about_dialog_set_application_icon(dialog, "io.github.seja_arctic_fox.vidcom");
     adw_about_dialog_set_website(dialog, "https://seja-arctic-fox.github.io/");
     adw_about_dialog_set_issue_url(dialog, "https://github.com/seja-arctic-fox/vidcom/issues");
+    adw_about_dialog_set_copyright(dialog, 
+        "VidCom  Copyright (C) 2026  seja-arctic-fox");
     adw_about_dialog_set_license_type(dialog, GTK_LICENSE_GPL_3_0);
-    adw_about_dialog_set_release_notes_version(dialog, "0.83");
+    adw_about_dialog_set_release_notes_version(dialog, "0.84");
     adw_about_dialog_set_release_notes(dialog, 
         "<ul>"
-            "<li>Automatic logout/suspend is prevented while "
-            "video encoding is running. </li>"
-            "<li>Bug fix: When Matroska container is used, the original "
-            "subtitles will always be copied</li>"
-            "<li>The page with results, shown after the encoding is finished, "
-            "now reflects the results more accurately</li>"
-            "<li>If the video encoding fails, you can now display the error "
-            "log (<code>stderr</code>)</li>"
-            "<li>Bug fix for missing bitrate recalculation after "
-            "enabling and setting cut</li>"
-            "<li><code>ffmpeg</code>/<code>ffprobe</code> processes are now "
-            "called directly instead of calling through shell</li>"
-            "<li>You can now select multiple videos in the queue by holding "
-            "the Shift key</li>"
-            "<li>'Select all' button is no longer a toggle and can also "
-            "deselect videos</li>"
-            "<li>Added support for AVC (H264) encoding</li>"
-            "<li>You can now open videos with VidCom. It will automatically "
-            "import them into the queue upon doing so</li>"
-            "<li>Custom default options can be set, such as the target size, "
-            "export folder, all the exposed codec parameters and more</li>"
+            "<li>Better solution for automatic side panel collapsing and window default size</li>"
+            "<li>Various UI changes</li>"
+            "<li>Queue is visible and can be interacted with during encoding. This allows the user to add, remove or shuffle videos in the queue while the encoding is in progress. </li>"
+            "<li>Bug fixes adressing app stability, threading, encoding and GUI</li>"
+            "<li>Fix for AVC codec options not working in batch settings</li>"
+            "<li>Fix for radio buttons not registering clicks in some cases</li>"
+            "<li>Better method of opening output folders</li>"
+            "<li>Added confirmation dialog for overwriting existing files</li>"
+            "<li>Added an option to always overwrite files on conflict</li>"
+            "<li>VidCom now works on Windows as well</li>"
         "</ul>"
         );
     

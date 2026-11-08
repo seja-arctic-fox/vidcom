@@ -1,6 +1,6 @@
 # Maintainer: seja-arcticfox <seja.czstudio@gmail.com>
 pkgname=vidcom
-pkgver=0.83
+pkgver=0.84
 pkgrel=1
 pkgdesc="Archive your videos"
 arch=('x86_64')

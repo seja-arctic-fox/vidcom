@@ -1,3 +1,20 @@
+/*
+    VidCom, an utility for video archival and compression
+    Copyright (C) 2026  seja-arctic-fox <seja.czstudio@gmail.com>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
 #include "cli.h"
 #include "../video/video.h"
 
@@ -71,7 +88,7 @@ void CLI::print_exception(exception error)
 
 void CLI::print_help()
 {
-    cout << GREEN << "VidCom 0.8 help page" << RESET << endl;
+    cout << GREEN << "VidCom 0.84 help page" << RESET << endl;
     cout << "Automatic utility for compressing and archiving videos. This is a CLI interface. You can run the GUI by executing 'vidcom'. \n"
          << "The script features two MODES. COMPRESS compresses the video to a target size and other settings, while ARCHIVE mode (default) makes the video as small as possible without quality sacrifices. \n";
     cout << "____________________" << endl;

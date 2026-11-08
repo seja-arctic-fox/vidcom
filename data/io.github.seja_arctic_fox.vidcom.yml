@@ -1,6 +1,6 @@
 app-id: io.github.seja_arctic_fox.vidcom
 runtime: org.gnome.Platform
-runtime-version: '50'
+runtime-version: '51'
 sdk: org.gnome.Sdk
 command: vidcom
 finish-args:
@@ -22,8 +22,8 @@ modules:
       - -Dtests=false
     sources: 
       - type: archive
-        url: https://github.com/open-source-parsers/jsoncpp/archive/refs/tags/1.9.6.tar.gz
-        sha256: f93b6dd7ce796b13d02c108bc9f79812245a82e577581c4c9aabe57075c90ea2
+        url: https://github.com/open-source-parsers/jsoncpp/archive/refs/tags/1.9.8.tar.gz
+        sha256: 51828cf3574281d2b79ec2a1c56a9e4c20cc1103711321ea96384cffb8d2d904
 
   - name: libsigcplusplus
     buildsystem: meson
@@ -36,8 +36,8 @@ modules:
       - -Dbuild-tests=false
     sources: 
       - type: archive
-        url: https://github.com/libsigcplusplus/libsigcplusplus/releases/download/3.8.0/libsigc++-3.8.0.tar.xz
-        sha256: 502a743bb07ed7627dd41bd85ec4b93b4954f06b531adc45818d24a959f54e36
+        url: https://github.com/libsigcplusplus/libsigcplusplus/releases/download/3.8.1/libsigc++-3.8.1.tar.xz
+        sha256: 4ff41d1474e501d3baeced4c989d154338206ac16471e614376496b63fe252d1
 
   - name: glibmm
     buildsystem: meson
@@ -49,8 +49,8 @@ modules:
       - '/lib/glibmm-*'
     sources: 
       - type: archive
-        url: https://download.gnome.org/sources/glibmm/2.88/glibmm-2.88.0.tar.xz
-        sha256: a6549da3a6c43de83b8717dae5413c57a60d92f6ecc624615c612d0bb0ad0fe2
+        url: https://download.gnome.org/sources/glibmm/2.90/glibmm-2.90.0.tar.xz
+        sha256: e2efa45643f16b9fea2d6299f2f403d672eaeacddf0ff7f8094e1af9b0f5980b
 
   - name: cairomm
     buildsystem: meson
@@ -63,8 +63,8 @@ modules:
       - '/lib/cairomm-*'
     sources:
       - type: archive
-        url: https://www.cairographics.org/releases/cairomm-1.19.0.tar.xz
-        sha256: 8b14f03a0e5178c7ff8f7b288cb342a61711c84c9fbed6e663442cfcc873ce5b
+        url: https://www.cairographics.org/releases/cairomm-1.19.1.tar.xz
+        sha256: 06881a0167d84962c74db318427c5be663d30b8ea5c60740a9dc36a9c1961b54
 
   - name: pangomm
     buildsystem: meson
@@ -75,8 +75,8 @@ modules:
       - '/lib/pangomm-*'
     sources:
       - type: archive
-        url: https://download.gnome.org/sources/pangomm/2.56/pangomm-2.56.1.tar.xz
-        sha256: 539f5aa60e9bdc6b955bb448e2a62cc14562744df690258040fbb74bf885755d
+        url: https://download.gnome.org/sources/pangomm/2.58/pangomm-2.58.0.tar.xz
+        sha256: 217514c1a65035c2fce6e69e33b0d92bafa2594cc474e995a4473441b10f3a33
 
   - name: gtkmm
     buildsystem: meson
@@ -89,11 +89,13 @@ modules:
       - '/lib/gtkmm-*'
     sources: 
     - type: archive
-      url: https://download.gnome.org/sources/gtkmm/4.22/gtkmm-4.22.0.tar.xz
-      sha256: 2e8a21b4b0725f620e33aaee0cd343ed121b533275b632896619b1c89e96de67
+      url: https://download.gnome.org/sources/gtkmm/4.24/gtkmm-4.24.0.tar.xz
+      sha256: 7fd9cea356e7d3b74bf7d2a51d7e0e6763f3f9f1cddc5e77c8b0b5b7fa9d5e5a
 
   - name: vidcom
     buildsystem: meson
     sources:
       - type: dir
         path: ../
+
+# Deps versions according to gnome-build-meta repository
