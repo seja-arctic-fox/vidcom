@@ -183,4 +183,8 @@ I will update the lists below from time to time;
 ### Known Issues
 - [ ] Encoding can fail when using specific parameters for certain codecs, potentially missing UI restrictions
 
+## Notice
+
+This project is distributed under GNU GPLv3 licence. See [COPYRIGHT.md](COPYRIGHT.md) for details. 
+
 This project follows [GNOME's Code of Conduct](https://conduct.gnome.org/).
