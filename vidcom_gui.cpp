@@ -1,3 +1,4 @@
+#include "src/gui/headers/hide_console.h"
 #include "adwaita.h"
 #include "giomm/settings.h"
 #include "glibmm/refptr.h"
@@ -13,13 +14,26 @@ Glib::RefPtr<Gio::Settings> SETTINGS;
 
 int main(int argc, char **argv) 
 {
+    #ifdef _WIN32
+    hide_console_for_children();
+    #endif
+    
     Gio::init();
     SETTINGS = Gio::Settings::create(
         "io.github.seja_arctic_fox.vidcom"
     );
     
+    #ifdef _WIN32
+    
+    if (argc > 1)
+        return CLI::parse_arguments(argc, argv);
+    
+    #else
+    
     if (argc > 1 && (string(argv[1]) == "-cli" || string(argv[1]) == "-h"))
         return CLI::parse_arguments(argc, argv);
+    
+    #endif
     else
     {
         adw_init();

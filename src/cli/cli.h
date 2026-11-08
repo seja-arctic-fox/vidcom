@@ -14,7 +14,7 @@ class CLI
 {
     public:
         static void print_input_video_info(VideoInfo video_info);
-        static void print_encoding_progress(char * stdout_buffer, float original_duration);
+        static void print_encoding_progress(string stdout_buffer, float original_duration);
         static int parse_arguments(int argc, char **argv);
         static void print_exception(exception error);
         static void print_help();

@@ -22,7 +22,7 @@ void CLI::print_input_video_info(VideoInfo video_info)
             << endl;
 }
 
-void CLI::print_encoding_progress(char *stdout_buffer, float duration)
+void CLI::print_encoding_progress(string stdout_buffer, float duration)
 {
     // Vstupní řádek převedeme na string
     string row(stdout_buffer);
@@ -75,7 +75,17 @@ void CLI::print_help()
     cout << "Automatic utility for compressing and archiving videos. This is a CLI interface. You can run the GUI by executing 'vidcom'. \n"
          << "The script features two MODES. COMPRESS compresses the video to a target size and other settings, while ARCHIVE mode (default) makes the video as small as possible without quality sacrifices. \n";
     cout << "____________________" << endl;
+    
+    #ifdef _WIN32
+    
+    cout << "Usage: \n vidcom-cli.exe [PATH_TO_VIDEO1 PATH_TO_VIDEO2] -Cm/Am -s SIZE_MB -c CODEC -p [PARAMETER1=VALUE1,PARAMETER2=VALUE2] -cut START-STOP -ds FACTOR -fps FPS -2p -o OUTPUT_FOLDER -pr PREFIX -d\n" << endl;
+    
+    #else
+    
     cout << "Usage: \n vidcom -cli [PATH_TO_VIDEO1 PATH_TO_VIDEO2] -Cm/Am -s SIZE_MB -c CODEC -p [PARAMETER1=VALUE1,PARAMETER2=VALUE2] -cut START-STOP -ds FACTOR -fps FPS -2p -o OUTPUT_FOLDER -pr PREFIX -d\n" << endl;
+    
+    #endif
+    
     cout << "Positional arguments \n\t Input videos: \t Paths to video files you want to process. Must be first. Specify as many as you like. \n" << endl;
     cout << "Voluntary arguments (order shouldn't matter)\n\t "
          << "MODES\n"

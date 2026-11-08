@@ -318,8 +318,10 @@ int CLI::parse_arguments(int argc, char **argv)
 
         if (argv[a][0] == '-')
         {
+            #ifndef _WIN32
             // Argumenty a nastavení
             if (command == "-cli") continue;
+            #endif
 
             // Pomoc
             if (command == "-h")
