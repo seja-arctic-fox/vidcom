@@ -15,6 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+#include "glibmm/miscutils.h"
 #include "video.h"
 #include <filesystem>
 #include <iostream>
@@ -33,9 +34,8 @@ void Video::set_default_output_settings()
     set_two_pass(false);
     set_bitrate_by_size(SETTINGS -> get_double("target-size"));
     set_cut(0, inputVideo.duration);
-    bool next_to_original = SETTINGS -> get_boolean("output-next-to-original");
-    if (next_to_original)
-        set_output_path(inputVideo.path.parent_path().string());
+    if (SETTINGS -> get_string("output-path") == "")
+        set_output_path(Glib::get_user_data_dir());
     else
         set_output_path(SETTINGS -> get_string("output-path"));
     set_codec(Codec(SETTINGS -> get_enum("codec")));

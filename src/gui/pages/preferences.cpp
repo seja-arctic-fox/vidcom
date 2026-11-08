@@ -36,10 +36,6 @@ DummyVideoElement::~DummyVideoElement()
 DefaultsPage::DefaultsPage(DummyVideoElement * video)
 :   
     SettingsPage(),
-    next_to_original_switch(
-        "Save next to original",
-        "Save video(s) next to original file(s)"
-    ),
     always_overwrite_switch(
         "Always overwrite videos",
         "Automatically overwrite videos on conflict and skip the confirmation dialog"
@@ -74,17 +70,6 @@ DefaultsPage::DefaultsPage(DummyVideoElement * video)
     target_size_row.set_sensitive();
     res_row.set_sensitive();
     
-    // Extra switch for deciding whether to store next to the original video
-    bool next_to_original_state = SETTINGS -> get_boolean(
-        "output-next-to-original"
-    );
-    next_to_original_switch.set_state(next_to_original_state);
-    output_row.set_sensitive(!next_to_original_state);
-    output_listbox.insert(next_to_original_switch, 1);
-    next_to_original_switch.signal_toggled.connect(sigc::mem_fun(
-        *this, &DefaultsPage::on_nto_switched
-    ));
-    
     // Extra switch for auto-overwriting files
     bool always_overwrite_state = SETTINGS -> get_boolean("always-overwrite");
     always_overwrite_switch.set_state(always_overwrite_state);
@@ -94,14 +79,8 @@ DefaultsPage::DefaultsPage(DummyVideoElement * video)
 DefaultsPage::~DefaultsPage()
 {}
 
-bool DefaultsPage::get_nto_state()
-{ return next_to_original_switch.get_state(); }
-
 bool DefaultsPage::get_aow_state()
 { return always_overwrite_switch.get_state(); }
-
-void DefaultsPage::on_nto_switched()
-{ output_row.set_sensitive(!next_to_original_switch.get_state()); }
 
 // Only reason for this is removing the sensitivity setters
 // (they don't make sense here)
@@ -181,9 +160,6 @@ void PreferencesWindow::apply_defaults()
     );
     SETTINGS -> set_double(
         "downscale-factor", video -> get_downscale_factor()
-    );
-    SETTINGS -> set_boolean(
-        "output-next-to-original", defaults_box.get_nto_state()
     );
     SETTINGS -> set_boolean(
         "always-overwrite", defaults_box.get_aow_state()

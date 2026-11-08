@@ -466,6 +466,7 @@ class MainWindow : public Gtk::Window
         
         void show_toast(char const * message);
         void on_open_videos(const Gio::Application::type_vec_files& file_vector, const Glib::ustring);
+        void show_toast_grant_access(std::vector<std::string> file_paths);
 
     protected:
         RunnerPanel runner_panel;
@@ -494,6 +495,7 @@ class MainWindow : public Gtk::Window
         void display_about_dialog(const Glib::VariantBase&);
         void display_preferences(const Glib::VariantBase&);
         void file_picker_add_videos(const Glib::RefPtr<Gio::AsyncResult>& result, Glib::RefPtr<Gtk::FileDialog> file_picker);
+        void file_picker_grant_access(std::vector<std::string> file_paths);
         
         // Vlákno pro kódování videí, synchronizace
         std::thread encoding_thread;
@@ -538,18 +540,15 @@ class DefaultsPage : public SettingsPage
         DefaultsPage(DummyVideoElement * video);
         ~DefaultsPage();
         
-        bool get_nto_state();
         bool get_aow_state();
         
     protected:
         OptionListBox defaults_desc_row;
         Gtk::Label defaults_desc;
-        SwitchRow next_to_original_switch;
         SwitchRow always_overwrite_switch;
     
         void save_archive_mode(VideoElement * element) override;
         void save_compress_mode(VideoElement * element) override;
-        void on_nto_switched();
 };
 
 class PreferencesWindow

@@ -46,7 +46,7 @@ Video::Video(string input_path)
 {
     // Načtení informací o vstupním videu
     if (input_path == "")
-        inputVideo.path = fs::path(Glib::get_home_dir()) / "example_video.mp4";
+        inputVideo.path = Glib::get_user_data_dir() + "/example_video.mp4";
     else
         set_video_info(input_path);
 
@@ -55,9 +55,8 @@ Video::Video(string input_path)
     set_bitrate_by_size(SETTINGS -> get_double("target-size"));
     set_cut(0, inputVideo.duration);
     
-    bool next_to_original = SETTINGS -> get_boolean("output-next-to-original");
-    if (next_to_original)
-        set_output_path(inputVideo.path.parent_path().string());
+    if (SETTINGS -> get_string("output-path") == "")
+        set_output_path(Glib::get_user_data_dir());
     else
         set_output_path(SETTINGS -> get_string("output-path"));
 }
